@@ -1,0 +1,4 @@
+; $Id$
+name = Mass Contact
+description = "Enables site administrator or privileged users to send mass e-mails to registered users."
+package = "Mail"
