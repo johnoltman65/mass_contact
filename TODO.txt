@@ -1,0 +1,8 @@
+$Id$
+
+(In no particular order.)
+
+Misc. stuff:
+  Force Bcc field to avoid unwanted address disclosure: http://drupal.org/node/145940:
+
+  Add multiple attachments.

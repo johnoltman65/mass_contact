@@ -1,0 +1,96 @@
+$Id$
+
+2008-05-23 Jason Flatt drupal@oadaeh.net
+  * TODO.txt: Removed completed items.
+  * mass_contact.module: Changed four watchdog messages to be translatable.
+
+2008-04-18 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Changed variable name from mass_contact_HTML_d to
+    mass_contact_html_d.
+    Changed how an HTML and plain text message are formed, taking into
+    account the Mime Mail module.
+    Added information about the formatting of HTML messages as descriptions
+    for the checkboxes that enable HTML e-mails.
+
+2008-04-15 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Tweaked the output of a log message.
+
+2008-04-06 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Clean up based on the Code Review module and the
+    ./code-style.pl script: Changed "<br>" to "<br />". Changed "!=" to "<>"
+    in three SQL querues.
+
+2008-02-22 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Modified the help text displayed for tokens to only
+    show global tokens as nothing else will work at the time the tokens are
+    being applied. In order to get user tokens to work, all messages would
+    have to be sent out one-at-a-time to each recipient.
+
+2008-02-17 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Changed how attachments are handled if Mime Mail is
+    installed.
+
+2008-01-23 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Made SQL query change for PostgreSQL: compatibility.
+    Issue and fix reported by larsfp here: http://drupal.org/node/198778
+    Changed attachment save operation from FILE_EXISTS_REPLACE to
+    FILE_EXISTS_RENAME.
+    Changed the help text to work with POT extractor as reported by skizzo
+    here: http://drupal.org/node/176345
+
+2008-01-22 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Removed the code to check for the SMTP module.
+    Changed the recipients' e-mail addresses from $rnamea ." <". $rmaila .">"
+    to $rmaila.
+    Modified the way the attachment is added to the message.
+    Changed the way the attachment is saved with the node to address
+    http://drupal.org/node/155229.
+
+2007-11-11 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Changed the default value for showing the opt-out
+    check box from true to false.
+
+2007-11-02 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Commented out the SMTP Auth. module specific code.
+
+2007-10-31 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Removed denugging line, thanks to this notice:
+    http://drupal.org/node/188308
+
+2007-10-20 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Removed a forgotten extrapolation where the Token
+    module was being used.
+
+2007-09-12 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Fixed the fact that multiple categories were not
+    being mailed to (which is what delayed the previous changes from getting
+    into CVS).
+    Fixed two places (in the area where there is a limit on the number of
+    recipients) where I was not checking for a valid header before sending the
+    e-mail. Thanks to sharplesa for alerting me to this oversight:
+    http://drupal.org/node/173987
+    Removed translation functions in areas that didn't work, as reported by
+    skizzo in this comment: http://drupal.org/node/145940#comment-284484
+  * TODO.txt: Added for notes and reminders on things to do.
+
+2007-09-01 Jason Flatt drupal@oadaeh.net
+  * CHANGELOG.txt: Added.
+  * mass_contact.module: The community has spoken: reverting all constants to
+    upper case.
+    Removed an uncessary validation check in mass_contact_admin_edit_validate.
+    Added periods at the end of a few sentences.
+    Moved code to inform user about node creation inside the check to do it in
+    the first place.
+    Changed the way creating categories works so that multiple categories can
+    be selected by default, and the mail page will respect those choices.
+    Added the two feature requests listed here: http://drupal.org/node/170837,
+    namely, hiding the categories checkbox, if there is only one category, and
+    it is set as selected, and showing descriptive text instead of the BCC
+    checkbox, if users are not allowed to change the setting.
+    Rearranged the admin settings and the mail page, so that they flowed more
+    like a standard e-mail sending form.
+    Tweaked a few things here and there (text, punctuation, etc.).
+    Added more commenting to the code. There's still more to do.
+    Probably some other stuff I forgot about.  :^)  (This was supposed to be a
+    quick change to a couple of things that ended up being a much bigger
+    update that took a lot longer.)
