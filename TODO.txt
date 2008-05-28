@@ -2,6 +2,9 @@ $Id$
 
 (In no particular order.)
 
+Continue upgrade.
+  Left off at 27. New db_column_exists() method.
+
 Misc. stuff:
   Force Bcc field to avoid unwanted address disclosure: http://drupal.org/node/145940:
 

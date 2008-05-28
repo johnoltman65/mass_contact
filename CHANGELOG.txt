@@ -3,6 +3,7 @@ $Id$
 2008-05-23 Jason Flatt drupal@oadaeh.net
   * TODO.txt: Removed completed items.
   * mass_contact.module: Changed four watchdog messages to be translatable.
+  * All: Started upgrade to Drupal 6.x.
 
 2008-04-18 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Changed variable name from mass_contact_HTML_d to

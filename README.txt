@@ -29,3 +29,9 @@ to send mass e-mails.
 
 The Mass Contact module also adds a menu item (disabled by default) to the
 navigation block.
+
+A note to Mime Mail users:
+The 5.x-2.x now has code that checks for Mime Mail being installed, enabled &
+active. If you are using Mime Mail with Mass Contact, you will need to patch
+Mime Mail with the patch attached to this issue:
+http://drupal.org/node/223176

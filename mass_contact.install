@@ -2,58 +2,57 @@
 // $Id$
 
 /**
+ * Implementation of hook_schema().
+ */
+function mass_contact_schema() {
+  $schema['mass_contact'] = array(
+    'description' => t('The base table for nodes.'),
+    'fields' => array(
+      'cid' => array(
+        'description' => t('.'),
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'category' => array(
+        'description' => t('.'),
+        'type' => 'varchar',
+        'length' => 255
+        'not null' => TRUE,
+        'default' => ''),
+      'recipients' => array(
+        'description' => t('.'),
+        'type' => 'longtext',
+        'not null' => TRUE),
+      'reply' => array(
+        'description' => t('.'),
+        'type' => 'longtext',
+        'not null' => TRUE),
+      'weight' => array(
+        'description' => t('.'),
+        'type' => 'tinyint',
+        'unsigned' => FALSE,
+        'not null' => TRUE,
+        'default' => '0'),
+      'selected' => array(
+        'description' => t('.'),
+        'type' => 'tinyint',
+        'unsigned' => FALSE,
+        'not null' => TRUE,
+        'default' => '0'),
+    ),
+    'primary key' => array('cid'),
+    'unique keys' => array(
+      'category' => array('category')
+    ),
+  );
+}
+
+
+/**
  * Implementation of hook_install().
  */
 function mass_contact_install() {
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      db_query("CREATE TABLE {mass_contact} (
-        cid int unsigned NOT NULL auto_increment,
-        category varchar(255) NOT NULL default '',
-        recipients longtext NOT NULL,
-        reply longtext NOT NULL,
-        weight tinyint NOT NULL default '0',
-        selected tinyint NOT NULL default '0',
-        PRIMARY KEY (cid),
-        UNIQUE KEY category (category)
-        ) /*!40100 DEFAULT CHARACTER SET UTF8 */ ");
-
-      // add node type
-      $info->type           = "mass_contact";
-      $info->name           = "Mass Contact Message";
-      $info->module         = "node";
-      $info->has_title      = 1;
-      $info->title_label    = "Subject";
-      $info->has_body       = 1;
-      $info->body_label     = "Message Body";
-      $info->description    = "carbon copy of mass e-mails sent from this site";
-      $info->help           = "";
-      $info->min_word_count = 0;
-      $info->custom         = 0;
-      $info->modified       = 0;
-      $info->locked         = 1;
-      $info->old_type       = 'mass_contact';
-
-      db_query("INSERT INTO {node_type} (type, name, module, has_title, title_label, has_body, body_label, description, help, min_word_count, custom, modified, locked, orig_type) VALUES ('%s', '%s', '%s', %d, '%s', %d, '%s', '%s', '%s', %d, %d, %d, %d, '%s')", $info->type, $info->name, $info->module, $info->has_title, $info->title_label, $info->has_body, $info->body_label, $info->description, $info->help, $info->min_word_count, $info->custom, $info->modified, $info->locked, $info->orig_type);
-
-      module_invoke_all('node_type', 'insert', $info);
-      break;
-
-    case 'pgsql':
-      db_query("CREATE TABLE {mass_contact} (
-        cid serial CHECK (cid >= 0),
-        category varchar(255) NOT NULL default '',
-        recipients text NOT NULL default '',
-        reply text NOT NULL default '',
-        weight smallint NOT NULL default '0',
-        selected smallint NOT NULL default '0',
-        PRIMARY KEY (cid),
-        UNIQUE (category)
-        )");
-      break;
-  }
-
+  drupal_install_schema('mass_contact');
   drupal_set_message(t('All tables and entries required by the Mass Contact module have been created.'));
 }
 
@@ -62,6 +61,21 @@ function mass_contact_install() {
  * Implementation of hook_uninstall().
  */
 function mass_contact_uninstall() {
-  db_query('DROP TABLE {mass_contact}');
+  drupal_uninstall_schema('mass_contact');
+
 //  db_query('DELETE FROM node_type WHERE type = "mass_contact"');
+
+  variable_del('mass_contact_bcc_d');
+  variable_del('mass_contact_bcc_d_override');
+  variable_del('mass_contact_category_override');
+  variable_del('mass_contact_default_sender_email');
+  variable_del('mass_contact_default_sender_name');
+  variable_del('mass_contact_form_information');
+  variable_del('mass_contact_html_d');
+  variable_del('mass_contact_hourly_threshold');
+  variable_del('mass_contact_message_prefix');
+  variable_del('mass_contact_message_suffix');
+  variable_del('mass_contact_nodecc_d');
+  variable_del('mass_contact_optout_d');
+  variable_del('mass_contact_recipient_limit');
 }

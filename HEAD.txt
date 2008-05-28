@@ -1,0 +1,16 @@
+This is just a warning to anyone interested in trying this version of this
+module out.
+
+This is pre-alpha code. If it works for you, it's a mistake. If it deletes
+all your data and all your backups and all your boss' data and backups, don't
+come crying to me.
+
+Failure to read this file is not an excuse.
+
+At some point in the future, this will become a stable(-ish) release,
+compatible with Drupal 6.
+
+If you want to try it out anyway, you're welcome to do so. If you find
+anything that needs fixing, let me know. I may or may not already know about
+it, and I may or may not have gotten to that part of the code, but the help
+is appreciated.
