@@ -9,8 +9,8 @@
 /**
  * Implementation of hook_help().
  */
-function mass_contact_help($section) {
-  switch ($section) {
+function mass_contact_help($path, $arg) {
+  switch ($path) {
     case 'admin/help#mass_contact':
       $output .= '<p><b>'. t('Related tasks:') .'</b><br />'. t('1. <a href="@add-category-page">Add a category</a>', array('@add-category-page' => url('admin/build/mass_contact/add'))) .'<br />'. t('2. <a href="@view-categories-page">View categories</a>', array('@view-categories-page' => url('admin/build/mass_contact'))) .'<br />'. t('3. <a href="@configure-module-page">Configure the module</a>', array('@configure-module-page' => url('admin/build/mass_contact/settings'))) .'<br />'. t('4. <a href="@set-permissions-page">Set Permissions</a>', array('@set-permissions-page' => url('admin/user/access', array('fragment' => 'module-mass_contact')))) .'<br />'. t('5. <a href="@send-mass-email-page">Send mass e-mail</a>', array('@send-mass-email-page' => url('mass_contact'))) .'</p>';
       $output .= '<p>'. t('The Mass Contact module is simply a modified version of the core contact module. It works opposite the latter, in that it allows site moderators (or anyone with permission), to <a href="mass_contact">send mass e-mail</a> to a set role or group of roles or even to all registered users.') .'</p>';
@@ -117,12 +117,12 @@ function mass_contact_menu_alter(&$items) {
  * Categories/list tab.
  */
 function mass_contact_admin_categories() {
-  $result = db_query('SELECT cid, category, recipients, selected FROM {mass_contact}');
+  $result = db_query("SELECT cid, category, recipients, selected FROM {mass_contact}");
   $rows = array();
   while ($category = db_fetch_object($result)) {
     $rolenamesa = array();
     foreach (explode(',', $category->recipients) as $rid) {
-      $namerole = db_fetch_object(db_query('SELECT name FROM {role} WHERE rid = %d', $rid));
+      $namerole = db_fetch_object(db_query("SELECT name FROM {role} WHERE rid = %d", $rid));
       $rolenamesa[] = ($namerole->name);
     }
     $rolenames = implode(', ', $rolenamesa);
@@ -151,7 +151,7 @@ function mass_contact_admin_edit($cid = NULL) {
   );
 
   // get all roles except anonymous
-  $allroles = db_query('SELECT rid, name FROM {role} WHERE rid > 1');
+  $allroles = db_query("SELECT rid, name FROM {role} WHERE rid > %d", 1);
   while ($roleobj = db_fetch_object($allroles)) {
     $onerid = $roleobj->rid;
     $onename = $roleobj->name;
@@ -189,7 +189,7 @@ function mass_contact_admin_edit($cid = NULL) {
 
   $form['submit'] = array(
     '#type'  => 'submit',
-    '#value' => t('Submit'),
+    '#value' => t('Save'),
   );
 
   return $form;
@@ -216,7 +216,7 @@ function mass_contact_admin_edit_validate($form_id, $form_values) {
 function mass_contact_admin_edit_submit($form_id, $form_values) {
   if ($form_values['reset_selected']) {
     // Unselect all other contact categories.
-    db_query('UPDATE {mass_contact} SET selected = 0');
+    db_query("UPDATE {mass_contact} SET selected = %d", 0);
   }
 
   // Remove 0s for unselected roles, convert to csv.
@@ -495,7 +495,7 @@ function mass_contact_site_page() {
 function mass_contact_mail_page() {
   global $user;
 
-  $result = db_query('SELECT cid, category, selected FROM {mass_contact} ORDER BY weight, category');
+  $result = db_query("SELECT cid, category, selected FROM {mass_contact} ORDER BY weight, category");
   while ($category = db_fetch_object($result)) {
     $categories[$category->cid] = $category->category;
     if ($category->selected) {
@@ -838,7 +838,7 @@ function mass_contact_mail_page_submit($form_id, $form_values) {
     }
   }
 
-  $result = db_query("SELECT * FROM {mass_contact} WHERE cid IN (%s)", $cids);
+  $result = db_query("SELECT * FROM {mass_contact} WHERE cid IN(". db_placeholders($cids) .")", $cids);
   while ($contact = db_fetch_object($result)) {
 drupal_set_message('$contact->category = "'. $contact->category .'"');
     // Format the subject line.
@@ -857,7 +857,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
     if (variable_get('mass_contact_optout_d', 0) == 1) {
       $allow_oo = $form_values['optout'];
       if ($allow_oo == 1) {
-        $ooresult = db_query('SELECT uid FROM {users} WHERE status <> 0');
+        $ooresult = db_query("SELECT uid FROM {users} WHERE status <> %d", 0);
         while ($oouid = db_fetch_object($ooresult)) {
           $account = user_load(array('uid' => $oouid->uid, 'status' => 1));
           if ($account->mass_contact_optout) {
@@ -873,7 +873,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
     $roles = explode(',', $contact->recipients);
     foreach ($roles as $r) {
       if ($r == 2) { // all users
-        $recipients = db_query("SELECT name, mail, uid FROM {users} WHERE status <> 0 AND uid > 0");
+        $recipients = db_query("SELECT name, mail, uid FROM {users} WHERE status <> %d AND uid > %d", 0, 0);
         while ($obj = db_fetch_object($recipients)) {
           $rname = $obj->name;
           $rmail = $obj->mail;
@@ -886,7 +886,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
       }
       else {
         // Get from users_roles, then role -> user.
-        $uids = db_query("SELECT ur.uid FROM {users_roles} ur LEFT JOIN {users} u ON ur.uid = u.uid WHERE ur.rid = %d AND u.status <> 0", $r);
+        $uids = db_query("SELECT ur.uid FROM {users_roles} ur LEFT JOIN {users} u ON ur.uid = u.uid WHERE ur.rid = %d AND u.status <> %d", $r, 0);
         while ($obj = db_fetch_object($uids))  {
           $ruid = $obj->uid;
           $userobj = db_fetch_object(db_query("SELECT name, mail FROM {users} WHERE uid = %d", $ruid));
