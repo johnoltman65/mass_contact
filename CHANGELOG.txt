@@ -1,5 +1,13 @@
 $Id$
 
+2008-06-04 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install, mass_contact.module: Continued on upgrade to Drupal
+    6.x.
+    Code cleanup, based on PHP's E_ALL.
+
+2008-05-28 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, TODO.txt: Continued on upgrade to Drupal 6.x.
+
 2008-05-23 Jason Flatt drupal@oadaeh.net
   * TODO.txt: Removed completed items.
   * mass_contact.module: Changed four watchdog messages to be translatable.

@@ -9,33 +9,37 @@ function mass_contact_schema() {
     'description' => t('The base table for nodes.'),
     'fields' => array(
       'cid' => array(
-        'description' => t('.'),
+        'description' => t('The primary id field for the category table.'),
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE),
       'category' => array(
-        'description' => t('.'),
+        'description' => t('The name of the category.'),
         'type' => 'varchar',
-        'length' => 255
+        'length' => 255,
         'not null' => TRUE,
         'default' => ''),
       'recipients' => array(
-        'description' => t('.'),
-        'type' => 'longtext',
+        'description' => t('A list of the users to receive the message.'),
+        'type' => 'text',
+        'size' => 'big',
         'not null' => TRUE),
       'reply' => array(
         'description' => t('.'),
-        'type' => 'longtext',
+        'type' => 'text',
+        'size' => 'big',
         'not null' => TRUE),
       'weight' => array(
         'description' => t('.'),
-        'type' => 'tinyint',
+        'type' => 'int',
+        'size' => 'tiny',
         'unsigned' => FALSE,
         'not null' => TRUE,
         'default' => '0'),
       'selected' => array(
         'description' => t('.'),
-        'type' => 'tinyint',
+        'type' => 'int',
+        'size' => 'tiny',
         'unsigned' => FALSE,
         'not null' => TRUE,
         'default' => '0'),
@@ -45,6 +49,8 @@ function mass_contact_schema() {
       'category' => array('category')
     ),
   );
+
+  return $schema;
 }
 
 

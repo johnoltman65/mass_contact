@@ -10,6 +10,7 @@
  * Implementation of hook_help().
  */
 function mass_contact_help($path, $arg) {
+  $output = '';
   switch ($path) {
     case 'admin/help#mass_contact':
       $output .= '<p><b>'. t('Related tasks:') .'</b><br />'. t('1. <a href="@add-category-page">Add a category</a>', array('@add-category-page' => url('admin/build/mass_contact/add'))) .'<br />'. t('2. <a href="@view-categories-page">View categories</a>', array('@view-categories-page' => url('admin/build/mass_contact'))) .'<br />'. t('3. <a href="@configure-module-page">Configure the module</a>', array('@configure-module-page' => url('admin/build/mass_contact/settings'))) .'<br />'. t('4. <a href="@set-permissions-page">Set Permissions</a>', array('@set-permissions-page' => url('admin/user/access', array('fragment' => 'module-mass_contact')))) .'<br />'. t('5. <a href="@send-mass-email-page">Send mass e-mail</a>', array('@send-mass-email-page' => url('mass_contact'))) .'</p>';
@@ -95,21 +96,13 @@ function mass_contact_menu() {
     'access arguments' => array('access mass contact form'),
     'type'             => MENU_SUGGESTED_ITEM,
   );
-//  $items['node/add/mass_contact'] = array(
-//    'title'            => 'Mass Contact',
-//    'access arguments' => array('create mass_contact content'),
-//    'type'             => MENU_SUGGESTED_ITEM,
-//  );
+  $items['node/add/mass_contact'] = array(
+    'title'            => 'Mass Contact',
+    'access arguments' => array('create mass_contact content'),
+    'type'             => MENU_SUGGESTED_ITEM,
+  );
 
   return $items;
-}
-
-
-/**
- * Implementation of hook_menu_alter().
- */
-function mass_contact_menu_alter(&$items) {
-  $items['node/add/mass_contact']['access arguments'] = array('create mass_contact content');
 }
 
 
@@ -136,7 +129,9 @@ function mass_contact_admin_categories() {
 /**
  * Category edit page.
  */
-function mass_contact_admin_edit($cid = NULL) {
+function mass_contact_admin_edit($form_state, $cid = NULL) {
+  $edit = array('category' => '', 'recipients' => '', 'selected' => '', 'cid' => '');
+
   if (arg(3) == "edit" && $cid > 0) {
     $edit = db_fetch_array(db_query("SELECT * FROM {mass_contact} WHERE cid = %d", $cid));
   }
@@ -199,8 +194,8 @@ function mass_contact_admin_edit($cid = NULL) {
 /**
  * Validate the mass_contact category edit page form submission.
  */
-function mass_contact_admin_edit_validate($form_id, $form_values) {
-  $recipients = $form_values['recipients'];
+function mass_contact_admin_edit_validate($form, &$form_state) {
+  $recipients = $form_state['values']['recipients'];
   foreach ($recipients as $checkr) {
     if ($checkr > 1) {
       return;
@@ -213,14 +208,14 @@ function mass_contact_admin_edit_validate($form_id, $form_values) {
 /**
  * Process the mass_contact category edit page form submission.
  */
-function mass_contact_admin_edit_submit($form_id, $form_values) {
-  if ($form_values['reset_selected']) {
+function mass_contact_admin_edit_submit($form, &$form_state) {
+  if ($form_state['values']['reset_selected']) {
     // Unselect all other contact categories.
     db_query("UPDATE {mass_contact} SET selected = %d", 0);
   }
 
   // Remove 0s for unselected roles, convert to csv.
-  $recipients = $form_values['recipients'];
+  $recipients = $form_state['values']['recipients'];
 
   // If all authenticated users are already added, remove all roles.
   if ($recipients[2] == 2)  {
@@ -237,27 +232,34 @@ function mass_contact_admin_edit_submit($form_id, $form_values) {
       $newformrec[] = $recip;
     }
   }
-  $form_values['recipients'] = implode(',', $newformrec);
+  $form_state['values']['recipients'] = implode(',', $newformrec);
+
+  if (!isset($form_state['values']['reply'])) {
+    $form_state['values']['reply'] = '';
+  }
+  if (!isset($form_state['values']['weight'])) {
+    $form_state['values']['weight'] = 0;
+  }
 
   if (arg(3) == 'add') {
-    db_query("INSERT INTO {mass_contact} (category, recipients, reply, weight, selected) VALUES ('%s', '%s', '%s', %d, %d)", $form_values['category'], $form_values['recipients'], $form_values['reply'], $form_values['weight'], $form_values['selected']);
-    drupal_set_message(t('Category %category has been added.', array('%category' => $form_values['category'])));
-    watchdog('mass_contact', 'Mass Contact form: category %category added.', array('%category' => $form_values['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/build/mass_contact'));
+    db_query("INSERT INTO {mass_contact} (category, recipients, reply, weight, selected) VALUES ('%s', '%s', '%s', %d, %d)", $form_state['values']['category'], $form_state['values']['recipients'], $form_state['values']['reply'], $form_state['values']['weight'], $form_state['values']['selected']);
+    drupal_set_message(t('Category %category has been added.', array('%category' => $form_state['values']['category'])));
+    watchdog('mass_contact', 'Mass Contact form: category %category added.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/build/mass_contact'));
   }
   else {
-    db_query("UPDATE {mass_contact} SET category = '%s', recipients = '%s', reply = '%s', weight = %d, selected = %d WHERE cid = %d", $form_values['category'], $form_values['recipients'], $form_values['reply'], $form_values['weight'], $form_values['selected'], $form_values['cid']);
-    drupal_set_message(t('Category %category has been updated.', array('%category' => $form_values['category'])));
-    watchdog('mass_contact', 'Mass Contact form: category %category updated.', array('%category' => $form_values['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/build/mass_contact'));
+    db_query("UPDATE {mass_contact} SET category = '%s', recipients = '%s', reply = '%s', weight = %d, selected = %d WHERE cid = %d", $form_state['values']['category'], $form_state['values']['recipients'], $form_state['values']['reply'], $form_state['values']['weight'], $form_state['values']['selected'], $form_state['values']['cid']);
+    drupal_set_message(t('Category %category has been updated.', array('%category' => $form_state['values']['category'])));
+    watchdog('mass_contact', 'Mass Contact form: category %category updated.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/build/mass_contact'));
   }
 
-  return 'admin/build/mass_contact';
+  $form_state['redirect'] = 'admin/build/mass_contact';
 }
 
 
 /**
  * Category delete page.
  */
-function mass_contact_admin_delete($cid = NULL) {
+function mass_contact_admin_delete($form_state, $cid = NULL) {
   if ($info = db_fetch_object(db_query("SELECT category FROM {mass_contact} WHERE cid = %d", $cid))) {
     $form['category'] = array(
       '#type'  => 'value',
@@ -276,18 +278,18 @@ function mass_contact_admin_delete($cid = NULL) {
 /**
  * Process category delete form submission.
  */
-function mass_contact_admin_delete_submit($form_id, $form_values) {
+function mass_contact_admin_delete_submit($form, &$form_state) {
   db_query("DELETE FROM {mass_contact} WHERE cid = %d", arg(4));
-  drupal_set_message(t('Category %category has been deleted.', array('%category' => $form_values['category'])));
-  watchdog('mass_contact', 'Mass Contact form: category %category deleted.', array('%category' => $form_values['category']));
-  return 'admin/build/mass_contact';
+  drupal_set_message(t('Category %category has been deleted.', array('%category' => $form_state['values']['category'])));
+  watchdog('mass_contact', 'Mass Contact form: category %category deleted.', array('%category' => $form_state['values']['category']));
+  $form_state['redirect'] = 'admin/build/mass_contact';
 }
 
 
 /**
  * Administration settings form.
  */
-function mass_contact_admin_settings() {
+function mass_contact_admin_settings($form_state) {
   $form['mass_contact_form_information'] = array(
     '#type'          => 'textarea',
     '#title'         => t('Additional information for Mass Contact form'),
@@ -428,15 +430,15 @@ function mass_contact_admin_settings() {
 /**
  * Validation for the administration settings form.
  */
-function mass_contact_admin_settings_validate($form_id, $form_values) {
-  if (!empty($form_values['mass_contact_default_sender_name'])) {
-    if (empty($form_values['mass_contact_default_sender_email'])) {
+function mass_contact_admin_settings_validate($form, &$form_state) {
+  if (!empty($form_state['values']['mass_contact_default_sender_name'])) {
+    if (empty($form_state['values']['mass_contact_default_sender_email'])) {
       form_set_error('mass_contact_default_sender_email', t('If you are going to specify default user settings, you must specify both a user name and a user e-mail address.'));
     }
   }
 
-  if (!empty($form_values['mass_contact_default_sender_email'])) {
-    if (empty($form_values['mass_contact_default_sender_name'])) {
+  if (!empty($form_state['values']['mass_contact_default_sender_email'])) {
+    if (empty($form_state['values']['mass_contact_default_sender_name'])) {
       form_set_error('mass_contact_default_sender_name', t('If you are going to specify default user settings, you must specify both a user name and a user e-mail address.'));
     }
   }
@@ -492,8 +494,11 @@ function mass_contact_site_page() {
 /**
  *
  */
-function mass_contact_mail_page() {
+function mass_contact_mail_page($form_state) {
   global $user;
+//  $categories = array();
+//  $default_category = array();
+//  $default_category_name = '';
 
   $result = db_query("SELECT cid, category, selected FROM {mass_contact} ORDER BY weight, category");
   while ($category = db_fetch_object($result)) {
@@ -699,11 +704,11 @@ function mass_contact_mail_page() {
 /**
  * Validate the site-wide contact page form submission.
  */
-function mass_contact_mail_page_validate($form_id, $form_values) {
-  if (!$form_values['cid']) {
+function mass_contact_mail_page_validate($form, &$form_state) {
+  if (!$form_state['values']['cid']) {
     form_set_error('category', t('You must select a valid category.'));
   }
-  if (!valid_email_address($form_values['mail'])) {
+  if (!valid_email_address($form_state['values']['mail'])) {
     form_set_error('mass_contact', t('You must enter a valid e-mail address.'));
   }
 }
@@ -712,15 +717,15 @@ function mass_contact_mail_page_validate($form_id, $form_values) {
 /**
  * Process the mail page form submission.
  */
-function mass_contact_mail_page_submit($form_id, $form_values) {
+function mass_contact_mail_page_submit($form, &$form_state) {
   global $user;
 
-  $bcc                = $form_values['bcc'];
-  $nodecc             = $form_values['nodecc'];
+  $bcc                = $form_state['values']['bcc'];
+  $nodecc             = $form_state['values']['nodecc'];
   $send_error         = 0;
   // E-mail address of the sender: as the form field is a text field,
   // all instances of \r and \n have been automatically stripped from it.
-  $from               = $form_values['mail'];
+  $from               = $form_state['values']['mail'];
   $uid                = '';
   $ctype              = '';
   $headers            = array();
@@ -732,7 +737,7 @@ function mass_contact_mail_page_submit($form_id, $form_values) {
       $uid = md5(uniqid(time()));
       $headers['Content-Type'] = 'multipart/mixed; boundary="'. $uid .'"';
 
-      if ($form_values['html'] == 1) {
+      if ($form_state['values']['html'] == 1) {
         $ctype = 'Content-Type: text/html; charset=UTF-8; format=flowed';
       }
       else {
@@ -742,7 +747,7 @@ function mass_contact_mail_page_submit($form_id, $form_values) {
       $message[] = "\n--". $uid ."\n". $ctype ."\n\n";
     }
   }
-  elseif ($form_values['html'] == 1) {
+  elseif ($form_state['values']['html'] == 1) {
     $headers['Content-Type'] = 'text/html; charset=UTF-8; format=flowed';
   }
 
@@ -758,24 +763,23 @@ function mass_contact_mail_page_submit($form_id, $form_values) {
     $node_message[] = variable_get('mass_contact_message_prefix', '');
   }
 
-  if ($form_values['html'] == 1) {
+  if ($form_state['values']['html'] == 1) {
     // Add a spacer for HTML formatted messages.
     $message[]      = "<p>";
     $node_message[] = "<p>";
 
     // Add in the actual message.
-    $message[]      = check_markup(wordwrap($form_values['message']));
-    $node_message[] = check_markup(wordwrap($form_values['message']));
+    $message[]      = check_markup(wordwrap($form_state['values']['message']));
+    $node_message[] = check_markup(wordwrap($form_state['values']['message']));
 
     // Add a spacer for HTML formatted messages.
     $message[]      = "<p>";
     $node_message[] = "<p>";
   }
-  else
-  {
+  else {
     // Add in the actual message.
-    $message[]      = check_plain(wordwrap($form_values['message']));
-    $node_message[] = check_plain(wordwrap($form_values['message']));
+    $message[]      = check_plain(wordwrap($form_state['values']['message']));
+    $node_message[] = check_plain(wordwrap($form_state['values']['message']));
   }
 
   // End with the message suffix.
@@ -831,22 +835,21 @@ function mass_contact_mail_page_submit($form_id, $form_values) {
 
 
   // Load the category information.
-  foreach ($form_values['cid'] as $cid) {
+  foreach ($form_state['values']['cid'] as $cid) {
     $cids .= $cid;
-    if (next($form_values['cid'])) {
+    if (next($form_state['values']['cid'])) {
       $cids .= ", ";
     }
   }
 
   $result = db_query("SELECT * FROM {mass_contact} WHERE cid IN(". db_placeholders($cids) .")", $cids);
   while ($contact = db_fetch_object($result)) {
-drupal_set_message('$contact->category = "'. $contact->category .'"');
     // Format the subject line.
     if (variable_get('mass_contact_category_override', 1)) {
-      $subject = t('[!category] !subject', array('!category' => $contact->category, '!subject' => $form_values['subject']));
+      $subject = t('[!category] !subject', array('!category' => $contact->category, '!subject' => $form_state['values']['subject']));
     }
     else {
-      $subject = $form_values['subject'];
+      $subject = $form_state['values']['subject'];
     }
 
     // Prepare the body.
@@ -855,7 +858,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
 
     // Check for opt-out unless overridden by admin.
     if (variable_get('mass_contact_optout_d', 0) == 1) {
-      $allow_oo = $form_values['optout'];
+      $allow_oo = $form_state['values']['optout'];
       if ($allow_oo == 1) {
         $ooresult = db_query("SELECT uid FROM {users} WHERE status <> %d", 0);
         while ($oouid = db_fetch_object($ooresult)) {
@@ -934,7 +937,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
 
           // Send the e-mail to the recipients:
           if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
-            if ($form_values['html'] == 1) {
+            if ($form_state['values']['html'] == 1) {
               $success = mimemail($from, $to, $subject, $body, NULL, $headers, NULL, $message_attachment);
             }
             else {
@@ -973,7 +976,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
 
         // Send the e-mail to the recipients:
         if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
-          if ($form_values['html'] == 1) {
+          if ($form_state['values']['html'] == 1) {
             $success = mimemail($from, $to, $subject, $body, NULL, $headers, NULL, $message_attachment);
           }
           else {
@@ -1013,7 +1016,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
 
       // Send the e-mail to the recipients.
       if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
-        if ($form_values['html'] == 1) {
+        if ($form_state['values']['html'] == 1) {
           $success = mimemail($from, $to, $subject, $body, NULL, $headers, NULL, $message_attachment);
         }
         else {
@@ -1090,7 +1093,7 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
 
       // Log the operation.
       flood_register_event('mass_contact');
-      watchdog('mass_contact', '%name-from sent an e-mail to the %category group.', array('%name-from' => $form_values['name'] ." <$from>", '%category' => $contact->category));
+      watchdog('mass_contact', '%name-from sent an e-mail to the %category group.', array('%name-from' => $form_state['values']['name'] ." <$from>", '%category' => $contact->category));
 
       // Inform the user.
       drupal_set_message(t('Message sent successfully to !total users: -e-mails', array('!total' => $total_recip, '-e-mails' => $recipientout)));
@@ -1102,7 +1105,8 @@ drupal_set_message('$contact->category = "'. $contact->category .'"');
 
   // Jump to home page rather than back to mail page to avoid
   // contradictory messages if flood control has been activated.
-  return ('');
+//  return ('');
+  $form_state['redirect'] = '';
 }
 
 
