@@ -496,14 +496,14 @@ function mass_contact_site_page() {
  */
 function mass_contact_mail_page($form_state) {
   global $user;
-//  $categories = array();
-//  $default_category = array();
-//  $default_category_name = '';
+  $categories = array();
+  $default_category = array();
+  $default_category_name = '';
 
   $result = db_query("SELECT cid, category, selected FROM {mass_contact} ORDER BY weight, category");
   while ($category = db_fetch_object($result)) {
     $categories[$category->cid] = $category->category;
-    if ($category->selected) {
+    if ($category->selected || count($categories) == 1) {
       $default_category[] = $category->cid;
       $default_category_name = $category->category;
     }
@@ -558,11 +558,6 @@ function mass_contact_mail_page($form_state) {
       );
     }
 
-    // If there is more than one category available and no default category has been selected,
-    // prepend a default placeholder value.
-//    if (!isset($default_category)) {
-//      $categories = array(t('--')) + $categories;
-//    }
     if ((count($categories) > 1) || !isset($default_category)) {
       // Display a choice when one is needed.
       $form['cid'] = array(
@@ -578,7 +573,6 @@ function mass_contact_mail_page($form_state) {
       // Otherwise, just use the default category.
       $form['cid'] = array(
         '#type'  => 'value',
-//        '#value' => array($default_category), // This must be an array, otherwise the code breaks upon submit.
         '#value' => $default_category, // This must be an array, otherwise the code breaks upon submit.
       );
       $form['cid-info'] = array(
@@ -833,8 +827,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
  */
 
-
   // Load the category information.
+  $cids = '';
   foreach ($form_state['values']['cid'] as $cid) {
     $cids .= $cid;
     if (next($form_state['values']['cid'])) {
@@ -855,6 +849,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     // Prepare the body.
     $body      = implode("\n\n", $message);
     $node_body = implode("\n\n", $node_message);
+    $uidooa    = array();
 
     // Check for opt-out unless overridden by admin.
     if (variable_get('mass_contact_optout_d', 0) == 1) {
@@ -904,10 +899,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
     // Check for empty recipient list.
     if (count($recipientouta) == 0) {
-      drupal_set_message(t('There are no users in this category. Mail not sent.'));
+      drupal_set_message(t('There are no users in this category. The message was not sent.'));
       return ('');
     }
 
+drupal_set_message('One');
     $recipientout = array();
     // Check for recipient limit and break up recipient list, if necessary.
     $recip_limit = variable_get('mass_contact_recipient_limit', 0);

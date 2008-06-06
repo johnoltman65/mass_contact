@@ -1,5 +1,8 @@
 $Id$
 
+2008-06-05 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: More code cleanup.
+
 2008-06-04 Jason Flatt drupal@oadaeh.net
   * mass_contact.install, mass_contact.module: Continued on upgrade to Drupal
     6.x.
