@@ -1,5 +1,17 @@
 $Id$
 
+2008-06-11 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: More code updating to Drupal 6.x.
+  * mass_contact.install: Added @file comment.
+
+2008-06-10 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Documented the functions.
+    Created separate function (_mass_contact_create_node_type()) for the
+    creation of the node type.
+    Made mass_contact_save_node() a private function.
+    Removed the return value from mass_contact_save_node() since it always
+    returned TRUE and never anything else.
+
 2008-06-05 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: More code cleanup.
 
