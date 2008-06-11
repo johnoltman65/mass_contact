@@ -2,6 +2,7 @@ $Id$
 
 2008-06-11 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: More code updating to Drupal 6.x.
+    Fixed a bug where an extra category was selected by default.
   * mass_contact.install: Added @file comment.
 
 2008-06-10 Jason Flatt drupal@oadaeh.net

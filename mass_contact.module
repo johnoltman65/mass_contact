@@ -707,10 +707,15 @@ function mass_contact_mail_page($form_state) {
   $result = db_query("SELECT cid, category, selected FROM {mass_contact} ORDER BY weight, category");
   while ($category = db_fetch_object($result)) {
     $categories[$category->cid] = $category->category;
-    if ($category->selected || count($categories) == 1) {
+    if ($category->selected) {
       $default_category[] = $category->cid;
       $default_category_name = $category->category;
     }
+  }
+
+  if (count($categories) == 1) {
+    $default_category[] = $category->cid;
+    $default_category_name = $category->category;
   }
 
   if (count($categories) > 0) {
