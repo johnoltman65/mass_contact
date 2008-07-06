@@ -1,5 +1,15 @@
 $Id$
 
+2008-07-06 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Changed how the message headers get updated.
+    Slightly modified how the body is created for sending through Mime Mail
+    (even though there is currently no Drupal 6.x compatible release of it).
+
+2008-07-04 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Corrected error checking for when sending.
+    Changed the node body variable to the correct one for saving attachments.
+    Changed how the body array is created and edited.
+
 2008-06-11 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: More code updating to Drupal 6.x.
     Fixed a bug where an extra category was selected by default.
