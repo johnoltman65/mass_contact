@@ -1,5 +1,13 @@
 $Id$
 
+2008-07-18 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Changed the way the "Related tasks" texts are
+    generated to hopefully help with translations and themeing, per meible on
+    http://drupal.org/node/243292.
+
+2008-07-08 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Slight change to the wording of an error message.
+
 2008-07-06 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Changed how the message headers get updated.
     Slightly modified how the body is created for sending through Mime Mail

@@ -30,7 +30,12 @@ function mass_contact_help($path, $arg) {
   $output = '';
   switch ($path) {
     case 'admin/help#mass_contact':
-      $output .= '<p><b>'. t('Related tasks:') .'</b><br />'. t('1. <a href="@add-category-page">Add a category</a>', array('@add-category-page' => url('admin/build/mass_contact/add'))) .'<br />'. t('2. <a href="@view-categories-page">View categories</a>', array('@view-categories-page' => url('admin/build/mass_contact'))) .'<br />'. t('3. <a href="@configure-module-page">Configure the module</a>', array('@configure-module-page' => url('admin/build/mass_contact/settings'))) .'<br />'. t('4. <a href="@set-permissions-page">Set Permissions</a>', array('@set-permissions-page' => url('admin/user/permissions', array('fragment' => 'module-mass_contact')))) .'<br />'. t('5. <a href="@send-mass-email-page">Send mass e-mail</a>', array('@send-mass-email-page' => url('mass_contact'))) .'</p>';
+      $output .= '<p><b>'. t('Related tasks:') .'</b><br /><ol>'.
+        '<li>' . l('Set Permissions', 'admin/user/permissions', array('fragment' => 'module-mass_contact')) .'</li>'.
+        '<li>' . l('List current categories', 'admin/build/mass_contact') .'</li>'.
+        '<li>' . l('Add new category', 'admin/build/mass_contact/add') .'</li>'.
+        '<li>' . l('Configure the module', 'admin/build/mass_contact/settings') .'</li>'.
+        '<li>' . l('Send mass e-mail', 'mass_contact') .'</li></ol>';
       $output .= '<p>'. t('The Mass Contact module is simply a modified version of the core contact module. It works opposite the latter, in that it allows site moderators (or anyone with permission), to <a href="mass_contact">send mass e-mail</a> to a set role or group of roles or even to all registered users.') .'</p>';
       $output .= '<p>'. t("The sender's own address may be placed in the 'To:' field and all recipients placed in the 'BCC:' field, or the recipients simply placed in the 'To:' field. Note that the latter option leaves all recipients open to abuse due to their e-mail addresses being visible to all other recipients.") .'</p>';
       $output .= '<p>'. t("The e-mail may be sent as HTML or plain text, and may include a single binary file attachment (if permitted by admin).") .'</p>';
@@ -900,7 +905,12 @@ function mass_contact_mail_page($form_state) {
       '#prefix'      => '<p>',
     );
     $form['tasklist']['list'] = array(
-      '#value' => '<p>'. t('1. <a href="admin/build/mass_contact/add">Add a category</a><br />2. <a href="admin/build/mass_contact">View categories</a><br />3. <a href="admin/build/mass_contact/settings">Configure the module</a><br />4. <a href="admin/user/permissions#module-mass_contact">Set permissions</a><br />5. <a href="mass_contact">Send mass e-mail</a><br />6. <a href="admin/help/mass_contact">Help</a>') .'</p>',
+      '#value' => '<p><ol>'.
+        '<li>' . l('Set Permissions', 'admin/user/permissions', array('fragment' => 'module-mass_contact')) .'</li>'.
+        '<li>' . l('List current categories', 'admin/build/mass_contact') .'</li>'.
+        '<li>' . l('Add new category', 'admin/build/mass_contact/add') .'</li>'.
+        '<li>' . l('Configure the module', 'admin/build/mass_contact/settings') .'</li>'.
+        '<li>' . l('Help', 'admin/help/mass_contact') .'</li></ol>',
     );
   }
 
@@ -1306,7 +1316,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       drupal_set_message(t('Message sent successfully to !total users: -e-mails', array('!total' => $total_recip, '-e-mails' => $recipientout)));
     }
     else {
-      drupal_set_message(t('!errors errors encountered sending message. Please check the logs and try again.', array('!errors' => $send_error)));
+      drupal_set_message(t('!errors error(s) encountered sending message. Please check the logs and try again.', array('!errors' => $send_error)));
     }
   }
 
