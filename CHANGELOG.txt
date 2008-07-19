@@ -4,6 +4,8 @@ $Id$
   * mass_contact.module: Changed the way the "Related tasks" texts are
     generated to hopefully help with translations and themeing, per meible on
     http://drupal.org/node/243292.
+    Added and changed permissions per joachim in
+    http://drupal.org/node/263156.
 
 2008-07-08 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Slight change to the wording of an error message.

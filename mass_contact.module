@@ -65,7 +65,7 @@ function mass_contact_help($path, $arg) {
  *   An array of permissions strings.
  */
 function mass_contact_perm() {
-  return array('access mass contact form', 'choose whether to archive mass contact messages', 'send mass contact attachments');
+  return array('administer mass contact', 'choose whether to archive mass contact messages', 'create mass_contact content', 'send mass contact attachments', 'send mass contact e-mails');
 }  //  End of mass_contact_perm().
 
 
@@ -83,20 +83,20 @@ function mass_contact_menu() {
   $items['admin/build/mass_contact'] = array(
     'title'            => 'Mass Contact form',
     'page callback'    => 'mass_contact_admin_categories',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer mass contact'),
     'description'      => 'Create a mass contact form and set up categories for the form to use.',
   );
   $items['admin/build/mass_contact/list'] = array(
-    'title'            => 'List',
+    'title'            => 'Category list',
     'page callback'    => 'mass_contact_admin_categories',
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer mass contact'),
     'type'             => MENU_DEFAULT_LOCAL_TASK,
   );
   $items['admin/build/mass_contact/add'] = array(
     'title'            => 'Add category',
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('mass_contact_admin_edit'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer mass contact'),
     'type'             => MENU_LOCAL_TASK,
     'weight'           => 1,
   );
@@ -104,28 +104,28 @@ function mass_contact_menu() {
     'title'            => 'Edit Mass Contact category',
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('mass_contact_admin_edit'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer mass contact'),
     'type'             => MENU_CALLBACK,
   );
   $items['admin/build/mass_contact/delete'] = array(
     'title'            => 'Delete Mass Contact category',
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('mass_contact_admin_delete'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer mass contact'),
     'type'             => MENU_CALLBACK,
   );
   $items['admin/build/mass_contact/settings'] = array(
     'title'            => 'Settings',
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('mass_contact_admin_settings'),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer mass contact'),
     'type'             => MENU_LOCAL_TASK,
     'weight'           => 2,
   );
   $items['mass_contact'] = array(
     'title'            => 'Mass Contact',
     'page callback'    => 'mass_contact_site_page',
-    'access arguments' => array('access mass contact form'),
+    'access arguments' => array('send mass contact e-mails'),
     'type'             => MENU_SUGGESTED_ITEM,
   );
 
@@ -687,7 +687,7 @@ function mass_contact_admin_settings_validate($form, &$form_state) {
 function mass_contact_site_page() {
   global $user;
 
-  if (!user_access('administer site configuration') && !flood_is_allowed('mass_contact', variable_get('mass_contact_hourly_threshold', 3))) {
+  if (!user_access('administer mass contact') && !flood_is_allowed('mass_contact', variable_get('mass_contact_hourly_threshold', 3))) {
     $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('mass_contact_hourly_threshold', 3)));
   }
   else {
@@ -801,7 +801,7 @@ function mass_contact_mail_page($form_state) {
 
     if (variable_get('mass_contact_optout_d', 0) == 1) {
       // Allow to override or respect opt-outs if admin, otherwise use default.
-      if (user_access('administer site configuration')) {
+      if (user_access('administer mass contact')) {
         $form['optout'] = array(
           '#type'          => 'checkbox',
           '#title'         => t('Respect user opt-outs.'),
@@ -896,7 +896,7 @@ function mass_contact_mail_page($form_state) {
     );
   }
 
-  if (user_access('administer site configuration')) {
+  if (user_access('administer mass contact')) {
     $form['tasklist'] = array(
       '#type'        => 'fieldset',
       '#title'       => t('Related tasks'),
