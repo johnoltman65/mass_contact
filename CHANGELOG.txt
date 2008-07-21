@@ -1,5 +1,8 @@
 $Id$
 
+2008-07-20 Jason Flatt drupal@oadaeh.net
+  * translations/mass_contact.pot: Added.
+
 2008-07-18 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Changed the way the "Related tasks" texts are
     generated to hopefully help with translations and themeing, per meible on
