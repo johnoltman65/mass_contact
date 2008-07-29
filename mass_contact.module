@@ -65,7 +65,14 @@ function mass_contact_help($path, $arg) {
  *   An array of permissions strings.
  */
 function mass_contact_perm() {
-  return array('administer mass contact', 'choose whether to archive mass contact messages', 'create mass_contact content', 'send mass contact attachments', 'send mass contact e-mails');
+  $permissions = array('administer mass contact', 'choose whether to archive mass contact messages', 'create mass_contact content', 'send mass contact attachments', 'send mass contact e-mails');
+
+  $result = db_query('SELECT category FROM {mass_contact}');
+  while ($category = db_fetch_object($result)) {
+    $permissions[] = 'send to users in the '. $category->category .' category';
+  }
+
+  return $permissions;
 }  //  End of mass_contact_perm().
 
 
@@ -738,10 +745,13 @@ function mass_contact_mail_page($form_state) {
 
   $result = db_query("SELECT cid, category, selected FROM {mass_contact} ORDER BY weight, category");
   while ($category = db_fetch_object($result)) {
-    $categories[$category->cid] = $category->category;
-    if ($category->selected) {
-      $default_category[] = $category->cid;
-      $default_category_name = $category->category;
+    if (user_access('send to users in the '. $category->category .' category')) {
+      $categories[$category->cid] = $category->category;
+
+      if ($category->selected) {
+        $default_category[] = $category->cid;
+        $default_category_name = $category->category;
+      }
     }
   }
 
@@ -950,7 +960,7 @@ function mass_contact_mail_page($form_state) {
   }
   else {
     $form['error'] = array(
-      '#value' => '<p><b>'. t('You must create at least one category before using this form.') .'</b>',
+      '#value' => '<p><b>'. t('Either you have not created any categories, or you are not allowed to send to any of the existing categories.') .'<br /><br />'. t('Either create at least one category of users to send to, or contact your system administer for access to the existing categories.') .'</b>',
     );
   }
 

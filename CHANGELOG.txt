@@ -9,6 +9,8 @@ $Id$
     http://drupal.org/node/143911#comment-683219.
     Added an administrative option to allow the charset to be specified, per
     jarihj on http://drupal.org/node/182903.
+    Added permissions to send messages based on category, per silverd/csilver
+    on http://drupal.org/node/270423.
 
 2008-07-20 Jason Flatt drupal@oadaeh.net
   * translations/mass_contact.pot: Added.
