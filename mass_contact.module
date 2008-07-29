@@ -514,6 +514,13 @@ function mass_contact_admin_settings($form_state) {
     '#description'   => t('Information to show on the <a href="@form">Mass Contact page</a>.', array('@form' => url('mass_contact'))),
   );
 
+  $form['mass_contact_character_set'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Character set'),
+    '#default_value' => variable_get('mass_contact_character_set', ''),
+    '#description'   => t('You may specify an alternate character set to use when sending e-mails. If left blank, the default of UTF-8 will be used. If you are unsure of what to put here, then leave it blank. Caution: setting this may not get you the results you desire. Other modules may come along and change that value after it has been set by this module.'),
+  );
+
   $form['mass_contact_default_sender'] = array(
     '#type'        => 'fieldset',
     '#title'       => t('Default sender information'),
@@ -544,7 +551,7 @@ function mass_contact_admin_settings($form_state) {
 
   $form['mass_contact_recipient_limit'] = array(
     '#type'          => 'textfield',
-    '#title'         => t('Max number of users before breaking up the e-mail'),
+    '#title'         => t('Maximum number of recipients before splitting up the e-mail'),
     '#size'          => 4,
     '#default_value' => variable_get('mass_contact_recipient_limit', 0),
     '#description'   => t('This is a workaround for server-side limits on the number of recipients in a single mail message. Once this limit is reached, the recipient list will be broken up and multiple copies of the message will be sent out until all recipients receive the mail. Setting this to "0" will turn off this feature.'),
@@ -630,6 +637,13 @@ function mass_contact_admin_settings($form_state) {
     '#default_value' => variable_get('mass_contact_html_d_override', 1),
   );
 
+  $form['mass_contact_attachment_location'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Attachment location'),
+    '#default_value' => variable_get('mass_contact_attachment_location', file_directory_path() .'/mass_contact_attachments'),
+    '#description'   => t('If a copy of the message is saved as a node, this is the file path where to save the attachment so it can be viewed later.'),
+  );
+
   $form['mass_contact_nodecc_d'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Save a copy as a node by default.'),
@@ -639,13 +653,6 @@ function mass_contact_admin_settings($form_state) {
     '#type'          => 'checkbox',
     '#title'         => t('Allow sender to override node copy setting.'),
     '#default_value' => variable_get('mass_contact_nodecc_d_override', 1),
-  );
-
-  $form['mass_contact_attachment_location'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Attachment location'),
-    '#default_value' => variable_get('mass_contact_attachment_location', file_directory_path() .'/mass_contact_attachments'),
-    '#description'   => t('If a copy of the message is saved as a node, this is the file path where to save the attachment so it can be viewed later.'),
   );
 
   $form['mass_contact_hourly_threshold'] = array(
@@ -1011,6 +1018,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   $headers            = array();
   $message_attachment = array();
   $params             = array();
+  $character_set      = variable_get('mass_contact_character_set', 'UTF-8');
+
+  if (!$character_set) {
+    $character_set = 'UTF-8';
+  }
 
   // Create the headers based on presence or absence of an attachment.
   if ($_FILES['files']['size']['attachment'] > 0) {
@@ -1018,14 +1030,17 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     $params['headers']['Content-Type'] = 'multipart/mixed; boundary="'. $uid .'"';
 
     if ($form_state['values']['html'] == 1) {
-      $params['body'][] = "\n--". $uid ."\nContent-Type: text/html; charset=UTF-8; format=flowed\n\n";
+      $params['body'][] = "\n--". $uid ."\nContent-Type: text/html; charset=". $character_set ."; format=flowed\n\n";
     }
     else {
-      $params['body'][] = "\n--". $uid ."\nContent-Type: text/plain; charset=UTF-8; format=flowed\n\n";
+      $params['body'][] = "\n--". $uid ."\nContent-Type: text/plain; charset=". $character_set ."; format=flowed\n\n";
     }
   }
   elseif ($form_state['values']['html'] == 1) {
-    $params['headers']['Content-Type'] = 'text/html; charset=UTF-8; format=flowed';
+    $params['headers']['Content-Type'] = 'text/html; charset='. $character_set .'; format=flowed';
+  }
+  elseif ($character_set) {
+    $params['headers']['Content-Type'] = 'text/plain; charset='. $character_set .'; format=flowed';
   }
 
 

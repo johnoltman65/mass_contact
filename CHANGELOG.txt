@@ -7,6 +7,8 @@ $Id$
     Added an administrative option to allow or disalllow the sender to change
     the default name and e-mail address, per saul11 on
     http://drupal.org/node/143911#comment-683219.
+    Added an administrative option to allow the charset to be specified, per
+    jarihj on http://drupal.org/node/182903.
 
 2008-07-20 Jason Flatt drupal@oadaeh.net
   * translations/mass_contact.pot: Added.
