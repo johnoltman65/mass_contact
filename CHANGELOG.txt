@@ -4,6 +4,9 @@ $Id$
   * mass_contact.module: Added administrative options for forcing the HTML
     and node options, per skizzo on http://drupal.org/node/145940.
     Added a self copy option, per josvl on http://drupal.org/node/170928.
+    Added an administrative option to allow or disalllow the sender to change
+    the default name and e-mail address, per saul11 on
+    http://drupal.org/node/143911#comment-683219.
 
 2008-07-20 Jason Flatt drupal@oadaeh.net
   * translations/mass_contact.pot: Added.

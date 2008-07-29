@@ -535,6 +535,12 @@ function mass_contact_admin_settings($form_state) {
     '#maxlength' => 128,
     '#description' => t('The optional user e-mail address to send e-mail as. Replaces the "Your e-mail address" value when sending mass e-mails.'),
   );
+  $form['mass_contact_default_sender']['mass_contact_default_sender_changable'] = array(
+    '#type'        => 'checkbox',
+    '#title'       => t('Allow the sender to change these values.'),
+    '#default_value' => variable_get('mass_contact_default_sender_changable', 0),
+    '#description' => t('If checked, gives the sender the ability of changing the default sender and e-mail address when creating the message. If unchecked, the fields will be disabled.'),
+  );
 
   $form['mass_contact_recipient_limit'] = array(
     '#type'          => 'textfield',
@@ -753,7 +759,7 @@ function mass_contact_mail_page($form_state) {
         '#title'         => t('Your name'),
         '#maxlength'     => 255,
         '#default_value' => $mass_contact_default_sender_name,
-        '#disabled'      => TRUE,
+        '#disabled'      => !variable_get('mass_contact_default_sender_changable', 0),
       );
     }
     else {
@@ -773,7 +779,7 @@ function mass_contact_mail_page($form_state) {
         '#title'         => t('Your e-mail address'),
         '#maxlength'     => 255,
         '#default_value' => $mass_contact_default_sender_email,
-        '#disabled'      => TRUE,
+        '#disabled'      => !variable_get('mass_contact_default_sender_changable', 0),
       );
     }
     else {
