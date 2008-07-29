@@ -2,7 +2,8 @@ $Id$
 
 2008-07-29 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Added administrative options for forcing the HTML
-    and node options, per skizzo on http://drupal.org/node/145940
+    and node options, per skizzo on http://drupal.org/node/145940.
+    Added a self copy option, per josvl on http://drupal.org/node/170928.
 
 2008-07-20 Jason Flatt drupal@oadaeh.net
   * translations/mass_contact.pot: Added.

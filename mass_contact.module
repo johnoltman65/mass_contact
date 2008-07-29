@@ -888,6 +888,16 @@ function mass_contact_mail_page($form_state) {
       );
     }
 
+    // We do not allow anonymous users to send themselves a copy because it
+    // can be abused to spam people.
+    if ($user->uid) {
+      $form['copy'] = array(
+        '#type'   => 'checkbox',
+        '#title'  => t('Send yourself a copy.'),
+        '#weight' => $i,
+      );
+    }
+
     if (user_access('choose whether to archive mass contact messages')) {
       // Check if the user can override the node copy setting.
       if (variable_get('mass_contact_nodecc_d_override', 1)) {
@@ -1215,6 +1225,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
             $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from);
           }
 
+          // Send a copy to self, if requested.
+          if ($form_state['values']['copy']) {
+            drupal_mail('mass_contact', 'user-copy', $from, language_default(), $params, $from);
+          }
+
           if ($success['result']) {
             drupal_set_message(t('[Success] Send #!ccc: -e-mails', array('!ccc' => $ccc, '-e-mails' => $recipient_send)));
           }
@@ -1253,6 +1268,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
         }
         else {
           $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from);
+        }
+
+        // Send a copy to self, if requested.
+        if ($form_state['values']['copy']) {
+          drupal_mail('mass_contact', 'user-copy', $from, language_default(), $params, $from);
         }
 
         if ($success['result']) {
@@ -1294,6 +1314,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       }
       else {
         $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from);
+      }
+
+      // Send a copy to self, if requested.
+      if ($form_state['values']['copy']) {
+        drupal_mail('mass_contact', 'user-copy', $from, language_default(), $params, $from);
       }
 
       if ($success['result']) {
