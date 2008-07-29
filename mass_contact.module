@@ -618,11 +618,21 @@ function mass_contact_admin_settings($form_state) {
     '#default_value' => variable_get('mass_contact_html_d', 1),
     '#description'   => t('This will use the default input filter as specified on the <a href="@formats_settings">Input formats settings</a> page.', array('@formats_settings' => url('admin/settings/filters'))),
   );
+  $form['mass_contact_html_d_override'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Allow sender to override HTML setting.'),
+    '#default_value' => variable_get('mass_contact_html_d_override', 1),
+  );
 
   $form['mass_contact_nodecc_d'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Save a copy as a node by default.'),
     '#default_value' => variable_get('mass_contact_nodecc_d', 1),
+  );
+  $form['mass_contact_nodecc_d_override'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Allow sender to override node copy setting.'),
+    '#default_value' => variable_get('mass_contact_nodecc_d_override', 1),
   );
 
   $form['mass_contact_attachment_location'] = array(
@@ -816,7 +826,7 @@ function mass_contact_mail_page($form_state) {
       }
     }
 
-    // Check if the user can override BCC.
+    // Check if the user can override the BCC setting.
     if (variable_get('mass_contact_bcc_d_override', 1)) {
       $form['bcc'] = array(
         '#type'          => 'checkbox',
@@ -857,20 +867,45 @@ function mass_contact_mail_page($form_state) {
       );
     }
 
-    $form['html'] = array(
-      '#type'          => 'checkbox',
-      '#title'         => t('Send as HTML.'),
-      '#default_value' => variable_get('mass_contact_html_d', 1),
-      '#description'   => t('This will use the settings for the default input filter. More information about what is available is on the <a href="@formats_settings">Input formats</a> page.', array('@formats_settings' => url('filter/tips'))),
-    );
-
-    if (user_access('choose whether to archive mass contact messages')) {
-      $form['nodecc'] = array(
+    // Check if the user can override the HTML setting.
+    if (variable_get('mass_contact_html_d_override', 1)) {
+      $form['html'] = array(
         '#type'          => 'checkbox',
-        '#title'         => t('Save a copy as a node.'),
-        '#default_value' => variable_get('mass_contact_nodecc_d', 1),
+        '#title'         => t('Send as HTML.'),
+        '#default_value' => variable_get('mass_contact_html_d', 1),
+        '#description'   => t('This will use the settings for the default input filter. More information about what is available is on the <a href="@formats_settings">Input formats</a> page.', array('@formats_settings' => url('filter/tips'))),
       );
     }
+    // If not, then just display the HTML info.
+    else {
+      $form['html'] = array(
+        '#type'  => 'value',
+        '#value' => variable_get('mass_contact_html_d', 1),
+      );
+      $form['html-info'] = array(
+        '#type'  => 'markup',
+        '#value' => '<p>'. (variable_get('mass_contact_html_d', 1) ? t('The message will be sent as HTML.') : t('The message will be sent as plain text.')) .'</p>',
+      );
+    }
+
+    if (user_access('choose whether to archive mass contact messages')) {
+      // Check if the user can override the node copy setting.
+      if (variable_get('mass_contact_nodecc_d_override', 1)) {
+        $form['nodecc'] = array(
+          '#type'          => 'checkbox',
+          '#title'         => t('Save a copy as a node.'),
+          '#default_value' => variable_get('mass_contact_nodecc_d', 1),
+        );
+      }
+      // If not, then do it or not based on the administrative setting.
+      else {
+        $form['nodecc'] = array(
+          '#type'          => 'hidden',
+          '#default_value' => variable_get('mass_contact_nodecc_d', 1),
+        );
+      }
+    }
+    // If not, then do it or not based on the administrative setting.
     else {
       $form['nodecc'] = array(
         '#type'          => 'hidden',
