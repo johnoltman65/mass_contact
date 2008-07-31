@@ -1,5 +1,14 @@
 $Id$
 
+2008-07-31 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Fixed a bug where I forgot to change the
+    $headers['Bcc'] variable to $params['headers']['Bcc'], per ulf1 on
+    http://drupal.org/comment/reply/289229.
+    Commented out all references to the Mime Mail module.
+    Changed the $cids vaiable from a string to an array in lines 1140 through
+    1143 in order for the db_placeholders() function in line 1145 to work
+    correctly.
+
 2008-07-29 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Added administrative options for forcing the HTML
     and node options, per skizzo on http://drupal.org/node/145940.

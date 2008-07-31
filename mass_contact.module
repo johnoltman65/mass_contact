@@ -1025,7 +1025,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   $from               = $form_state['values']['mail'];
   $uid                = '';
   $ctype              = '';
-  $headers            = array();
   $message_attachment = array();
   $params             = array();
   $character_set      = variable_get('mass_contact_character_set', 'UTF-8');
@@ -1096,6 +1095,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
   // Add attachment.
   if ($_FILES['files']['size']['attachment'] > 0) {
+/*
     if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
       $message_attachment = array(
         array(
@@ -1106,6 +1106,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       );
     }
     else {
+*/
       $message_attachment  = '--'. $uid ."\n";
       $message_attachment .= "Content-Type: ". $_FILES['files']['type']['attachment'] ."; name=\"". basename($_FILES['files']['name']['attachment']) ."\"\n";
       $message_attachment .= "Content-Transfer-Encoding: base64\n";
@@ -1114,7 +1115,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       $message_attachment .= "\n\n--". $uid ."--\n\n";
 
       $params['body'][]    = $message_attachment;
-    }
+//    }
   }
 
 
@@ -1136,12 +1137,9 @@ function mass_contact_mail_page_submit($form, &$form_state) {
  */
 
   // Load the category information.
-  $cids = '';
+  $cids = array();
   foreach ($form_state['values']['cid'] as $cid) {
-    $cids .= $cid;
-    if (next($form_state['values']['cid'])) {
-      $cids .= ", ";
-    }
+    $cids[] = $cid;
   }
 
   $result = db_query("SELECT * FROM {mass_contact} WHERE cid IN(". db_placeholders($cids) .")", $cids);
@@ -1233,7 +1231,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           // set bcc
           if ($bcc == 1) { // hidden recipients
-            $headers['Bcc'] = $recipient_send;
+            $params['headers']['Bcc'] = $recipient_send;
             $to = $from;
           }
           else {
@@ -1243,18 +1241,20 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           ++$ccc;
 
           // Send the e-mail to the recipients:
+/*
           if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
             $body = implode("\n\n", $params['body']);
             if ($form_state['values']['html'] == 1) {
-              $success = mimemail($from, $to, $params['subject'], $body, NULL, $headers, NULL, $message_attachment);
+              $success = mimemail($from, $to, $params['subject'], $body, NULL, $params['headers'], NULL, $message_attachment);
             }
             else {
-              $success = mimemail($from, $to, $params['subject'], $body, TRUE, $headers, $body, $message_attachment);
+              $success = mimemail($from, $to, $params['subject'], $body, TRUE, $params['headers'], $body, $message_attachment);
             }
           }
           else {
+*/
             $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from);
-          }
+//          }
 
           // Send a copy to self, if requested.
           if ($form_state['values']['copy']) {
@@ -1278,7 +1278,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       if ($countrecip != 0) {
         $recipient_send = implode(', ', $recipient_temp);
         if ($bcc == 1) { // hidden recipients
-          $headers['Bcc'] = $recipient_send;
+          $params['headers']['Bcc'] = $recipient_send;
           $to = $from;
         }
         else {
@@ -1288,18 +1288,20 @@ function mass_contact_mail_page_submit($form, &$form_state) {
         ++$ccc;
 
         // Send the e-mail to the recipients:
+/*
         if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
           $body = implode("\n\n", $params['body']);
           if ($form_state['values']['html'] == 1) {
-            $success = mimemail($from, $to, $params['subject'], $body, NULL, $headers, NULL, $message_attachment);
+            $success = mimemail($from, $to, $params['subject'], $body, NULL, $params['headers'], NULL, $message_attachment);
           }
           else {
-            $success = mimemail($from, $to, $params['subject'], $body, TRUE, $headers, $body, $message_attachment);
+            $success = mimemail($from, $to, $params['subject'], $body, TRUE, $params['headers'], $body, $message_attachment);
           }
         }
         else {
+*/
           $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from);
-        }
+//        }
 
         // Send a copy to self, if requested.
         if ($form_state['values']['copy']) {
@@ -1326,7 +1328,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
       // set bcc
       if ($bcc == 1) { // hidden recipients
-        $headers['Bcc'] = $recipientout;
+        $params['headers']['Bcc'] = $recipientout;
         $to = $from;
       }
       else {
@@ -1334,18 +1336,20 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       }
 
       // Send the e-mail to the recipients.
+/*
       if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
         $body = implode("\n\n", $params['body']);
         if ($form_state['values']['html'] == 1) {
-          $success = mimemail($from, $to, $params['subject'], $body, NULL, $headers, NULL, $message_attachment);
+          $success = mimemail($from, $to, $params['subject'], $body, NULL, $params['headers'], NULL, $message_attachment);
         }
         else {
-          $success = mimemail($from, $to, $params['subject'], $body, TRUE, $headers, $body, $message_attachment);
+          $success = mimemail($from, $to, $params['subject'], $body, TRUE, $params['headers'], $body, $message_attachment);
         }
       }
       else {
+*/
         $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from);
-      }
+//      }
 
       // Send a copy to self, if requested.
       if ($form_state['values']['copy']) {
