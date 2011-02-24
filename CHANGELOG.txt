@@ -1,5 +1,146 @@
 $Id$
 
+2010-10-08 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Fixed problem with input formats not displaying
+    correctly (http://drupal.org/node/294433, http://drupal.org/node/934222).
+    Added an administrative option to specify when to check the HTML markup
+    (http://drupal.org/node/468464).
+    Converted several function calls to variables in the code ralated to the
+    above activity to reduce the amount of processing needed and to improve
+    the readability of the code.
+    Fixed a bug (unrelated to the first item) with selecting the wrong input
+    filter when building the message body.
+    Fixed a problem when showing opt out options for users that are not a part
+    of any categories (http://drupal.org/node/812518). Also, removed the when
+    users may opt out as part of this fix.
+    Added the ability for site administrator to specify what they want their
+    opt-out message to say.
+
+2010-10-05 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Removed reference to max_file_uploads, as it's only
+    in newer versions of PHP.
+
+2010-08-30 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install: Fix variable deletion query.
+
+2010-08-27 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Correct the way a node type is created
+    (http://drupal.org/node/894696).
+
+2010-08-26 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install: Made variable removal encompassing during uninstall.
+  * mass_contact.module: Make the closing boundary line the correct format.
+    Removed some unnecessary CR/LFs.
+
+2010-08-22 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Made the field for maximum recipients larger.
+    Removed the setting of the weight for the send to self option, so that it
+    wasn't all the way at the bottom of the main message form.
+    Made the main menu link enabled by default.
+  * README.txt: Updated the documentation, so that it was current and
+    accurate. Also included a number of user recommendations.
+
+2010-08-21 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Changed attachment behavior to allow multiple
+    attachments, the number being defined by the system administrator.
+    In doing the above, updated and/or fixed various MIME behaviors and/or
+    settings.
+    Made message attachments actual file attachments when saving the message
+    as a node.
+    Removed hard coded node settings when saving a node, per dabro in
+    http://drupal.org/node/889846.
+
+2010-05-11 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Separated the administrative settings page into
+    three pages.
+  * mass_contact.module, mass_contact.install: Added the ability to specify
+    the input format for the message prefix, the user's message text, and the
+    message suffix, along with allowing the user to change the input format
+    for the user's message text or not.
+
+2010-04-30 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Added the option to specify when to allow opting out
+    of mass e-mails. This takes care of this feature request:
+    http://drupal.org/node/354689.
+
+2010-04-30 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Added code to be compatible with the Admin Role
+    module (http://drupal.org/project/adminrole), per jim0203 and lyricnz in
+    http://drupal.org/node/586870.
+
+2010-04-30 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install: Corrected the default values for two database
+    fields, per Nigeria and lyricnz in http://drupal.org/node/526130.
+
+2010-04-30 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Added code to get around Drupal reformatting the
+    body during the sending of the message, per hotspoons in
+    http://drupal.org/node/473838.
+
+2009-08-19 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Split a line in mass_contact_admin_delete() to avoid
+    a possible accidental assignment.
+    Added an "else" when checking for the number of recipients so that an
+    error would not occur, due to the module attempting to send the e-mail
+    even when there are no recipients, per mellenburg and drupalok in
+    http://drupal.org/node/460648. Also changed the error message to include
+    the category in question for less ambiguity.
+    Pulled the send copy to self functionality out of the normal send process
+    so that it would be sent even if there were no recipients (due to the
+    above fix).
+    Added a link to the logs in the error messages, for users who have
+    permission to view them.
+
+2009-08-18 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install: Added a field name correction to account for code
+    change a long time ago, per sharplesa and MrWerewolf in
+    http://drupal.org/node/371285.
+  * mass_contact.module: Changed how user roles were being iterated through
+    in order to fix http://drupal.org/node/543942, per ed523.
+
+2009-03-13 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Added the ability to opt out of specific categories.
+    Changed some of the text messages to use consistent wording and/or case.
+    Fixed how the mass contact message content type is managed.
+
+2009-03-11 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install: Added some missing variables in the uninstall
+    routine.
+  * mass_contact.module: Added a check for an empty menu item in
+    mass_contact_menu_alter(), per cYu in http://drupal.org/node/375815.
+    Fixed a bug where single categories were not being selected by default,
+    per ProfStein in http://drupal.org/node/394318.
+
+2008-10-23 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Tested and fixed problems with work around for
+    http://drupal.org/node/227966.
+    Changed the $from variable to $from_email and added $from_name to go
+    along with it.
+    Tweaked when to send self a copy, by not sending when the recipient list
+    is in the BCC field and only sending at the end if the recipient list is
+    being broken up.
+  * README.txt: Removed note about Mime Mail.
+
+2008-08-09 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Created a work around for
+    http://drupal.org/node/227966, per compuguru and karlcw on
+    http://drupal.org/node/290913.
+
+2008-08-06 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Changed the way multipart messages are handled to
+    include plain text parts with HTML messages.
+
+2008-08-01 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Added checks for the message prefix and suffix to
+    all areas where they're included, so they aren't added when they don't
+    exist.
+    Made the message form field larger.
+    Added input formatting to the body of the message, per akolahi on
+    http://drupal.org/node/231369.
+    Removed extra spaces in task list items.
+  * README.txt: Updated with a note about Mime Mail.
+  * TODO.txt: Updated.
+
 2008-07-31 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Fixed a bug where I forgot to change the
     $headers['Bcc'] variable to $params['headers']['Bcc'], per ulf1 on
@@ -25,14 +166,12 @@ $Id$
   * translations/mass_contact.pot: Added.
 
 2008-07-18 Jason Flatt drupal@oadaeh.net
-  * mass_contact.module: Changed the way the "Related tasks" texts are
-    generated to hopefully help with translations and themeing, per meible on
+  * mass_contact.module: Slight change to the wording of an error message.
+    Changed the way the "Related tasks" texts are generated to hopefully help
+    with translations and themeing, per meible on
     http://drupal.org/node/243292.
     Added and changed permissions per joachim in
     http://drupal.org/node/263156.
-
-2008-07-08 Jason Flatt drupal@oadaeh.net
-  * mass_contact.module: Slight change to the wording of an error message.
 
 2008-07-06 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Changed how the message headers get updated.

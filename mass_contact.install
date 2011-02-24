@@ -42,14 +42,14 @@ function mass_contact_schema() {
         'size' => 'tiny',
         'unsigned' => FALSE,
         'not null' => TRUE,
-        'default' => '0'),
+        'default' => 0),
       'selected' => array(
         'description' => t('.'),
         'type' => 'int',
         'size' => 'tiny',
         'unsigned' => FALSE,
         'not null' => TRUE,
-        'default' => '0'),
+        'default' => 0),
     ),
     'primary key' => array('cid'),
     'unique keys' => array(
@@ -78,17 +78,62 @@ function mass_contact_uninstall() {
 
 //  db_query('DELETE FROM node_type WHERE type = "mass_contact"');
 
-  variable_del('mass_contact_bcc_d');
-  variable_del('mass_contact_bcc_d_override');
-  variable_del('mass_contact_category_override');
-  variable_del('mass_contact_default_sender_email');
-  variable_del('mass_contact_default_sender_name');
-  variable_del('mass_contact_form_information');
-  variable_del('mass_contact_html_d');
-  variable_del('mass_contact_hourly_threshold');
-  variable_del('mass_contact_message_prefix');
-  variable_del('mass_contact_message_suffix');
-  variable_del('mass_contact_nodecc_d');
-  variable_del('mass_contact_optout_d');
-  variable_del('mass_contact_recipient_limit');
+  db_query("DELETE FROM {variable} WHERE name LIKE 'mass_contact_%'");
+}
+
+
+/**
+ * Implementation of hook_update().
+ *
+ * Updates permission names.
+ */
+function mass_contact_update_6000() {
+  $ret = array();
+
+  $result = db_query('SELECT * FROM {permission}');
+  while ($permission = db_fetch_object($result)) {
+    if (strstr($permission->perm, 'access mass contact form')) {
+      $new_permission = str_replace ('access mass contact form', 'send mass contact e-mails', $permission->perm);
+      $ret[] = update_sql('UPDATE {permission} SET perm = "'. $new_permission .'" WHERE rid = '. $permission->rid .' AND tid = '. $permission->tid);
+    }
+  }
+
+  return $ret;
+}
+
+
+/**
+ * Implementation of hook_update().
+ *
+ * Changes a database field name to match the code that's using it.
+ */
+function mass_contact_update_6001() {
+  $ret = array();
+  $ret[] = update_sql("UPDATE {variable} SET name = 'mass_contact_html_d' WHERE name = 'mass_contact_HTML_d'");
+  return $ret;
+}
+
+
+/**
+ * Implementation of hook_update().
+ *
+ * Update the defaults for weight/selected to integers instead of strings.
+ */
+function mass_contact_update_6002() {
+  $ret = array();
+  // Can't use db_field_set_default() due to Drupal bug http://drupal.org/node/517642
+  $ret[] = update_sql('ALTER TABLE {mass_contact} ALTER COLUMN weight SET DEFAULT 0');
+  $ret[] = update_sql('ALTER TABLE {mass_contact} ALTER COLUMN selected SET DEFAULT 0');
+  return $ret;
+}
+
+
+/**
+ * Implementation of hook_update().
+ *
+ * Remove a now unused variable.
+ */
+function mass_contact_update_6003() {
+  variable_del('mass_contact_when_to_optout');
+  return array();
 }
