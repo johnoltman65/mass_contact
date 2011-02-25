@@ -1,4 +1,3 @@
-$Id$
 
 2010-10-08 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Fixed problem with input formats not displaying
