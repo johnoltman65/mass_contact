@@ -1,3 +1,23 @@
+2011-05-16 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module:
+    * Converted the "Hourly threshold" setting from a select box to a text
+      field, so that people can specify the exact number they want.
+    * Moved the configuration menu structure from admin/structure to
+      admin/config/system.
+    * Removed administrative task list at the bottom of the main Mass Contact
+      page.
+    * Refactored the main send function.
+  * HEAD.txt:
+    * Removed file.
+  * TODO.txt:
+    * Removed file.
+
+2011-04-23 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module:
+    * Began the update to Drupal 7.
+    * Pulled the administrative functions out into their own file.
+    * Pulled the actual Mass Contact form and realted functions out into their
+      own file.
 
 2010-10-08 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Fixed problem with input formats not displaying
