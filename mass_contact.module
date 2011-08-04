@@ -57,15 +57,15 @@ function mass_contact_permission() {
       'description' => t('This permission sets whether the user is allowed to modify the categories and configuration settings of Mass Contact.'),
     ),
     'send mass contact e-mails' => array(
-      'title' => t('Can send messages with Mass Contact'),
+      'title' => t('Send messages with Mass Contact'),
       'description' => t('This permission sets whether the user is allowed to send messages with the Mass Contact.'),
     ),
     'send mass contact attachments' => array(
-      'title' => t('Can send attachments'),
+      'title' => t('Attach files to outgoing messages'),
       'description' => t('This permission sets whether the sender of the message is allowed to include attachments with the message.'),
     ),
     'choose whether to archive mass contact messages' => array(
-      'title' => t('Can archive mass contact messages as content'),
+      'title' => t('Archive messages as content'),
       'description' => t('This permission sets whether the sender of the message is allowed to save an archive copy of the message as a node.'),
     ),
   );
@@ -201,7 +201,7 @@ function mass_contact_menu_alter(&$items) {
  * Implements hook_user_presave().
  */
 function mass_contact_user_presave(&$edit, $account, $category) {
-dpm($edit); dpm($account); dpm($category);
+//dpm($edit); dpm($account); dpm($category);
   $edit['data']['mass_contact_optout'] = isset($edit['mass_contact_optout']) ? $edit['mass_contact_optout'] : '';
 
 //  return array('mass_contact_optout' => $edit['mass_contact_optout']);
@@ -325,3 +325,19 @@ dpm($test_node);
   }
 } // End of mass_contact_node_delete().
 */
+
+
+/**
+ * Implements hook_mail().
+ */
+function mass_contact_mail($key, &$message, $params) {
+//dpm($key); dpm($message); dpm($params);
+  if (!empty($params['headers'])) {
+    foreach ($params['headers'] as $key => $value) {
+      $message['headers'][$key] = $params['headers'][$key];
+    }
+  }
+  $message['subject'] = $params['subject'];
+  $message['body'][] = $params['body'];
+//dpm($key); dpm($message); dpm($params);
+} // End of mass_contact_mail().

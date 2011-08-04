@@ -1474,7 +1474,7 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
   // Set the Result field.
   $node->field_mass_contact_result[$node->language][0]['value'] = $result;
 //  $node->field_mass_contact_result[$node->language][0]['format'] = 'plain_text';
-dpm($node);
+//dpm($node);
 
 /*
 // Some file on our system
@@ -1536,18 +1536,3 @@ $node->field_image[LANGUAGE_NONE][0] = (array)$file; //associate the file object
   // Inform the user.
   drupal_set_message(t('A copy has been created as a node.'));
 } // End of _mass_contact_save_node().
-
-
-/**
- * Implements hook_mail().
- */
-function mass_contact_mail($key, &$message, $params) {
-  if (!empty($params['headers'])) {
-    foreach ($params['headers'] as $key => $value) {
-      $message['headers'][$key] = $params['headers'][$key];
-    }
-  }
-  $message['subject'] = $params['subject'];
-  $message['body'][] = $params['body'];
-//dpm($key); dpm($message); dpm($params);
-} // End of mass_contact_mail().
