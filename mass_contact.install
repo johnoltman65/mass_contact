@@ -254,7 +254,7 @@ function _mass_contact_field_instances() {
       'label' => $t('Headers'),
       'description' => $t('Any other headers that were created by the Mass Contact module.'),
       'widget' => array(
-        'type' => 'text_textfield',
+        'type' => 'text_textarea',
         'weight' => -6,
       ),
       'display' => array(
@@ -272,7 +272,7 @@ function _mass_contact_field_instances() {
       'label' => $t('Result'),
       'description' => $t('The result of sending this message.'),
       'widget' => array(
-        'type' => 'text_textfield',
+        'type' => 'text_textarea',
         'weight' => 5,
       ),
       'display' => array(

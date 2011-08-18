@@ -281,7 +281,7 @@ function mass_contact_mail_page($form, $form_state) {
           );
           // Display information to the user.
           $form['html-info'] = array(
-            '#value' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent using the !filter input format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('!filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
+            '#value' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent using the @filter input format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('@filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
           );
         }
  */
@@ -311,7 +311,7 @@ function mass_contact_mail_page($form, $form_state) {
           );
           // Display information to the user.
           $form['html-info'] = array(
-            '#value' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent as HTML, using the !filter input format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('!filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
+            '#value' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent as HTML, using the @filter input format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('!filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
           );
         }
  */
@@ -398,11 +398,11 @@ function mass_contact_mail_page($form, $form_state) {
     );
     $form['tasklist']['list'] = array(
       '#markup' => '<p><ol>' .
-        '<li>' . l('Set Permissions', 'admin/user/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
-        '<li>' . l('List current categories', 'admin/config/system/mass_contact') . '</li>' .
-        '<li>' . l('Add new category', 'admin/config/system/mass_contact/add') . '</li>' .
-        '<li>' . l('Configure the module', 'admin/config/system/mass_contact/settings') . '</li>' .
-        '<li>' . l('Help', 'admin/help/mass_contact') . '</li></ol>',
+        '<li>' . l(t('Set Permissions'), 'admin/user/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
+        '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
+        '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
+        '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
+        '<li>' . l(t('Help'), 'admin/help/mass_contact') . '</li></ol>',
     );
   }
 
@@ -528,7 +528,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
         $everyone = TRUE;
 
         if (variable_get('mass_contact_category_override', 1)) {
-          $message_subject = t('[!category] !subject', array('!category' => $category->category, '!subject' => $form_state['values']['subject']));
+          $message_subject = t('[@category] @subject', array('@category' => $category->category, '@subject' => $form_state['values']['subject']));
         }
 
         break 2;
@@ -608,7 +608,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
         // Set the recipients.
         'recipients' => _mass_contact_create_recipient_list($roles, $opt_out_users),
         // Set the subject.
-        'subject' => t('[!category] !subject', array('!category' => $category->category, '!subject' => $form_state['values']['subject'])),
+        'subject' => t('[@category] @subject', array('@category' => $category->category, '@subject' => $form_state['values']['subject'])),
       );
     }
   }
@@ -681,7 +681,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
               $success = _mass_contact_send_message('mail_page', $from_email, $to, $params);
 
               if ($success['result']) {
-                drupal_set_message(t('[Success] Send #!ccc: -e-mails', array('!ccc' => $ccc, '-e-mails' => $recipients)));
+                drupal_set_message(t('[Success] Send #@ccc: @e-mails', array('@ccc' => $ccc, '@e-mails' => $recipients)));
               }
               else {
                 ++$send_error;
@@ -720,7 +720,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
             $success = _mass_contact_send_message('mail_page', $from_email, $to, $params);
 
             if ($success['result']) {
-              drupal_set_message(t('[Success] Send Remainder: -e-mails', array('-e-mails' => $recipients)));
+              drupal_set_message(t('[Success] Send Remainder: @e-mails', array('@e-mails' => $recipients)));
             }
             else {
               ++$send_error;
@@ -761,7 +761,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           $success = _mass_contact_send_message('mail_page', $from_email, $to, $params);
 
           if ($success['result']) {
-            drupal_set_message(t('[Success] Send Once: -e-mails', array('-e-mails' => $listed_recipients)));
+            drupal_set_message(t('[Success] Send Once: @e-mails', array('@e-mails' => $listed_recipients)));
           }
           else {
             ++$send_error;
@@ -786,7 +786,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     }
     else {
       if (user_access('access site reports')) {
-        drupal_set_message(t('A copy could not be sent to you. Please check the !logs for errors.', array('!logs' => l('logs', 'admin/reports/dblog'))));
+        drupal_set_message(t('A copy could not be sent to you. Please check the @logs for errors.', array('@logs' => l(t('logs'), 'admin/reports/dblog'))));
       }
       else {
         drupal_set_message(t('A copy could not be sent to you. Please have a system administrator check the logs for errors.'));
@@ -811,16 +811,16 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
       // Inform the user.
       if (count($total_recipients) > 0) {
-        drupal_set_message(t('Message sent successfully to !total users: @e-mails', array('!total' => $total_recipients, '@e-mails' => $listed_recipients)));
+        drupal_set_message(t('Message sent successfully to @total users: @e-mails', array('@total' => $total_recipients, '@e-mails' => $listed_recipients)));
       }
     }
     else {
       // Inform the user of the error.
       if (user_access('access site reports')) {
-        drupal_set_message(t('!errors error(s) were encountered sending the message. Please check the !logs for errors.', array('!errors' => $send_error, '!logs' => l('logs', 'admin/reports/dblog'))));
+        drupal_set_message(t('@errors error(s) were encountered sending the message. Please check the @logs for errors.', array('@errors' => $send_error, '@logs' => l(t('logs'), 'admin/reports/dblog'))));
       }
       else {
-        drupal_set_message(t('!errors error(s) were encountered sending the message. Please have a system administrator check the logs for errors.', array('!errors' => $send_error)));
+        drupal_set_message(t('@errors error(s) were encountered sending the message. Please have a system administrator check the logs for errors.', array('@errors' => $send_error)));
       }
     }
   }
@@ -979,9 +979,9 @@ function _mass_contact_prepare_message_addon($addon, $style) {
       break;
   }
 
-  $message_addon = $message_addon['value'];
+  if (!empty($message_addon['value'])) {
+    $message_addon = $message_addon['value'];
 
-  if (!empty($message_addon)) {
     switch ($style) {
       case 'plain text':
 //        if ($token_module_exists) {
@@ -1461,12 +1461,10 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
   // Set the Headers field.
   if (!empty($params['headers'])) {
     // Format the output so that it is readable.
-    $headers = '<dl>';
+    $headers = '';
     foreach ($params['headers'] as $header => $value) {
-      $headers .= '<dt>' . $header . '</dt>';
-      $headers .= '<dd>' . $value . '</dd>';
+      $headers .= $header . ": " . $value . "\n";
     }
-    $headers .= '</dl>';
 
     $node->field_mass_contact_headers[$node->language][0]['value'] = $headers;
 //    $node->field_mass_contact_headers[$node->language][0]['format'] = 'filtered_html';
@@ -1508,7 +1506,7 @@ $node->field_image[LANGUAGE_NONE][0] = (array)$file; //associate the file object
 
         // Copy the file to Drupal's 'files' directory.
         if (!file_copy($file)) {
-          drupal_set_message(t('Failed to save attachment: !filename', array('!filename' => $_FILES['files']['name']['attachment_' . $i])));
+          drupal_set_message(t('Failed to save attachment: @filename', array('@filename' => $_FILES['files']['name']['attachment_' . $i])));
           continue;
         }
 

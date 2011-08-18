@@ -541,7 +541,7 @@ function mass_contact_admin_settings_body($form, $form_state) {
     $form['mass_contact_supplemental_texts']['mass_contact_message_prefix'] = array(
       '#type' => 'text_format',
       '#title' => t('Text to be prepended to all messages'),
-      '#default_value' => variable_get('mass_contact_message_prefix', t('You were sent a group e-mail from !site.', array('!site' => url(NULL, array('absolute' => TRUE))))),
+      '#default_value' => variable_get('mass_contact_message_prefix', t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))))),
       '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed before the message text entered in by the sender.'),
 //      '#format' => filter_form(variable_get('mass_contact_prefix_format', FILTER_FORMAT_DEFAULT), NULL, array('mass_contact_prefix_format')),
     );
@@ -614,7 +614,7 @@ function mass_contact_admin_settings_body($form, $form_state) {
  * /
 function mass_contact_admin_settings_body_validate($form, &$form_state) {
   if ($form_values['mass_contact_number_of_attachments'] > ini_get('max_file_uploads')) {
-    form_set_error('mass_contact_number_of_attachments', t("The number of attachments you have specified, !num_attachments, is greater than your system's PHP configuration of !max_file_uploads.", array('!num_attachments' => $form_values['mass_contact_number_of_attachments'], '!max_file_uploads' => ini_get('max_file_uploads'))));
+    form_set_error('mass_contact_number_of_attachments', t("The number of attachments you have specified, @num_attachments, is greater than your system's PHP configuration of @max_file_uploads.", array('!num_attachments' => $form_values['mass_contact_number_of_attachments'], '!max_file_uploads' => ini_get('max_file_uploads'))));
   }
 } // End of mass_contact_admin_settings_body_validate().
 */

@@ -77,8 +77,8 @@ function mass_contact_permission() {
     foreach ($result as $category) {
       $permission = 'send to users in the ' . $category->category . ' category';
       $permissions[$permission] = array(
-        'title' => t('Send to users in the !category category', array('!category' => $category->category)),
-        'description' => t('Allows the user to send messages to the users in the !category category', array('!category' => $category->category)),
+        'title' => t('Send to users in the @category category', array('@category' => $category->category)),
+        'description' => t('Allows the user to send messages to the users in the @category category', array('@category' => $category->category)),
       );
     }
   }

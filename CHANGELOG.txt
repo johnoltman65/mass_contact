@@ -1,3 +1,13 @@
+2011-08-12 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc:
+    * Changed t() ! placeholders to @.
+  * mass_contact.page.inc:
+    * Added t() to a few l()s that did not have it.
+    * Removed HTML output for Headers node field.
+    * Moved $message_addon variable assignment inside the check for valid data.
+  * mass_contact.install:
+    * Changed the widgets for the Headers and Result fields to textarea.
+
 2011-05-16 Jason Flatt drupal@oadaeh.net
   * mass_contact.module:
     * Converted the "Hourly threshold" setting from a select box to a text
