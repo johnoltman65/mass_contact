@@ -19,29 +19,58 @@
  */
 function mass_contact_help($path, $arg) {
   $output = '';
+
   switch ($path) {
     case 'admin/help#mass_contact':
-      $output .= '<p><b>' . t('Related tasks:') . '</b><br /><ol>' .
-        '<li>' . l('Set Permissions', 'admin/user/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
-        '<li>' . l('List current categories', 'admin/config/system/mass_contact') . '</li>' .
-        '<li>' . l('Add new category', 'admin/config/system/mass_contact/add') . '</li>' .
-        '<li>' . l('Configure the module', 'admin/config/system/mass_contact/settings') . '</li>' .
-        '<li>' . l('Send mass e-mail', 'mass_contact') . '</li></ol>';
-      $output .= '<p>' . t('The Mass Contact module is simply a modified version of the core contact module. It works opposite the latter, in that it allows site moderators (or anyone with permission), to <a href="mass_contact">send mass e-mail</a> to a set role or group of roles or even to all registered users.') . '</p>';
-      $output .= '<p>' . t("The sender's own address may be placed in the 'To:' field and all recipients placed in the 'BCC:' field, or the recipients simply placed in the 'To:' field. Note that the latter option leaves all recipients open to abuse due to their e-mail addresses being visible to all other recipients.") . '</p>';
-      $output .= '<p>' . t("The e-mail may be sent as HTML or plain text, and may include a single binary file attachment (if permitted by admin).") . '</p>';
-      $output .= '<p>' . t("At the option of the sender (if permitted by admin), a node may be created in order to keep a record of the e-mail sent. Do not try to send e-mails by creating nodes; it will not work.") . '</p>';
-      $output .= '<p>' . t('Users may opt-out of mass mailings on their profile page, but this may be overridden by the admin (or respected). The entire opt-out system may be disabled on the <a href="@settings-page">settings page</a>.', array('@settings-page' => url('admin/config/system/mass_contact/settings'))) . '</p>';
-      $output .= '<p>' . t('Make sure to add at least one category and configure the module before trying to send mass e-mails.') . '</p>';
+      $output .= '<h3>' . t('Related tasks:') . '</h3><ul>' .
+        '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
+        '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
+        '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
+        '<li>' . l(t('Set permissions'), 'admin/user/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
+        '<li>' . l(t('Send a mass e-mail message'), 'mass_contact') . '</li></ul>';
 
-      if (!module_exists('menu')) {
-        $menu_note = t('The menu item can be customized and configured only once the menu module has been <a href="@modules-page">enabled</a>.', array('@modules-page' => url('admin/modules')));
+      $output .= '<h3>' . t('Configuration and setup') . '</h3>';
+      $output .= '<p>' . t('While an attempt has been made at setting sensible defaults, the configuration should be reviewed and tweaked before sending any messages.') . '</p>';
+      $output .= '<p>' . t('Before sending any mass e-mails, at least one category needs to be created, which can be done at the same location where the administrative settings are. ') . '</p>';
+      $output .= '<p>' . t("By default, the e-mails are sent as plain text. If the Mime Mail module is enabled, the e-mails may be sent as HTML and may include one or more binary file attachments (if permitted by admin).") . '</p>';
+
+      $output .= '<h3>' . t('Miscelaneous information') . '</h3>';
+      $output .= '<p>' . t("This module works by sending a single e-mail to your mail server with all of the recipients' e-mail addresses in either the 'To:' or 'Bcc:' field. The mail server is then responsible for parsing out the recipients' addresses and forwarding the message along to everyone.") . '</p>';
+      $output .= '<p>' . t("When using the Bcc option, recipients are not potentially left open to abuse due to their e-mail addresses being visible to all other recipients.") . '</p>';
+
+      $output .= '<h3>' . t('Menu structure') . '</h3>';
+      $output .= '<p>' . t('Here is a description of the menu items and links Mass Contact provides:') . '</p>';
+      $output .= '<table><thead>';
+      $output .= '<tr><th>' . t('URL') . '</th><th>' . t('Label') . '</th><th>' . t('Description') . '</th><th>' . t('To have access to this URL, users must have this permission') . '</th></tr></thead>';
+      $output .= '<tbody><tr><td>' . t('/admin/config/system/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The main administrative interface, which defaults to the Category listing page.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
+      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/list') . '</td><td>' . t('Category list') . '</td><td>' . t('List the currently defined categories.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
+      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/add') . '</td><td>' . t('Add category') . '</td><td>' . t('Add a new category.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
+      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/edit/$category_id') . '</td><td>' . t("Edit Mass Contact category (the 'edit' operation in the Category list)") . '</td><td>' . t('Edit an existing category') . '</td><td>' . t('administer mass contact') . '</td></tr>';
+      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/delete/$category_id') . '</td><td>' . t("Delete Mass Contact category (the 'delete' operation in the Category list)") . '</td><td>' . t('Delete an existing category.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
+      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/settings') . '</td><td>' . t('Settings') . '</td><td>' . t('Administrative settings to modify how Mass Contact operates. There are three sub pages under this one: Miscellaneous, Message header and Message body.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
+      $output .= '<tr><td>' . t('/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The main Mass Contact form for sending messages.') . '</td><td>' . t('send mass contact e-mails') . '</td></tr>';
+      $output .= '<tr><td>' . t('/node/add/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The add content page for adding a Mass Contact content item. This is not really useful on its own.') . '</td><td>' . t('create mass_contact content') . '</td></tr>';
+      $output .= '</tbody></table>';
+
+      $output .= '<h3>' . t('Troubleshooting') . '</h3>';
+      $output .= '<p>' . t('Verify the permission set correctly.') . '</p>';
+      $output .= '<p>' . t('When sending messages as Bcc (hiding the recipients from each other) and breaking up a large recipient list into smaller chunks or sending to multiple categories while retaining the category name in the subject, keep in mind that the sender will receive a copy of the message for every group of recipients the list is broken up into. That is normal behavior and cannot be changed.') . '</p>';
+      $output .= '<p>' . t('If your category permissions are not showing up correctly, check your category name and make sure you do not have any stray characters or any characters that Drupal does not allow.') . '</p>';
+      $output .= '<p>' . t('If you experience "return-path" errors when sending e-mail, you can try the !returnpath module to see if that solves your problem.', array('!returnpath' => l('Return-Path', 'http://drupal.org/project/returnpath'))) . '</p>';
+      if (user_access('view site reports')) {
+        $drupal_logs = t("Drupal's !logs in the !reports.", array('!logs' => l('log messages', 'admin/reports/dblog'), '!reports' => l('Reports section', 'admin/reports')));
       }
       else {
-        $menu_note = '';
+        $drupal_logs = t("Drupal's log messages in the Reports section.");
       }
+      $output .= '<p>' . t("If PHP's mail() function encounters an error, it just returns FALSE and Drupal presents a message like this: 'Unable to send e-mail. Contact the site administrator if the problem persists.'
+                            To find what the cause of the error is, you may need to reference a number of logs:") .
+                            '<ul><li>' . $drupal_logs . '</li>' .
+                            '<li>' . t("The host server's system logs. For most Linux systems, the log files are usually stored in /var/log. The system messages are usually stored in /var/log/messages or /var/log/syslog.") . '</li>' .
+                            '<li>' . t("The HTTP server software's logs. For Apache on Linux, it's log files are usually found in /var/log/httpd, /var/log/apache or /var/log/apache2.") . '</li>' .
+                            '<li>' . t("The mail server software's logs. Most mail servers store thier logs in /var/log/mail*, where 'mail*' might be a directory or it might be a number of files in /var/log, including (but not limited to) mail.log, mail.info, mail.warn and mail.err.") . '</li></ul></p>';
+      $output .= '<p>' . t('If you are also using other mail related modules on your Drupal installation (i.e.: !htmlmail module, !mimemail module, !phpmailer module, !smtp module, etc.), be sure to check the issue queues for those modules for solutions, as well.', array('!htmlmail' => l('HTML Mail', 'http://drupal.org/project/htmlmail'), '!mimemail' => l('Mime Mail', 'http://drupal.org/project/mimemail'), '!phpmailer' => l('PHPMailer', 'http://drupal.org/project/phpmailer'), '!smtp' => l('SMTP Authentication Support', 'http://drupal.org/project/smtp'))) . '</p>';
 
-      $output .= '<p>' . t('The Mass Contact module also adds a <a href="@menu-settings">menu item</a> to the navigation block.', array('@menu-settings' => url('admin/structure/menu'))) . ' ' . $menu_note . '</p>';
       return ($output);
   }
 } // End of mass_contact_help().
@@ -238,10 +267,9 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
       // Start with the 'authenticated user' role, as it's not in the database.
       $users_roles[] = 2;
       // Get all the roles this user is a memeber of.
-      global $user;
       $user_roles = db_select('users_roles', 'ur')
         ->fields('ur', array('rid'))
-        ->condition('uid', $user->uid)
+        ->condition('uid', $account->uid)
         ->execute();
       // Put them into an array for later reference.
       foreach ($user_roles as $user_role) {

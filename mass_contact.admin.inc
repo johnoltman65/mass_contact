@@ -8,7 +8,6 @@
  * through selected roles.
  */
 
-
 /* **************************************************************
  *
  * Functions for listing, adding/editing and deleting categories.
@@ -507,20 +506,22 @@ function mass_contact_admin_settings_body($form, $form_state) {
     '#description' => t('You may specify additional text to insert before and/or after the message text of every mass e-mail that is sent.'),
   );
   if (module_exists('token')) {
+    $mass_contact_message_prefix = variable_get('mass_contact_message_prefix');
     $form['mass_contact_supplemental_texts']['mass_contact_message_prefix']['mass_contact_message_prefix'] = array(
       '#type' => 'text_format',
       '#title' => t('Text to be prepended to all messages'),
-//      '#default_value' => variable_get('mass_contact_message_prefix', t('[user-name] has sent you a group e-mail from [site-name].')),
+      '#default_value' => isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[user-name] has sent you a group e-mail from [site-name].'),
+      '#format' => isset($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL,
       '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed before the message text entered in by the sender.'),
-//      '#format' => filter_form(variable_get('mass_contact_prefix_format', FILTER_FORMAT_DEFAULT), NULL, array('mass_contact_prefix_format')),
     );
 
+    $mass_contact_message_suffix = variable_get('mass_contact_message_suffix');
     $form['mass_contact_supplemental_texts']['mass_contact_message_suffix']['mass_contact_message_suffix'] = array(
       '#type' => 'text_format',
       '#title' => t('Text to be appended to all messages'),
-//      '#default_value' => variable_get('mass_contact_message_suffix', ''),
+      '#default_value' => isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '',
+      '#format' => isset($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL,
       '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed after the message text entered in by the sender.'),
-//      '#format' => filter_form(variable_get('mass_contact_suffix_format', FILTER_FORMAT_DEFAULT), NULL, array('mass_contact_suffix_format')),
     );
 
     // Display the user documentation of placeholders supported by this
@@ -538,19 +539,22 @@ function mass_contact_admin_settings_body($form, $form_state) {
     );
   }
   else {
+    $mass_contact_message_prefix = variable_get('mass_contact_message_prefix');
     $form['mass_contact_supplemental_texts']['mass_contact_message_prefix'] = array(
       '#type' => 'text_format',
       '#title' => t('Text to be prepended to all messages'),
-      '#default_value' => variable_get('mass_contact_message_prefix', t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))))),
+      '#default_value' => isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))),
+      '#format' => isset($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL,
       '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed before the message text entered in by the sender.'),
-//      '#format' => filter_form(variable_get('mass_contact_prefix_format', FILTER_FORMAT_DEFAULT), NULL, array('mass_contact_prefix_format')),
     );
+
+    $mass_contact_message_suffix = variable_get('mass_contact_message_suffix');
     $form['mass_contact_supplemental_texts']['mass_contact_message_suffix'] = array(
       '#type' => 'text_format',
       '#title' => t('Text to be appended to all messages'),
-      '#default_value' => variable_get('mass_contact_message_suffix', t('')),
+      '#default_value' => isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '',
+      '#format' => isset($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL,
       '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed after the message text entered in by the sender.'),
-//      '#format' => filter_form(variable_get('mass_contact_suffix_format', FILTER_FORMAT_DEFAULT), NULL, array('mass_contact_suffix_format')),
     );
   }
 
@@ -560,61 +564,89 @@ function mass_contact_admin_settings_body($form, $form_state) {
     '#type' => 'fieldset',
     '#title' => t('HTML Settings'),
   );
-  $form['mass_contact_html_settings']['mass_contact_html_d'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Send as HTML by default.'),
-    '#default_value' => variable_get('mass_contact_html_d', 1),
-  );
-  $form['mass_contact_html_settings']['mass_contact_html_d_override'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow sender to override HTML setting.'),
-    '#default_value' => variable_get('mass_contact_html_d_override', 1),
-  );
+  if (module_exists('mimemail')) {
+/*
+    $form['mass_contact_html_settings']['mass_contact_html_d'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Send as HTML by default.'),
+      '#default_value' => variable_get('mass_contact_html_d', 1),
+    );
+    $form['mass_contact_html_settings']['mass_contact_html_d_override'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow sender to override HTML setting.'),
+      '#default_value' => variable_get('mass_contact_html_d_override', 1),
+    );
+*/
+    $mass_contact_html_format = variable_get('mass_contact_html_format');
+    $form['mass_contact_html_settings']['mass_contact_html_format'] = array(
+      '#type' => 'text_format',
+      '#base_type' => 'item',
+      '#title' => t('The default text format'),
+      '#format' => isset($mass_contact_html_format['format']) ? $mass_contact_html_format['format'] : NULL,
+      '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not choose any HTML formats below.'),
+    );
+    $form['mass_contact_html_settings']['mass_contact_html_format_override'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow sender to override the text format.'),
+      '#default_value' => variable_get('mass_contact_html_format_override', 0),
+    );
 
-//  $form['mass_contact_html_settings']['mass_contact_html_format'] = filter_form(variable_get('mass_contact_html_format', FILTER_FORMAT_DEFAULT), NULL, array('mass_contact_html_format'));
-  $form['mass_contact_html_settings']['mass_contact_html_format_override'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow sender to override input filter setting.'),
-    '#default_value' => variable_get('mass_contact_html_format_override', 0),
-  );
+    $form['mass_contact_html_settings']['mass_contact_allowed_text_formats'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Allowed text formats'),
+      '#description' => t('In addition to the default text format chosen above, specify all text formats the user is allowed to use when sending a message.'),
+    );
 
-  $form['mass_contact_html_settings']['mass_contact_check_markup'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Check HTML markup.'),
-    '#default_value' => variable_get('mass_contact_check_markup', 1),
-    '#description' => t('Runs the body text through an HTML markup checker. Disabling this is not recommeneded. However, if your messages are not coming through as they should, this may fix it.'),
-  );
+    $filter_formats = filter_formats();
+    foreach ($filter_formats as $filter_format) {
+      $form['mass_contact_html_settings']['mass_contact_allowed_text_formats']['mass_contact_' . $filter_format->format] = array(
+        '#type' => 'checkbox',
+        '#title' => t($filter_format->name),
+        '#default_value' => variable_get('mass_contact_' . $filter_format->format, 0),
+      );
+    }
+
+    $form['mass_contact_html_settings']['mass_contact_check_markup'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Check HTML markup.'),
+      '#default_value' => variable_get('mass_contact_check_markup', 1),
+      '#description' => t('Runs the body text through an HTML markup checker. Disabling this is not recommeneded. However, if your messages are not coming through as they should, this may fix it.'),
+    );
+  }
+  else {
+    $form['mass_contact_html_settings']['mass_contact_no_mimemail'] = array(
+      '#type' => 'item',
+      '#description' => t('This module no longer supports HTML e-mail without the Mime Mail module, which can be found here: http://drupal.org/project/mimemail.'),
+    );
+  }
 
   ////////////////////////////////////////////////////////////
   // Attachment options.
-  $form['mass_contact_number_of_attachments'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Number of attachments'),
-    '#default_value' => variable_get('mass_contact_number_of_attachments', '3'),
-    '#size' => 10,
-    '#description' => t("The number of attachments to allow on the contact form. The maximum number of allowed uploads may be limited by PHP. If necessary, check your system's PHP php.ini file for a max_file_uploads directive to change."),
+  $form['mass_contact_attachment_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Attachment Settings'),
   );
-  $form['mass_contact_attachment_location'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Attachment location'),
-    '#default_value' => variable_get('mass_contact_attachment_location', variable_get('file_public_path', conf_path() . '/files') . '/mass_contact_attachments'),
-    '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment so it can be viewed later.'),
-  );
+  if (module_exists('mimemail')) {
+    $form['mass_contact_attachment_settings']['mass_contact_number_of_attachments'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of attachments'),
+      '#default_value' => variable_get('mass_contact_number_of_attachments', '3'),
+      '#size' => 10,
+      '#description' => t("The number of attachments to allow on the contact form. The maximum number of allowed uploads may be limited by PHP. If necessary, check your system's PHP php.ini file for a max_file_uploads directive to change."),
+    );
+    $form['mass_contact_attachment_settings']['mass_contact_attachment_location'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Attachment location'),
+      '#default_value' => variable_get('mass_contact_attachment_location', variable_get('file_public_path', conf_path() . '/files') . '/mass_contact_attachments'),
+      '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment so it can be viewed later.'),
+    );
+  }
+  else {
+    $form['mass_contact_attachment_settings']['mass_contact_no_mimemail'] = array(
+      '#type' => 'item',
+      '#description' => t('This module no longer supports attachments without the Mime Mail module, which can be found here: http://drupal.org/project/mimemail.'),
+    );
+  }
 
   return system_settings_form($form);
 } // End of mass_contact_admin_settings_body().
-
-/**
- * Validates the message header administration settings form.
- *
- * @param form
- *   An associative array containing the structure of the form.
- * @param form_state
- *   A keyed array containing the current state of the form.
- * /
-function mass_contact_admin_settings_body_validate($form, &$form_state) {
-  if ($form_values['mass_contact_number_of_attachments'] > ini_get('max_file_uploads')) {
-    form_set_error('mass_contact_number_of_attachments', t("The number of attachments you have specified, @num_attachments, is greater than your system's PHP configuration of @max_file_uploads.", array('!num_attachments' => $form_values['mass_contact_number_of_attachments'], '!max_file_uploads' => ini_get('max_file_uploads'))));
-  }
-} // End of mass_contact_admin_settings_body_validate().
-*/

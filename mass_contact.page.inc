@@ -233,25 +233,18 @@ function mass_contact_mail_page($form, $form_state) {
 
     ////////////////////////////////////////////////////////////
     // Add the field for specifying the body of the message.
-    $form['body_filter']['message'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Message'),
-      '#rows' => 12,
-      '#required' => TRUE,
-    );
-
-    ////////////////////////////////////////////////////////////
+    //
     // Add the fields for specifying whether the message is in HTML format or
     // not, and what the input format is.
+    //
     // Get the HTML input format setting and the corresponding name.
-    if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
-/*
-      $html_filter_format = variable_get('mass_contact_html_format', FILTER_FORMAT_DEFAULT);
+    if (module_exists('mimemail')) {
+      $html_filter_format = variable_get('mass_contact_html_format', 'FILTER_FORMAT_DEFAULT');
       if ($html_filter_format) {
         global $user;
         $filter_formats = filter_formats($user);
         foreach ($filter_formats as $filter_format) {
-          if ($filter_format->format == $html_filter_format) {
+          if ($filter_format->format == $html_filter_format['format']) {
             $html_filter_format_name = $filter_format->name;
           }
         }
@@ -259,62 +252,99 @@ function mass_contact_mail_page($form, $form_state) {
       else {
         $html_filter_format_name = 'the default';
       }
- */
+
       // Check if the user is allowed override the HTML setting.
       if (variable_get('mass_contact_html_d_override', 1)) {
+dpm('One');
+        // Check if the user is allowed to override the text format setting.
+        if (variable_get('mass_contact_html_format_override', 0)) {
+dpm('Two');
+          // The user is allowed, so add that to the form.
+          $form['body_filter']['message'] = array(
+            '#type' => 'text_format',
+            '#title' => t('Message'),
+            '#format' => $html_filter_format['format'],
+            '#rows' => 12,
+            '#required' => TRUE,
+          );
+        }
+        else {
+dpm('Three');
+          // The user is not allowed to override the text format setting, so
+          // show a normal textarea form field.
+          $form['body_filter']['message'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Message'),
+            '#rows' => 12,
+            '#required' => TRUE,
+          );
+          // And save the text format information for later use.
+          $form['html_format'] = array(
+            '#type' => 'value',
+            '#value' => $html_filter_format,
+          );
+          // Display text format information to the user.
+          $form['html_info'] = array(
+            '#type' => 'item',
+            '#description' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent using the %filter text format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('%filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
+          );
+        }
+
         $form['html'] = array(
           '#type' => 'checkbox',
           '#title' => t('Send as HTML.'),
           '#default_value' => variable_get('mass_contact_html_d', 1),
         );
-/*
-        // Check if the user is allowed to override the input format setting.
-        if (variable_get('mass_contact_html_format_override', 0)) {
-          // The user is allowed, so add that to the form.
-          $form['body_filter']['format'] = filter_form($html_filter_format, NULL, array('mass_contact_html_format'));
-        }
-        else {
-          // The user is not allowed, so save the setting for later use.
-          $form['html_format'] = array(
-            '#type' => 'value',
-            '#value' => $html_filter_format,
-          );
-          // Display information to the user.
-          $form['html-info'] = array(
-            '#value' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent using the @filter input format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('@filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
-          );
-        }
- */
       }
       else {
+dpm('Four');
         // The user is not allowed override the HTML setting.
-        // Save the setting for later use.
+        // Save the information for later use.
         $form['html'] = array(
           '#type' => 'value',
           '#value' => variable_get('mass_contact_html_d', 1),
         );
-/*
-        // Check if the user is allowed to override the input format setting.
+
+        // Check if the user is allowed to override the text format setting.
         if (variable_get('mass_contact_html_format_override', 0)) {
-          // Display information to the user.
-          $form['html-info'] = array(
-            '#value' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent as HTML.') : t('The message will be sent as plain text.')) . '</p>',
-          );
+dpm('Five');
           // The user is allowed, so add that to the form.
-          $form['body_filter']['format'] = filter_form($html_filter_format, NULL, array('mass_contact_html_format'));
+          $form['body_filter']['message'] = array(
+            '#type' => 'text_format',
+            '#title' => t('Message'),
+            '#format' => $html_filter_format['format'],
+            '#rows' => 12,
+            '#required' => TRUE,
+          );
+          // Display HTML information to the user.
+          $form['html_info'] = array(
+            '#type' => 'item',
+            '#description' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent as HTML.') : t('The message will be sent as plain text.')) . '</p>',
+          );
         }
         else {
-          // The user is not allowed, so save the setting for later use.
+dpm('Six');
+          // The user is not allowed to override the text format setting, so
+          // show a normal textarea form field.
+          $form['body_filter']['message'] = array(
+            '#type' => 'textarea',
+            '#title' => t('Message'),
+            '#rows' => 12,
+            '#required' => TRUE,
+          );
+          // And save the text format information for later use.
           $form['html_format'] = array(
             '#type' => 'value',
             '#value' => $html_filter_format,
           );
-          // Display information to the user.
-          $form['html-info'] = array(
-            '#value' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent as HTML, using the @filter input format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('!filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
+          // Display text format information to the user.
+          $form['html_info'] = array(
+            '#type' => 'item',
+            '#description' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent as HTML, using the %filter input format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('%filter' => $html_filter_format_name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
           );
+dpm($form['html_format']);
+dpm($form['html_info']);
         }
- */
       }
     }
 
@@ -486,14 +516,16 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
   // If there are attachments, add them.
   if ($boundary_attachment) {
-    if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
+    if (module_exists('mimemail')) {
       $message_attachments = _mass_contact_process_mime_mail_attachments();
     }
+/*
     else {
       $message = _mass_contact_process_attachments($message, $boundary_attachment);
       // Add the closing boundary line (RFC 2046, section 5.1 and 5.1.1).
       $message .= "--$boundary_attachment--\n";
     }
+*/
   }
 
   // Add the message to the main variable.
@@ -785,11 +817,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       drupal_set_message(t('A copy was sent to you.'));
     }
     else {
-      if (user_access('access site reports')) {
-        drupal_set_message(t('A copy could not be sent to you. Please check the @logs for errors.', array('@logs' => l(t('logs'), 'admin/reports/dblog'))));
+      if (!module_exists('help')) {
+        drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's !help page or README.txt.", array('@errors' => $send_error, '!help' => l(t('help'), 'admin/help/mass_contact'))));
       }
       else {
-        drupal_set_message(t('A copy could not be sent to you. Please have a system administrator check the logs for errors.'));
+        drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's README.txt.", array('@errors' => $send_error)));
       }
     }
   }
@@ -816,11 +848,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     }
     else {
       // Inform the user of the error.
-      if (user_access('access site reports')) {
-        drupal_set_message(t('@errors error(s) were encountered sending the message. Please check the @logs for errors.', array('@errors' => $send_error, '@logs' => l(t('logs'), 'admin/reports/dblog'))));
+      if (module_exists('help')) {
+        drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's !help page or README.txt.", array('@errors' => $send_error, '!help' => l(t('help'), 'admin/help/mass_contact'))));
       }
       else {
-        drupal_set_message(t('@errors error(s) were encountered sending the message. Please have a system administrator check the logs for errors.', array('@errors' => $send_error)));
+        drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's README.txt.", array('@errors' => $send_error)));
       }
     }
   }
@@ -891,7 +923,7 @@ function _mass_contact_prepare_bodies($form_values) {
 
   // If this is supposed to be an HTML e-mail, we need to process the plain
   // text part differently.
-  if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
+  if (module_exists('mimemail')) {
     if ($form_values['html']) {
       // Start with the message prefix.
       $body['plain'] .= _mass_contact_prepare_message_addon('prefix', 'converted');
@@ -921,7 +953,7 @@ function _mass_contact_prepare_bodies($form_values) {
   }
 
   // If this is an HTML message, create the HTML body part.
-  if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
+  if (module_exists('mimemail')) {
     if ($form_values['html']) {
       // Start with the message prefix.
       $body['html'] .= _mass_contact_prepare_message_addon('prefix', 'html');
@@ -971,11 +1003,11 @@ function _mass_contact_prepare_message_addon($addon, $style) {
   switch ($addon) {
     case 'prefix':
       $message_addon = variable_get('mass_contact_message_prefix', '');
-//      $addon_format = variable_get('mass_contact_prefix_format', FILTER_FORMAT_DEFAULT);
+//      $addon_format = variable_get('mass_contact_prefix_format', 'FILTER_FORMAT_DEFAULT');
       break;
     case 'suffix':
       $message_addon = variable_get('mass_contact_message_suffix', '');
-//      $addon_format = variable_get('mass_contact_suffix_format', FILTER_FORMAT_DEFAULT);
+//      $addon_format = variable_get('mass_contact_suffix_format', 'FILTER_FORMAT_DEFAULT');
       break;
   }
 
@@ -1372,7 +1404,8 @@ function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
  */
 function _mass_contact_send_message($mail_key, $from, $to, $params, $attachments = array()) {
   // Send the e-mail to the recipients:
-  if (module_exists('mimemail') && variable_get('mimemail_alter', 0) == 1) {
+/*
+  if (module_exists('mimemail')) {
     $body = implode("\n\n", $params['body']);
 
     if ($form_state['values']['html'] == 1) {
@@ -1383,8 +1416,9 @@ function _mass_contact_send_message($mail_key, $from, $to, $params, $attachments
     }
   }
   else {
+*/
     $success = drupal_mail('mass_contact', $mail_key, $to, language_default(), $params, $from);
-  }
+//  }
 
   return $success;
 } // End of _mass_contact_send_message().

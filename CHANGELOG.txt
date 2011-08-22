@@ -1,3 +1,21 @@
+2011-08-19 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module
+    * Modified mass_contact_form_user_profile_form_alter() so that editing a
+      user other than the currently logged in user shows the correct assigned
+      categories.
+  * mass_contact.module, README.txt:
+    * Extensively modified the various help texts to be more readable and to
+      reflect reality.
+  * mass_contact.page.inc:
+    * Updated error messages to point to the help texts.
+  * mass_contact.admin.inc:
+    * Fixed how text formats for the prefix, suffix and default HTML filter
+      settings work.
+
+2011-08-18 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Changed a couple of t() @ placeholders back to !.
+
 2011-08-12 Jason Flatt drupal@oadaeh.net
   * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc:
     * Changed t() ! placeholders to @.
