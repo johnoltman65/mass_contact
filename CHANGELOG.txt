@@ -1,3 +1,13 @@
+2011-08-24 Jason Flatt drupal@oadaeh.net
+  * mass_contact.admin.inc, mass_contact.page.inc:
+    * Fixed and simplified how text formats work for the default text format,
+      since Drupal doesn't have the provision for allowing one to specify the
+      list of available text formats through FAPI (if at all).
+  * mass_contact.admin.inc:
+    * Simplified the code behind the message prefix and suffix fields.
+  * mass_contact.page.inc:
+    * Account for more options whan setting $from_name and $from_email.
+
 2011-08-19 Jason Flatt drupal@oadaeh.net
   * mass_contact.module
     * Modified mass_contact_form_user_profile_form_alter() so that editing a

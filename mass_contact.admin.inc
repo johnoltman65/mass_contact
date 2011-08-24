@@ -498,6 +498,9 @@ function mass_contact_admin_settings_header_validate($form, &$form_state) {
  *   An associative array that defines the form to be built.
  */
 function mass_contact_admin_settings_body($form, $form_state) {
+  $mimemail = module_exists('mimemail');
+  $token = module_exists('token');
+
   ////////////////////////////////////////////////////////////
   // Supplemental texts that are prepended and/or appended to every message.
   $form['mass_contact_supplemental_texts'] = array(
@@ -505,25 +508,47 @@ function mass_contact_admin_settings_body($form, $form_state) {
     '#title' => t('Supplemental message body texts'),
     '#description' => t('You may specify additional text to insert before and/or after the message text of every mass e-mail that is sent.'),
   );
-  if (module_exists('token')) {
-    $mass_contact_message_prefix = variable_get('mass_contact_message_prefix');
-    $form['mass_contact_supplemental_texts']['mass_contact_message_prefix']['mass_contact_message_prefix'] = array(
-      '#type' => 'text_format',
-      '#title' => t('Text to be prepended to all messages'),
-      '#default_value' => isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[user-name] has sent you a group e-mail from [site-name].'),
-      '#format' => isset($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL,
-      '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed before the message text entered in by the sender.'),
-    );
 
-    $mass_contact_message_suffix = variable_get('mass_contact_message_suffix');
-    $form['mass_contact_supplemental_texts']['mass_contact_message_suffix']['mass_contact_message_suffix'] = array(
-      '#type' => 'text_format',
-      '#title' => t('Text to be appended to all messages'),
-      '#default_value' => isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '',
-      '#format' => isset($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL,
-      '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed after the message text entered in by the sender.'),
-    );
+  $mass_contact_message_prefix = variable_get('mass_contact_message_prefix');
+  $mass_contact_message_suffix = variable_get('mass_contact_message_suffix');
 
+  if ($mimemail) {
+    $field_type = 'text_format';
+    $prefix_format = isset($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL;
+    $suffix_format = isset($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL;
+  }
+  else {
+    $field_type = 'textarea';
+    $prefix_format = NULL;
+    $suffix_format = NULL;
+  }
+
+  if ($token) {
+    $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[user-name] has sent you a group e-mail from [site-name].');
+    $suffix_default_value = isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+  }
+  else {
+    $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
+    $suffix_default_value = isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+  }
+
+  $form['mass_contact_supplemental_texts']['mass_contact_message_prefix'] = array(
+    '#type' => $field_type,
+    '#title' => t('Text to be prepended to all messages'),
+    '#default_value' => $prefix_default_value,
+    '#format' => $prefix_format,
+    '#description' => t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed before the message text entered in by the sender.'),
+  );
+
+  $form['mass_contact_supplemental_texts']['mass_contact_message_suffix'] = array(
+    '#type' => $field_type,
+    '#title' => t('Text to be appended to all messages'),
+    '#default_value' => $suffix_default_value,
+    '#format' => $suffix_format,
+    '#description' => t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed after the message text entered in by the sender.'),
+  );
+
+  if ($token) {
     // Display the user documentation of placeholders supported by this
     // module, as a description on the last pattern
     $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens'] = array(
@@ -538,25 +563,6 @@ function mass_contact_admin_settings_body($form, $form_state) {
       '#token_types' => array('global'),
     );
   }
-  else {
-    $mass_contact_message_prefix = variable_get('mass_contact_message_prefix');
-    $form['mass_contact_supplemental_texts']['mass_contact_message_prefix'] = array(
-      '#type' => 'text_format',
-      '#title' => t('Text to be prepended to all messages'),
-      '#default_value' => isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))),
-      '#format' => isset($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL,
-      '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed before the message text entered in by the sender.'),
-    );
-
-    $mass_contact_message_suffix = variable_get('mass_contact_message_suffix');
-    $form['mass_contact_supplemental_texts']['mass_contact_message_suffix'] = array(
-      '#type' => 'text_format',
-      '#title' => t('Text to be appended to all messages'),
-      '#default_value' => isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '',
-      '#format' => isset($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL,
-      '#description' => t('The text you specify above will be added to all e-mails sent out. The text will be placed after the message text entered in by the sender.'),
-    );
-  }
 
   ////////////////////////////////////////////////////////////
   // HTML options.
@@ -564,47 +570,21 @@ function mass_contact_admin_settings_body($form, $form_state) {
     '#type' => 'fieldset',
     '#title' => t('HTML Settings'),
   );
-  if (module_exists('mimemail')) {
-/*
-    $form['mass_contact_html_settings']['mass_contact_html_d'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Send as HTML by default.'),
-      '#default_value' => variable_get('mass_contact_html_d', 1),
-    );
-    $form['mass_contact_html_settings']['mass_contact_html_d_override'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Allow sender to override HTML setting.'),
-      '#default_value' => variable_get('mass_contact_html_d_override', 1),
-    );
-*/
+  if ($mimemail) {
     $mass_contact_html_format = variable_get('mass_contact_html_format');
     $form['mass_contact_html_settings']['mass_contact_html_format'] = array(
       '#type' => 'text_format',
       '#base_type' => 'item',
       '#title' => t('The default text format'),
       '#format' => isset($mass_contact_html_format['format']) ? $mass_contact_html_format['format'] : NULL,
-      '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not choose any HTML formats below.'),
+      '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not aloow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
     );
+
     $form['mass_contact_html_settings']['mass_contact_html_format_override'] = array(
       '#type' => 'checkbox',
       '#title' => t('Allow sender to override the text format.'),
       '#default_value' => variable_get('mass_contact_html_format_override', 0),
     );
-
-    $form['mass_contact_html_settings']['mass_contact_allowed_text_formats'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Allowed text formats'),
-      '#description' => t('In addition to the default text format chosen above, specify all text formats the user is allowed to use when sending a message.'),
-    );
-
-    $filter_formats = filter_formats();
-    foreach ($filter_formats as $filter_format) {
-      $form['mass_contact_html_settings']['mass_contact_allowed_text_formats']['mass_contact_' . $filter_format->format] = array(
-        '#type' => 'checkbox',
-        '#title' => t($filter_format->name),
-        '#default_value' => variable_get('mass_contact_' . $filter_format->format, 0),
-      );
-    }
 
     $form['mass_contact_html_settings']['mass_contact_check_markup'] = array(
       '#type' => 'checkbox',
@@ -626,7 +606,7 @@ function mass_contact_admin_settings_body($form, $form_state) {
     '#type' => 'fieldset',
     '#title' => t('Attachment Settings'),
   );
-  if (module_exists('mimemail')) {
+  if ($mimemail) {
     $form['mass_contact_attachment_settings']['mass_contact_number_of_attachments'] = array(
       '#type' => 'textfield',
       '#title' => t('Number of attachments'),
