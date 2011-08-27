@@ -428,7 +428,6 @@ function mass_contact_mail_page_validate($form, &$form_state) {
  */
 function mass_contact_mail_page_submit($form, &$form_state) {
   // Initialize some variables.
-  $mimemail = module_exists('mimemail');
   $params = array();
   $bcc = $form_state['values']['bcc'];
   $nodecc = $form_state['values']['nodecc'];
@@ -459,7 +458,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
   // Check for the exsistance of attachments.
   $attachments = FALSE;
-  if ($mimemail) {
+  if (module_exists('mimemail')) {
     for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
       if (isset($_FILES['files']['size']['attachment_' . $i]) && $_FILES['files']['size']['attachment_' . $i] > 0) {
         $attachments = TRUE;
@@ -669,7 +668,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
               ++$ccc;
 
-              $success = _mass_contact_send_message('mail_page', $from_email, $to, $params);
+//dpm($params);
+              $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
 
               if ($success['result']) {
                 drupal_set_message(t('[Success] Send #@ccc: @e-mails', array('@ccc' => $ccc, '@e-mails' => $recipients)));
@@ -708,7 +708,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
             ++$ccc;
 
-            $success = _mass_contact_send_message('mail_page', $from_email, $to, $params);
+//dpm($params);
+            $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
 
             if ($success['result']) {
               drupal_set_message(t('[Success] Send Remainder: @e-mails', array('@e-mails' => $recipients)));
@@ -749,7 +750,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           $params['subject'] = $recipient_list['subject'];
 
-          $success = _mass_contact_send_message('mail_page', $from_email, $to, $params);
+//dpm($params);
+          $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
 
           if ($success['result']) {
             drupal_set_message(t('[Success] Send Once: @e-mails', array('@e-mails' => $listed_recipients)));
@@ -769,7 +771,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
   // Send a copy to self, if requested.
   if (!$no_recipients && $form_state['values']['copy'] && !$bcc) {
-    $success = _mass_contact_send_message('user-copy', $from_email, $from_email, $params);
+    $success = drupal_mail('mass_contact', 'user-copy', $to, language_default(), $params, $from_email);
 
     // Inform the user.
     if ($success['result']) {
@@ -844,22 +846,15 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 function _mass_contact_prepare_header() {
   $params = array();
 
-/*
-  // Set the "Content-Type" header based on the presence or absence of an
-  // attachment and the HTML setting.
-  if ($boundary_attachment) {
-    $params['headers']['Content-Type'] = 'multipart/mixed; boundary="' . $boundary_attachment . '"';
+  if (module_exists('mimemail')) {
+//    $params['plain'] = !$email['html'];
+//    $params['plaintext'] = $email['html'] ? NULL : $email['message'];
+    // Mime Mail requires this header or it will filter all text.
+    $params['headers']['Content-Type'] = 'text/html; charset=UTF-8';
   }
-  elseif ($boundary_html) {
-    $params['headers']['Content-Type'] = 'multipart/alternative; boundary="' . $boundary_html . '"';
+  elseif ($character_set = variable_get('mass_contact_character_set', '')) {
+    $params['headers']['Content-Type'] = 'text/plain; charset=' . $character_set . '; format=flowed';
   }
-  else {
-*/
-    $character_set = variable_get('mass_contact_character_set', '');
-    if (!empty($character_set)) {
-      $params['headers']['Content-Type'] = 'text/plain; charset=' . $character_set . '; format=flowed';
-    }
-//  }
 
   return $params;
 } // End of _mass_contact_prepare_header().
@@ -889,10 +884,10 @@ function _mass_contact_prepare_bodies($form_values) {
 
     // Add in the actual message.
     if ($check_markup) {
-      $body['plain'] .= drupal_html_to_text(check_markup($form_values['message'], $form_values['mass_contact_html_format'])) . "\n";
+      $body['plain'] .= drupal_html_to_text(check_markup($form_values['message']['value'], $form_values['message']['format'])) . "\n";
     }
     else {
-      $body['plain'] .= drupal_html_to_text($form_values['message']) . "\n";
+      $body['plain'] .= drupal_html_to_text($form_values['message']['value']) . "\n";
     }
 
     // End with the message suffix.
@@ -905,10 +900,10 @@ function _mass_contact_prepare_bodies($form_values) {
 
     // Add in the actual message.
     if ($check_markup) {
-      $body['html'] .= check_markup($form_values['message'], $form_values['mass_contact_html_format']);
+      $body['html'] .= check_markup($form_values['message']['value'], $form_values['message']['format']);
     }
     else {
-      $body['html'] .= $form_values['message'];
+      $body['html'] .= $form_values['message']['value'];
     }
 
     // End with the message suffix.
@@ -921,7 +916,7 @@ function _mass_contact_prepare_bodies($form_values) {
     $body['plain'] .= _mass_contact_prepare_message_addon('prefix', 'converted');
 
     // Add in the actual message.
-    $body['plain'] .= wordwrap(drupal_html_to_text($form_values['message'])) . "\n";
+    $body['plain'] .= wordwrap(drupal_html_to_text($form_values['message']['value'])) . "\n";
 
     // End with the message suffix.
     $body['plain'] .= _mass_contact_prepare_message_addon('suffix', 'converted');
@@ -1021,81 +1016,6 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
 
 /**
- * Puts all of the pieces of the message together (except for the recipients).
- *
- * @param body
- *   A keyed array containing the prepared body as two strings. There are two
- *   possible values:
- *     $body['plain']: The plain text body part is here.
- *     $body['html']: The HTML body part is here.
- * @param boundary_attachment
- *   A string containing boundary for the attachments.
- * @param boundary_html
- *   A string containing boundary for the HTML part.
- *
- * @return
- *   A string containing the assembeled message.
- * /
-function _mass_contact_assemble_message($body, $boundary_html, $boundary_attachment) {
-  $message = '';
-  $character_set = variable_get('mass_contact_character_set', '');
-  $character_set = $character_set ? $character_set : 'UTF-8';
-
-  // Check to see if we have either an attachment or an HTML message.
-  if ($boundary_attachment || $boundary_html) {
-    // If we have either, we add the following.
-    $message .= "\nThis is a MIME-formatted multipart message.\n\nIf you see this text it means that your e-mail software does not support MIME-formatted multipart messages.\n\nYou might want to consider changing your e-mail software to one that understands how to properly display MIME-formatted multipart messages.\n";
-
-    // Add our boundary, based on the content.
-    if ($boundary_attachment) {
-      $message .= "\n--$boundary_attachment\n";
-    }
-    else {
-      $message .= "\n--$boundary_html\n";
-    }
-
-    // If we have both an attachment and an HTML message, we need the following.
-    if ($boundary_attachment && $boundary_html) {
-      $message .= 'Content-Type: multipart/alternative; boundary="' . $boundary_html . '"' . "\n";
-      $message .= "\n--$boundary_html\n";
-    }
-
-    // Add the plain text part to the message.
-    $message .= "Content-Type: text/plain; charset=$character_set; format=flowed\n";
-    // The 8bit Data mechanism is similar to 7bit, except that it allows for
-    // character sets other than US-ASCII to be used (RFC 2045, sections 2.7
-    // and 2.8).
-    // When the Content-Transfer-Encoding is not specified, "7bit" is the
-    // default mechanism (RFC 2045, sections 6 and 6.1).
-    $message .= "Content-Transfer-Encoding: 8bit\n\n";
-    $message .= $body['plain'];
-
-    // If there is an HTML part, add it to the message.
-    if ($boundary_html) {
-      $message .= "\n--$boundary_html\n";
-      $message .= "Content-Type: text/html; charset=$character_set; format=flowed\n";
-      // The 8bit Data mechanism is similar to 7bit, except that it allows for
-      // character sets other than US-ASCII to be used (RFC 2045, sections 2.7
-      // and 2.8).
-      // When the Content-Transfer-Encoding is not specified, "7bit" is the
-      // default mechanism (RFC 2045, sections 6 and 6.1).
-      $message .= "Content-Transfer-Encoding: 8bit\n\n";
-      $message .= $body['html'];
-      // Add the closing boundary line (RFC 2046, section 5.1 and 5.1.1).
-      $message .= "\n--$boundary_html--\n";
-    }
-  }
-  else {
-    // There is neither an attachment nor an HTML message, so this is not a
-    // multipart message, and we just add the plain text part.
-    $message .= $body['plain'];
-  }
-
-  return $message;
-} // End of _mass_contact_assemble_message().
-
-
-/**
  * Process attachments for use with Mime Mail.
  *
  * @return
@@ -1119,113 +1039,6 @@ function _mass_contact_process_mime_mail_attachments() {
 
   return $files;
 } // End of _mass_contact_process_mime_mail_attachments().
-
-
-/**
- * Check for attachments and process them, if one or more exists.
- *
- * @param message
- *   The message, as it exists, so far.
- * @param boundary_id
- *   The id to use as a boundary between attachments and the rest of the
- *   message.
- *
- * @return
- *   The attachments, ready to be appended to the existing message.
- * /
-function _mass_contact_process_attachments($message, $boundary_id) {
-  $message .= "\n";
-
-  // Loop through each possible attachment.
-  for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-    // Check to see if the attachment exists.
-    if ($_FILES['files']['size']['attachment_' . $i] > 0) {
-      // Process the attachment.
-      $message .= "--$boundary_id\n";
-      $message .= "Content-Type: " . $_FILES['files']['type']['attachment_' . $i] . "; name=\"" . $_FILES['files']['name']['attachment_' . $i] . "\"\n";
-      $message .= "Content-Transfer-Encoding: base64\n";
-      $message .= "Content-Disposition: attachment; filename=\"" . $_FILES['files']['name']['attachment_' . $i] . "\"\n\n";
-      if (file_exists($_FILES['files']['tmp_name']['attachment_' . $i])) {
-        $message .= chunk_split(base64_encode(file_get_contents($_FILES['files']['tmp_name']['attachment_' . $i])));
-      }
-      else {
-        $message .= chunk_split(base64_encode(file_get_contents(file_directory_temp() . '/' . $_FILES['files']['name']['attachment_' . $i])));
-      }
-
-      $message .= "\n";
-    }
-  }
-
-  return $message;
-} // End of _mass_contact_process_attachments().
-
-
-/**
- * Validate the attachment(s).
- *
- * @param form_id
- *   A unique string identifying the form.
- * @param form_values
- *   The contents of the form fields.
- */
-function _mass_contact_upload_validate($form_id, $form_values) {
-  // Accumulator for disk space quotas.
-  $filesize = 0;
-
-  // Loop through each possible attachment.
-  for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-    // Check to see if an attachment exists.
-    if ($_FILES['files']['size']['attachment_' . $i] > 0) {
-      global $user;
-
-      // Bypass validation for uid = 1.
-      if ($user->uid != 1) {
-        // Update filesize accumulator.
-        $filesize += $_FILES['files']['size']['attachment_' . $i];
-
-        $error = array();
-
-        // Validate file against all users roles.
-        // Only denies an upload when all roles prevent it.
-        foreach ($user->roles as $rid => $name) {
-          $extensions = variable_get("upload_extensions_$rid", variable_get('upload_extensions_default', 'jpg jpeg gif png txt doc xls pdf ppt pps odt ods odp'));
-          $uploadsize = variable_get("upload_uploadsize_$rid", variable_get('upload_uploadsize_default', 1)) * 1024 * 1024;
-          $usersize = variable_get("upload_usersize_$rid", variable_get('upload_usersize_default', 1)) * 1024 * 1024;
-
-          $regex = '/\.(' . ereg_replace(' +', '|', preg_quote($extensions)) . ')$/i';
-
-          if (!preg_match($regex, $_FILES['files']['name']['attachment_' . $i])) {
-            $error['extension']++;
-          }
-
-          if ($uploadsize && $_FILES['files']['size']['attachment_' . $i] > $uploadsize) {
-            $error['uploadsize']++;
-          }
-
-          if ($usersize && $filesize > $usersize) {
-            $error['usersize']++;
-          }
-        }
-
-        $user_roles = count($user->roles);
-        if ($error['extension'] == $user_roles) {
-          form_set_error('attachment_' . $i, t('The selected file %name can not be attached to this post, because it is only possible to attach files with the following extensions: %files-allowed.', array('%name' => $_FILES['files']['name']['attachment_' . $i], '%files-allowed' => $extensions)));
-        }
-        if ($error['uploadsize'] == $user_roles) {
-          form_set_error('attachment_' . $i, t('The selected file %name can not be attached to this post, because it exceeded the maximum filesize of %maxsize.', array('%name' => $_FILES['files']['name']['attachment_' . $i], '%maxsize' => format_size($uploadsize))));
-        }
-        if ($error['usersize'] == $user_roles) {
-          form_set_error('attachment_' . $i, t('The selected file %name can not be attached to this post, because the maximum file size of %quota per upload has been reached.', array('%name' => $_FILES['files']['name']['attachment_' . $i], '%quota' => format_size($usersize))));
-        }
-        if (drupal_strlen($_FILES['files']['name']['attachment_' . $i]) > 255) {
-          form_set_error('attachment_' . $i, t('The selected file %name can not be attached to this post, because the filename is too long.', array('%name' => $_FILES['files']['name']['attachment_' . $i])));
-        }
-      }
-    }
-  }
-} // End of _mass_contact_upload_validate().
-
-
 
 
 /**
@@ -1336,46 +1149,6 @@ function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
 
   return $recipient_list;
 } // End of _mass_contact_create_recipient_list().
-
-
-/**
- * Sends the message.
- *
- * @param mail_key
- *   The identifier for this message.
- * @param from
- *   The e-mail address of the person sending the message.
- * @param to
- *   The e-mail address(es) to whom the message is going.
- * @param message
- *   A keyed array with the rest of the details of the message, including the
- *   body of the message.
- * @param attachments
- *   An array with any included attachments described.
- *
- * @return
- *
- */
-function _mass_contact_send_message($mail_key, $from, $to, $params, $attachments = array()) {
-  // Send the e-mail to the recipients:
-/*
-  if (module_exists('mimemail')) {
-    $body = implode("\n\n", $params['body']);
-
-    if ($form_state['values']['html'] == 1) {
-      $success = mimemail($from, $to, $params['subject'], $body, NULL, $params['headers'], NULL, $attachments);
-    }
-    else {
-      $success = mimemail($from, $to, $params['subject'], $body, TRUE, $params['headers'], $body, $attachments);
-    }
-  }
-  else {
-*/
-    $success = drupal_mail('mass_contact', $mail_key, $to, language_default(), $params, $from);
-//  }
-
-  return $success;
-} // End of _mass_contact_send_message().
 
 
 /**

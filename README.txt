@@ -143,7 +143,7 @@ plain text e-mails.
 
 
 TROUBLESHOOTING:
- * Verify the permission set correctly.
+ * Verify the permissions are set correctly.
  * When sending messages as Bcc (hiding the recipients from each other) and
    breaking up a large recipient list into smaller chunks or sending to
    multiple categories while retaining the category name in the subject, keep
@@ -152,7 +152,8 @@ TROUBLESHOOTING:
    cannot be changed.
  * If your category permissions are not showing up correctly, check your
    category name and make sure you do not have any stray characters or any
-   characters that Drupal does not allow.
+   characters that Drupal does not allow, especially the single quote
+   character: '.
  * If you experience "return-path" errors when sending e-mail, you can try the
    Return-Path module (http://drupal.org/project/returnpath) to see if that
    solves your problem.

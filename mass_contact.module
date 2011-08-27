@@ -121,7 +121,6 @@ function mass_contact_permission() {
  */
 function mass_contact_menu() {
   $items = array();
-
   $items['admin/config/system/mass_contact'] = array(
     'title' => 'Mass Contact',
     'page callback' => 'mass_contact_admin_categories',
@@ -211,7 +210,6 @@ function mass_contact_menu() {
     'description' => 'Send an e-mail message to multiple users of this website.',
     'file' => 'mass_contact.page.inc',
   );
-
   return $items;
 } // End of mass_contact_menu().
 
@@ -235,6 +233,7 @@ function mass_contact_user_presave(&$edit, $account, $category) {
 
 //  return array('mass_contact_optout' => $edit['mass_contact_optout']);
 } // End of mass_contact_user_presave().
+
 
 /**
  * Implements hook_form_alter() for the user_profile_form.
@@ -366,6 +365,6 @@ function mass_contact_mail($key, &$message, $params) {
     }
   }
   $message['subject'] = $params['subject'];
-  $message['body'][] = $params['body'];
+  $message['body'] = $params['body'];
 //dpm($key); dpm($message); dpm($params);
 } // End of mass_contact_mail().
