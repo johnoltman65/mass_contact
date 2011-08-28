@@ -586,12 +586,12 @@ function mass_contact_admin_settings_body($form, $form_state) {
       '#default_value' => variable_get('mass_contact_html_format_override', 0),
     );
 
-    $form['mass_contact_html_settings']['mass_contact_check_markup'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Check HTML markup.'),
-      '#default_value' => variable_get('mass_contact_check_markup', 1),
-      '#description' => t('Runs the body text through an HTML markup checker. Disabling this is not recommeneded. However, if your messages are not coming through as they should, this may fix it.'),
-    );
+//    $form['mass_contact_html_settings']['mass_contact_check_markup'] = array(
+//      '#type' => 'checkbox',
+//      '#title' => t('Check HTML markup.'),
+//      '#default_value' => variable_get('mass_contact_check_markup', 1),
+//      '#description' => t('Runs the body text through an HTML markup checker. Disabling this is not recommeneded. However, if your messages are not coming through as they should, this may fix it.'),
+//    );
   }
   else {
     $form['mass_contact_html_settings']['mass_contact_no_mimemail'] = array(

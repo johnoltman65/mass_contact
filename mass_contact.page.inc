@@ -239,7 +239,7 @@ function mass_contact_mail_page($form, $form_state) {
       // Get the full object of the admin specified default text format.
 
       // Get the admin specified default text format.
-      $html_filter_format = variable_get('mass_contact_html_format', 'FILTER_FORMAT_DEFAULT');
+      $html_filter_format = variable_get('mass_contact_html_format', filter_fallback_format());
 
       // Initialize this variable.
       $default_filter_format = NULL;
@@ -482,7 +482,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
   // If there are attachments, add them.
   if ($attachments) {
-    $message_attachments = _mass_contact_process_mime_mail_attachments();
+    $params['attachments'] = _mass_contact_process_mime_mail_attachments();
   }
 
 
@@ -668,7 +668,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
               ++$ccc;
 
-//dpm($params);
               $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
 
               if ($success['result']) {
@@ -708,7 +707,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
             ++$ccc;
 
-//dpm($params);
             $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
 
             if ($success['result']) {
@@ -750,7 +748,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           $params['subject'] = $recipient_list['subject'];
 
-//dpm($params);
           $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
 
           if ($success['result']) {
@@ -873,10 +870,12 @@ function _mass_contact_prepare_header() {
  *     $body['html']: The HTML body part is here.
  */
 function _mass_contact_prepare_bodies($form_values) {
-  $body = array('plain' => '', 'html' => '');
-  $check_markup = variable_get('mass_contact_check_markup', 1);
+//  $body = array('plain' => '', 'html' => '');
+  $body = '';
+//  $check_markup = variable_get('mass_contact_check_markup', 1);
 
   if (module_exists('mimemail')) {
+/*
     // Create the plain text body part.
 
     // Start with the message prefix.
@@ -892,34 +891,34 @@ function _mass_contact_prepare_bodies($form_values) {
 
     // End with the message suffix.
     $body['plain'] .= _mass_contact_prepare_message_addon('suffix', 'converted');
-
+*/
     // Create the HTML body part.
 
     // Start with the message prefix.
-    $body['html'] .= _mass_contact_prepare_message_addon('prefix', 'html');
+    $body .= _mass_contact_prepare_message_addon('prefix', 'html');
 
     // Add in the actual message.
-    if ($check_markup) {
-      $body['html'] .= check_markup($form_values['message']['value'], $form_values['message']['format']);
-    }
-    else {
-      $body['html'] .= $form_values['message']['value'];
-    }
+//    if ($check_markup) {
+//      $body .= check_markup($form_values['message']['value'], $form_values['message']['format']);
+//    }
+//    else {
+      $body .= $form_values['message']['value'];
+//    }
 
     // End with the message suffix.
-    $body['html'] .= _mass_contact_prepare_message_addon('suffix', 'html');
+    $body .= _mass_contact_prepare_message_addon('suffix', 'html');
   }
   // Mime mail is not installed, so this message will only be processed as
   // plain text.
   else {
     // Start with the message prefix.
-    $body['plain'] .= _mass_contact_prepare_message_addon('prefix', 'converted');
+    $body .= _mass_contact_prepare_message_addon('prefix', 'converted');
 
     // Add in the actual message.
-    $body['plain'] .= wordwrap(drupal_html_to_text($form_values['message']['value'])) . "\n";
+    $body .= wordwrap(drupal_html_to_text($form_values['message']['value'])) . "\n";
 
     // End with the message suffix.
-    $body['plain'] .= _mass_contact_prepare_message_addon('suffix', 'converted');
+    $body .= _mass_contact_prepare_message_addon('suffix', 'converted');
   }
 
   return $body;
@@ -949,16 +948,16 @@ function _mass_contact_prepare_bodies($form_values) {
 function _mass_contact_prepare_message_addon($addon, $style) {
   $token_module_exists = module_exists('token');
   $message = '';
-  $check_markup = variable_get('mass_contact_check_markup', 1);
+//  $check_markup = variable_get('mass_contact_check_markup', 1);
 
   switch ($addon) {
     case 'prefix':
       $message_addon = variable_get('mass_contact_message_prefix', '');
-      $addon_format = variable_get('mass_contact_prefix_format', 'FILTER_FORMAT_DEFAULT');
+//      $addon_format = variable_get('mass_contact_prefix_format', filter_fallback_format());
       break;
     case 'suffix':
       $message_addon = variable_get('mass_contact_message_suffix', '');
-      $addon_format = variable_get('mass_contact_suffix_format', 'FILTER_FORMAT_DEFAULT');
+//      $addon_format = variable_get('mass_contact_suffix_format', filter_fallback_format());
       break;
   }
 
@@ -977,16 +976,16 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
       case 'html':
         if ($token_module_exists) {
-          if ($check_markup) {
-            $message .= check_markup(token_replace($message_addon), $addon_format);
-          }
-          else {
+//          if ($check_markup) {
+//            $message .= check_markup(token_replace($message_addon), $addon_format);
+//          }
+//          else {
             $message .= token_replace($message_addon);
-          }
+//          }
         }
-        elseif ($check_markup) {
-          $message .= check_markup($message_addon, $addon_format);
-        }
+//        elseif ($check_markup) {
+//          $message .= check_markup($message_addon, $addon_format);
+//        }
         else {
           $message .= $message_addon;
         }
@@ -994,16 +993,16 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
       case 'converted':
         if ($token_module_exists) {
-          if ($check_markup) {
-            $message .= drupal_html_to_text(check_markup(token_replace($message_addon), $addon_format)) . "\n";
-          }
-          else {
+//          if ($check_markup) {
+//            $message .= drupal_html_to_text(check_markup(token_replace($message_addon), $addon_format)) . "\n";
+//          }
+//          else {
             $message .= drupal_html_to_text(token_replace($message_addon)) . "\n";
-          }
+//          }
         }
-        elseif ($check_markup) {
-          $message .= drupal_html_to_text(check_markup($message_addon, $addon_format)) . "\n";
-        }
+//        elseif ($check_markup) {
+//          $message .= drupal_html_to_text(check_markup($message_addon, $addon_format)) . "\n";
+//        }
         else {
           $message .= drupal_html_to_text($message_addon) . "\n";
         }
@@ -1030,13 +1029,31 @@ function _mass_contact_process_mime_mail_attachments() {
     // Check to see if the attachment exists.
     if ($_FILES['files']['size']['attachment_' . $i] > 0) {
       $files[] = array(
-        'filepath' => $_FILES['files']['tmp_name']['attachment'],
-        'filename' => $_FILES['files']['name']['attachment'],
-        'filemime' => $_FILES['files']['type']['attachment'],
+        'filepath' => $_FILES['files']['tmp_name']['attachment_' . $i],
+        'filename' => $_FILES['files']['name']['attachment_' . $i],
+        'filemime' => $_FILES['files']['type']['attachment_' . $i],
       );
     }
   }
+/*
+         // Load attachments for the e-mail.
+        $attachments = array();
+        if ($email['attachments']) {
+          webform_component_include('file');
+          foreach ($node->webform['components'] as $component) {
+            if (webform_component_feature($component['type'], 'attachment') && !empty($submissio$
+              $file = webform_get_file($submission->data[$component['cid']]['value'][0]);
+              if ($file && ($file->filepath = drupal_realpath($file->uri))) {
+                $attachments[] = $file;
+              }
+            }
+          }
+        }
 
+        // Add the attachments to the mail parameters.
+        $mail_params['attachments'] = $attachments;
+
+*/
   return $files;
 } // End of _mass_contact_process_mime_mail_attachments().
 

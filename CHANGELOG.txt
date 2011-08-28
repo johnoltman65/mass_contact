@@ -1,3 +1,7 @@
+2011-08-27 Jason Flatt drupal@oadaeh.net
+  * mass_contact.admin.inc, mass_contact.page.inc:
+    * Now sends HTML and attachments using the Mime Mail module.
+
 2011-08-26 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Fix sending with Mime Mail. Still need to format the message correctly.
