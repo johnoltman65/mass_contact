@@ -365,6 +365,12 @@ function mass_contact_mail($key, &$message, $params) {
     }
   }
   $message['subject'] = $params['subject'];
-  $message['body'] = $params['body'];
+
+  if (module_exists('mimemail')) {
+    $message['body'] = $params['body'];
+  }
+  else {
+    $message['body'][] = $params['body'];
+  }
 //dpm($key); dpm($message); dpm($params);
 } // End of mass_contact_mail().

@@ -915,7 +915,7 @@ function _mass_contact_prepare_bodies($form_values) {
     $body .= _mass_contact_prepare_message_addon('prefix', 'converted');
 
     // Add in the actual message.
-    $body .= wordwrap(drupal_html_to_text($form_values['message']['value'])) . "\n";
+    $body .= wordwrap(drupal_html_to_text($form_values['message'])) . "\n";
 
     // End with the message suffix.
     $body .= _mass_contact_prepare_message_addon('suffix', 'converted');
