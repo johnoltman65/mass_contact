@@ -948,22 +948,21 @@ function _mass_contact_prepare_bodies($form_values) {
 function _mass_contact_prepare_message_addon($addon, $style) {
   $token_module_exists = module_exists('token');
   $message = '';
-//  $check_markup = variable_get('mass_contact_check_markup', 1);
 
   switch ($addon) {
     case 'prefix':
       $message_addon = variable_get('mass_contact_message_prefix', '');
-//      $addon_format = variable_get('mass_contact_prefix_format', filter_fallback_format());
       break;
     case 'suffix':
       $message_addon = variable_get('mass_contact_message_suffix', '');
-//      $addon_format = variable_get('mass_contact_suffix_format', filter_fallback_format());
       break;
   }
 
-  if (!empty($message_addon['value'])) {
+  if (is_array($message_addon)) {
     $message_addon = $message_addon['value'];
+  }
 
+  if (!empty($message_addon)) {
     switch ($style) {
       case 'plain text':
         if ($token_module_exists) {
@@ -976,16 +975,8 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
       case 'html':
         if ($token_module_exists) {
-//          if ($check_markup) {
-//            $message .= check_markup(token_replace($message_addon), $addon_format);
-//          }
-//          else {
-            $message .= token_replace($message_addon);
-//          }
+          $message .= token_replace($message_addon);
         }
-//        elseif ($check_markup) {
-//          $message .= check_markup($message_addon, $addon_format);
-//        }
         else {
           $message .= $message_addon;
         }
@@ -993,16 +984,8 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
       case 'converted':
         if ($token_module_exists) {
-//          if ($check_markup) {
-//            $message .= drupal_html_to_text(check_markup(token_replace($message_addon), $addon_format)) . "\n";
-//          }
-//          else {
-            $message .= drupal_html_to_text(token_replace($message_addon)) . "\n";
-//          }
+          $message .= drupal_html_to_text(token_replace($message_addon)) . "\n";
         }
-//        elseif ($check_markup) {
-//          $message .= drupal_html_to_text(check_markup($message_addon, $addon_format)) . "\n";
-//        }
         else {
           $message .= drupal_html_to_text($message_addon) . "\n";
         }
