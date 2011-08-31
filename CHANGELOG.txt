@@ -1,4 +1,8 @@
 2011-08-29 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module:
+    * Actually save the opt out information on the user profile.
+
+2011-08-29 Jason Flatt drupal@oadaeh.net
   * mass_contact.admin.inc, mass_contact.page.inc:
     * Fix the rest of sending w/o Mime Mail that broke getting it to work
       w/Mime Mail (http://drupal.org/node/1262178 by oadaeh).
@@ -32,7 +36,7 @@
     * Account for more options whan setting $from_name and $from_email.
 
 2011-08-19 Jason Flatt drupal@oadaeh.net
-  * mass_contact.module
+  * mass_contact.module:
     * Modified mass_contact_form_user_profile_form_alter() so that editing a
       user other than the currently logged in user shows the correct assigned
       categories.

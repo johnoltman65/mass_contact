@@ -225,17 +225,6 @@ function mass_contact_menu_alter(&$items) {
 
 
 /**
- * Implements hook_user_presave().
- */
-function mass_contact_user_presave(&$edit, $account, $category) {
-//dpm($edit); dpm($account); dpm($category);
-  $edit['data']['mass_contact_optout'] = isset($edit['mass_contact_optout']) ? $edit['mass_contact_optout'] : '';
-
-//  return array('mass_contact_optout' => $edit['mass_contact_optout']);
-} // End of mass_contact_user_presave().
-
-
-/**
  * Implements hook_form_alter() for the user_profile_form.
  */
 function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
@@ -290,6 +279,8 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
         }
       }
 
+      // If the user is in any of the categories, show them for the option of
+      // opting out of mailings.
       if ($included_categories) {
         $form['mass_contact'] = array(
           '#type' => 'fieldset',
@@ -311,6 +302,28 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
     }
   }
 } // End of mass_contact_form_user_profile_form_alter().
+
+
+/**
+ * Implements hook_user_presave().
+ */
+function mass_contact_user_presave(&$edit, $account, $category) {
+  if (!empty($edit['mass_contact_optout'])) {
+    $edit['data']['mass_contact_optout'] = $edit['mass_contact_optout'];
+  }
+
+  // Get all Mass Contact categories.
+  $categories = db_select('mass_contact', 'mc')
+    ->fields('mc', array('cid', 'category', 'recipients'))
+    ->execute();
+  // Iterate through each category.
+  foreach ($categories as $category) {
+    if (!empty($edit['mass_contact_optout_' . $category->cid])) {
+      // Set the ones that are checked.
+      $edit['data']['mass_contact_optout_' . $category->cid] = $edit['mass_contact_optout_' . $category->cid];
+    }
+  }
+} // End of mass_contact_user_presave().
 
 
 /**
