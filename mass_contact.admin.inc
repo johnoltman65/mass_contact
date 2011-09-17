@@ -626,8 +626,8 @@ function mass_contact_admin_settings_body($form, $form_state) {
     $form['mass_contact_attachment_settings']['mass_contact_attachment_location'] = array(
       '#type' => 'textfield',
       '#title' => t('Attachment location'),
-      '#default_value' => variable_get('mass_contact_attachment_location', variable_get('file_public_path', conf_path() . '/files') . '/mass_contact_attachments'),
-      '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment so it can be viewed later.'),
+      '#default_value' => variable_get('mass_contact_attachment_location', 'mass_contact_attachments'),
+      '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment(s) so it can be viewed later. If you specify anything here, it will be a subdirectory of your Public file system path, which is set on !file_conf_page. If you do not specify anything here, all attachments will be saved in the directory specified in the Public file system path.', array('!file_conf_page' => l('File system configuration page', '/admin/config/media/file-system'))),
     );
   }
   else {

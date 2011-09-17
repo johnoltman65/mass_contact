@@ -75,9 +75,6 @@ function mass_contact_mail_page($form, $form_state) {
   }
 
   if (count($categories) > 0) {
-    $form['#attributes'] = array(
-      'enctype' => "multipart/form-data",
-    );
     $form['#token'] = $user->name . $user->mail;
     $form['contact_information'] = array(
       '#value' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an e-mail message using the contact form below.'))),
@@ -482,7 +479,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
   // If there are attachments, add them.
   if ($attachments) {
-    $params['attachments'] = _mass_contact_process_mime_mail_attachments();
+    $params['attachments'] = _mass_contact_process_mime_mail_attachments($nodecc);
   }
 
 
@@ -679,7 +676,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
               if ($nodecc == 1) {
                 // Save the message as a node.
-                _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $boundary_attachment, $success['result']);
+                _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $success['result']);
               }
 
               // Reset the variables.
@@ -718,7 +715,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
             if ($nodecc == 1) {
               // Save the message as a node.
-              _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $boundary_attachment, $success['result']);
+              _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $success['result']);
             }
           }
           $total_recipients = count($all_recipients);
@@ -759,7 +756,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           if ($nodecc == 1) {
             // Save the message as a node.
-            _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $boundary_attachment, $success['result']);
+            _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $success['result']);
           }
         }
       }
@@ -791,8 +788,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       // If there are no errors, check to see if we need to save the message as a node.
 //      if ($nodecc == 1) {
         // Save the message as a node.
-//        _mass_contact_save_node($params['subject'], $node_message, $listed_recipients, $category->category, $roles, $user->uid, $boundary_attachment);
-//        _mass_contact_save_node($params, $node_message, $from_email, $categories, $roles, $listed_recipients, $boundary_attachment);
+//        _mass_contact_save_node($params['subject'], $node_message, $listed_recipients, $category->category, $roles, $user->uid);
+//        _mass_contact_save_node($params, $node_message, $from_email, $categories, $roles, $listed_recipients);
 //      }
 
       // Log the operation.
@@ -839,7 +836,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
  * @return
  *   An array containing the prepared header.
  */
-//function _mass_contact_prepare_header($boundary_attachment, $boundary_html) {
 function _mass_contact_prepare_header() {
   $params = array();
 
@@ -870,55 +866,41 @@ function _mass_contact_prepare_header() {
  *     $body['html']: The HTML body part is here.
  */
 function _mass_contact_prepare_bodies($form_values) {
-//  $body = array('plain' => '', 'html' => '');
   $body = '';
-//  $check_markup = variable_get('mass_contact_check_markup', 1);
 
   if (module_exists('mimemail')) {
-/*
-    // Create the plain text body part.
-
     // Start with the message prefix.
-    $body['plain'] .= _mass_contact_prepare_message_addon('prefix', 'converted');
-
-    // Add in the actual message.
-    if ($check_markup) {
-      $body['plain'] .= drupal_html_to_text(check_markup($form_values['message']['value'], $form_values['message']['format'])) . "\n";
-    }
-    else {
-      $body['plain'] .= drupal_html_to_text($form_values['message']['value']) . "\n";
+    $message_addon = _mass_contact_prepare_message_addon('prefix', 'html');
+    if ($message_addon) {
+      $body .= $message_addon . '<br /><br />';
     }
 
-    // End with the message suffix.
-    $body['plain'] .= _mass_contact_prepare_message_addon('suffix', 'converted');
-*/
-    // Create the HTML body part.
-
-    // Start with the message prefix.
-    $body .= _mass_contact_prepare_message_addon('prefix', 'html');
-
     // Add in the actual message.
-//    if ($check_markup) {
-//      $body .= check_markup($form_values['message']['value'], $form_values['message']['format']);
-//    }
-//    else {
-      $body .= $form_values['message']['value'];
-//    }
+    $body .= $form_values['message'];
 
     // End with the message suffix.
-    $body .= _mass_contact_prepare_message_addon('suffix', 'html');
+    $message_addon = _mass_contact_prepare_message_addon('suffix', 'html');
+    if ($message_addon) {
+      $body .= '<br /><br />' . $message_addon;
+    }
   }
   // Mime mail is not installed, so this message will only be processed as
   // plain text.
   else {
     // Start with the message prefix.
-    $body .= _mass_contact_prepare_message_addon('prefix', 'converted');
+    $message_addon = _mass_contact_prepare_message_addon('prefix', 'converted');
+    if ($message_addon) {
+      $body .= $message_addon . "\n\n";
+    }
 
     // Add in the actual message.
     $body .= wordwrap(drupal_html_to_text($form_values['message'])) . "\n";
 
     // End with the message suffix.
-    $body .= _mass_contact_prepare_message_addon('suffix', 'converted');
+    $message_addon = _mass_contact_prepare_message_addon('suffix', 'converted');
+    if ($message_addon) {
+      $body .= "\n\n" . $message_addon;
+    }
   }
 
   return $body;
@@ -966,10 +948,10 @@ function _mass_contact_prepare_message_addon($addon, $style) {
     switch ($style) {
       case 'plain text':
         if ($token_module_exists) {
-          $message .= wordwrap(token_replace($message_addon)) . "\n";
+          $message .= wordwrap(token_replace($message_addon));
         }
         else {
-          $message .= wordwrap($message_addon) . "\n";
+          $message .= wordwrap($message_addon);
         }
         break;
 
@@ -984,10 +966,10 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
       case 'converted':
         if ($token_module_exists) {
-          $message .= drupal_html_to_text(token_replace($message_addon)) . "\n";
+          $message .= drupal_html_to_text(token_replace($message_addon));
         }
         else {
-          $message .= drupal_html_to_text($message_addon) . "\n";
+          $message .= drupal_html_to_text($message_addon);
         }
         break;
     }
@@ -1000,43 +982,94 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 /**
  * Process attachments for use with Mime Mail.
  *
+ * @param nodecc
+ *   An boolean identifying whether a copy of the message will be saved as a
+ *   node.
+ *
  * @return
  *   The attachment information, as Mime Mail expects it.
  */
-function _mass_contact_process_mime_mail_attachments() {
-  // Set an initial value.
+function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
+  // Initialize the variable.
   $files = array();
 
   // Loop through each possible attachment.
   for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-    // Check to see if the attachment exists.
+    // Check to see if an attachment exists.
     if ($_FILES['files']['size']['attachment_' . $i] > 0) {
-      $files[] = array(
-        'filepath' => $_FILES['files']['tmp_name']['attachment_' . $i],
-        'filename' => $_FILES['files']['name']['attachment_' . $i],
-        'filemime' => $_FILES['files']['type']['attachment_' . $i],
-      );
-    }
-  }
-/*
-         // Load attachments for the e-mail.
-        $attachments = array();
-        if ($email['attachments']) {
-          webform_component_include('file');
-          foreach ($node->webform['components'] as $component) {
-            if (webform_component_feature($component['type'], 'attachment') && !empty($submissio$
-              $file = webform_get_file($submission->data[$component['cid']]['value'][0]);
-              if ($file && ($file->filepath = drupal_realpath($file->uri))) {
-                $attachments[] = $file;
-              }
-            }
-          }
+      // If the message is to be saved as a node, we need to save the
+      // attachment now so that it is not lost later.
+      if ($nodecc) {
+         // The name in the global $_FILES array where the information about
+         // the attachment is stored.
+        $file_source = 'attachment_' . $i;
+        $file_validators = array();
+        // Get the directory where attachments are to be saved.
+        $file_destination = 'public://' . variable_get('mass_contact_attachment_location');
+        $file_replace = FILE_EXISTS_RENAME;
+
+        // Check to see that the directory exists.
+        if (!file_prepare_directory($file_destination)) {
+          // It does not, so create the directoty.
+          drupal_mkdir($file_destination);
         }
 
-        // Add the attachments to the mail parameters.
-        $mail_params['attachments'] = $attachments;
+        // Save the file to the Mass Contact attachments directory.
+        $file = file_save_upload($file_source, $file_validators, $file_destination, $file_replace);
 
-*/
+        // Check to see if there was an error during the save.
+        if ($file === FALSE) {
+          // There was an error, so report it.
+          $message = 'There was an error uploading the "!attachment" attachment.';
+          $variables = array('!attachment' => $_FILES['files']['name']['attachment_' . $i]);
+
+          drupal_set_message(t($message, $variables), 'error');
+          watchdog('mass_contact', $message, $variables, WATCHDOG_ERROR);
+        }
+        elseif ($file === NULL) {
+          // Nothing happened, so say so.
+          $message = 'The "!attachment" attachment was not uploaded.';
+          $variables = array('!attachment' => $_FILES['files']['name']['attachment_' . $i]);
+
+          drupal_set_message(t($message, $variables), 'error');
+          watchdog('mass_contact', $message, $variables, WATCHDOG_ERROR);
+        }
+        // The file was saved, so now the information needs to be added to the
+        // database.
+        else {
+          //Set the status of the uploaded file so it stays around for a while.
+          $file->status = FILE_STATUS_PERMANENT;
+
+          // Save the file object to the database.
+          $file = file_save($file);
+
+          // Check the state to determine if there was an error or not.
+          if (!$file) {
+            // If there was an error, report it.
+            $message = 'There was an error saving the file object for "!attachment" to the database.';
+            $variables = array('!attachment' => $_FILES['files']['name']['attachment_' . $i]);
+
+            drupal_set_message(t($message, $variables), 'error');
+            watchdog('mass_contact', $message, $variables, WATCHDOG_ERROR);
+          }
+          else {
+            // Add the file object to the files collection array.
+            $files[] = $file;
+          }
+        }
+      }
+      // Save the files in a temporary location.
+      else {
+        $files[] = array(
+          'filepath' => $_FILES['files']['tmp_name']['attachment_' . $i],
+          'uri' => $_FILES['files']['tmp_name']['attachment_' . $i],
+          'filename' => $_FILES['files']['name']['attachment_' . $i],
+          'filemime' => $_FILES['files']['type']['attachment_' . $i],
+        );
+      }
+    }
+  }
+
   return $files;
 } // End of _mass_contact_process_mime_mail_attachments().
 
@@ -1170,26 +1203,23 @@ function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
  *   The user who sent the message is also the user who owns the node.
  */
 //function _mass_contact_save_node($subject, $body, $recipients, $category, $roles, $uid, $has_attachments) {
-function _mass_contact_save_node($params, $body, $from, $category, $recipients, $has_attachments, $result) {
+function _mass_contact_save_node($params, $body, $from, $category, $recipients, $result) {
   // Create a new node object.
   $node = new stdClass();
+
   // Set the node type.
   $node->type = 'mass_contact';
+
   // Set some default values.
   node_object_prepare($node);
+
   // Set the user id of the node to that of the current user.
   global $user;
   $node->uid = $user->uid;
+
   // Or any language code if Locale module is enabled.
   global $language;
-//  $node->language = ($language) ? $language->language  : LANGUAGE_NONE;
-  $node->language = LANGUAGE_NONE;
-
-  // Set some states.
-  $node->status = 0;
-  $node->promote = 0;
-  $node->sticky = 0;
-  $node->comment = 0;
+  $node->language = ($language) ? $language->language  : LANGUAGE_NONE;
 
   // Set the title of the node to the subject of the message.
   $node->title = $params['subject'];
@@ -1197,28 +1227,31 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
   // Set the body of the node to the body of the message.
   $node->body[$node->language][0]['value'] = $body;
   // Set the teaser or summary of the body.
-//  $node->body[$node->language][0]['summary'] = text_summary($body);
-  // Set the input filter format of the message body.
-//  $node->body[$node->language][0]['format'] = 'plain_text';
-//  $node->body = '<p><i>' . t('Category:') . ' ' . $category . '</i><p><i>' . t('Roles:') . ' ' . $rolesent . '</i><p><i>' . t('Recipients:') . ' ' . $recipients . '</i><p>' . $body;
+  $node->body[$node->language][0]['summary'] = text_summary($body);
+  // Set the text format of the message body.
+  $text_format = variable_get('mass_contact_html_format');
+  $node->body[$node->language][0]['format'] = $text_format['format'];
 
   // Set the From field.
   $node->field_mass_contact_from[$node->language][0]['value'] = $from;
+
   // Set the Category field.
   $node->field_mass_contact_category[$node->language][0]['value'] = $category;
+
   // Set the To field.
   $to = explode(',', $recipients);
   foreach ($to as $recipient) {
     $node->field_mass_contact_to[$node->language][]['value'] = $recipient;
   }
+
   // Set the BCC field.
   if (!empty($params['headers']['Bcc'])) {
     $to = explode(',', $params['headers']['Bcc']);
     foreach ($to as $recipient) {
       $node->field_mass_contact_bcc[$node->language][]['value'] = $recipient;
     }
-
   }
+
   // Set the Headers field.
   if (!empty($params['headers'])) {
     // Format the output so that it is readable.
@@ -1227,69 +1260,49 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
       $headers .= $header . ": " . $value . "\n";
     }
 
+    // Set the body of the Headers.
     $node->field_mass_contact_headers[$node->language][0]['value'] = $headers;
-//    $node->field_mass_contact_headers[$node->language][0]['format'] = 'filtered_html';
+    // Set the teaser or summary of the Headers.
+    $node->field_mass_contact_headers[$node->language][0]['summary'] = text_summary($headers);
+    // Set the text format of the Headers.
+    $node->field_mass_contact_headers[$node->language][0]['format'] = $text_format['format'];
   }
+
   // Set the Result field.
+  // Set the body of the Result.
   $node->field_mass_contact_result[$node->language][0]['value'] = $result;
-//  $node->field_mass_contact_result[$node->language][0]['format'] = 'plain_text';
-//dpm($node);
+  // Set the teaser or summary of the Result.
+  $node->field_mass_contact_result[$node->language][0]['summary'] = text_summary($result);
+  // Set the text format of the Result.
+  $node->field_mass_contact_result[$node->language][0]['format'] = $text_format['format'];
 
-/*
-// Some file on our system
-$file_path = drupal_realpath('somefile.png'); // Create a File object
-$file = (object) array(
-          'uid' => 1,
-          'uri' => $file_path,
-          'filemime' => file_get_mimetype($filepath),
-          'status' => 1,
- );
-$file = file_copy($file, 'public://'); // Save the file to the root of the files directory. You can specify a subdirectory, for example, 'public://images'
-$node->field_image[LANGUAGE_NONE][0] = (array)$file; //associate the file object with the image field:
-
-  // Add any attachments, if they exist.
-  if ($has_attachments) {
-    for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-      if ($_FILES['files']['error']['attachment_' . $i] == UPLOAD_ERR_OK) {
-        // Create and populate a file object.
-        $file = new stdClass();
-        $file->uid = $uid;
-        $file->filename = $_FILES['files']['name']['attachment_' . $i];
-        $file->filepath = $_FILES['files']['tmp_name']['attachment_' . $i];
-        $file->filemime = $_FILES['files']['type']['attachment_' . $i];
-        $file->filesize = $_FILES['files']['size']['attachment_' . $i];
-        $file->status = ~FILE_STATUS_PERMANENT;
-        $file->timestamp = REQUEST_TIME;
-
-        $file->filesource = $_FILES['files']['name']['attachment_' . $i];
-        $file->list = 1;
-        $file->new = TRUE;
-
-        // Copy the file to Drupal's 'files' directory.
-        if (!file_copy($file)) {
-          drupal_set_message(t('Failed to save attachment: @filename', array('@filename' => $_FILES['files']['name']['attachment_' . $i])));
-          continue;
-        }
-
-        // Save the file information to the database.
-        drupal_write_record('files', $file);
-
-        // Change file's status to permanent.
-        $file->status &= FILE_STATUS_PERMANENT;
-        $file = file_save($file);
-
-        // Add the attachment to the node.
-        $node->files[$file->fid] = $file;
-      }
+  // If any attachments exist, add them.
+  if (isset($params['attachments'])) {
+    foreach ($params['attachments'] as $attachment) {
+      // Attach the attachment to the node.
+      $node->field_mass_contact_attachments[$node->language][] = array(
+        'fid' => $attachment->fid,
+        'display' => 1,
+        'dscription' => '',
+        'uid' => $attachment->uid,
+        'filename' => $attachment->filename,
+        'uri' => $attachment->uri,
+        'filemime' => $attachment->filemime,
+        'filesize' => $attachment->filesize,
+        'status' => $attachment->status,
+        'timestamp' => $attachment->timestamp,
+        'rdf_mapping' => array(),
+      );
     }
   }
-*/
+
   // Prepare node for a saving.
   $node = node_submit($node);
+
   // Save the node.
   node_save($node);
 
-  // Log node creation.
+  // Log the node creation.
   watchdog('content', 'Mass Contact content added "%title".', array('%title' => $params['subject']), WATCHDOG_NOTICE, l(t('View'), 'node/' . $node->nid));
 
   // Inform the user.

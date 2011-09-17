@@ -1,3 +1,18 @@
+2011-09-17 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Fix problem w/message body and clean up how addons are displayed with
+      body.
+    * Made a bunch of changes in how attachments are dealth with and how the
+      archived node is saved.
+
+2011-09-16 Jason Flatt drupal@oadaeh.net
+  * mass_contact.admin.inc:
+    * Changed where and how the attachements directory is dealth with.
+
+2011-09-08 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install:
+    * Added some missing descriptions.
+
 2011-08-29 Jason Flatt drupal@oadaeh.net
   * mass_contact.module:
     * Actually save the opt out information on the user profile.
