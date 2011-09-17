@@ -4,6 +4,8 @@
       body.
     * Made a bunch of changes in how attachments are dealth with and how the
       archived node is saved.
+    * Fixed "Additional information for Mass Contact form" text not showing on
+      form (http://drupal.org/node/1277184).
 
 2011-09-16 Jason Flatt drupal@oadaeh.net
   * mass_contact.admin.inc:

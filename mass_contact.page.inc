@@ -77,7 +77,7 @@ function mass_contact_mail_page($form, $form_state) {
   if (count($categories) > 0) {
     $form['#token'] = $user->name . $user->mail;
     $form['contact_information'] = array(
-      '#value' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an e-mail message using the contact form below.'))),
+      '#markup' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an e-mail message using the contact form below.'))),
     );
 
     ////////////////////////////////////////////////////////////
