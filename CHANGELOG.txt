@@ -1,3 +1,12 @@
+2011-09-20 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Set a default text format, in case the admin has not done so.
+    * Fix preparing the body to account for the text format in an array.
+    * Removed message formatting from within the code.
+  * mass_contact.page.inc, mass_contact.admin.inc:
+    * Added text formatting to body and addons. Hopefully, this fixes
+      http://drupal.org/node/1277192.
+
 2011-09-17 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Fix problem w/message body and clean up how addons are displayed with

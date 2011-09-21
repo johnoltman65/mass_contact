@@ -233,13 +233,8 @@ function mass_contact_mail_page($form, $form_state) {
     //
     // Get the HTML input format setting and the corresponding name.
     if (module_exists('mimemail')) {
-      // Get the full object of the admin specified default text format.
-
       // Get the admin specified default text format.
-      $html_filter_format = variable_get('mass_contact_html_format', filter_fallback_format());
-
-      // Initialize this variable.
-      $default_filter_format = NULL;
+      $html_filter_format = variable_get('mass_contact_html_format', filter_default_format($user));
 
       // Get all the text formats the user is allowed access to.
       $filter_formats = filter_formats($user);
@@ -247,10 +242,16 @@ function mass_contact_mail_page($form, $form_state) {
       // Cycle through the list of possible text formats.
       foreach ($filter_formats as $filter_format) {
         // If the current text format matches the admin specified one...
-        if ($filter_format->format == $html_filter_format['format']) {
+        if ($filter_format->format == $html_filter_format['format'] || $filter_format->format == $html_filter_format) {
           // ...save it for later use.
           $default_filter_format = $filter_format;
         }
+      }
+
+      // In case nothing was selected above, set it to the Drupal system
+      // default.
+      if (empty($default_filter_format)) {
+        $default_filter_format = $filter_formats[filter_fallback_format()];
       }
 
       // Check if the user is allowed to override the text format.
@@ -280,6 +281,7 @@ function mass_contact_mail_page($form, $form_state) {
           '#type' => 'value',
           '#value' => $default_filter_format,
         );
+
         // Display text format information to the user.
         $form['html_info'] = array(
           '#type' => 'item',
@@ -353,14 +355,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    /*
-     // Place holder for future use.
-     $form['preview'] = array(
-     '#type' => 'button',
-     '#value' => t('Preview')
-     );
-     */
-
     ////////////////////////////////////////////////////////////
     // Add the submit button.
     $form['submit'] = array(
@@ -424,6 +418,7 @@ function mass_contact_mail_page_validate($form, &$form_state) {
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_mail_page_submit($form, &$form_state) {
+//dpm($form); dpm($form_state);
   // Initialize some variables.
   $params = array();
   $bcc = $form_state['values']['bcc'];
@@ -630,8 +625,10 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     $total_recipients = 0;
     $all_recipients = array();
 
+//dpm($recipient_lists);
     // Iterate through each recipient list.
     foreach ($recipient_lists as $category => $recipient_list) {
+//dpm($category); dpm($recipient_list);
       // Only process this recipient list if it is not empty.
       if (count($recipient_list['recipients']) > 0) {
         // If there's a recipient limit, break up recipient list.
@@ -676,7 +673,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
               if ($nodecc == 1) {
                 // Save the message as a node.
-                _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $success['result']);
+                _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, $success['result']);
               }
 
               // Reset the variables.
@@ -715,9 +712,10 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
             if ($nodecc == 1) {
               // Save the message as a node.
-              _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $success['result']);
+              _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, $success['result']);
             }
           }
+//dpm($all_recipients);
           $total_recipients = count($all_recipients);
           $listed_recipients = implode(', ', $all_recipients);
         }
@@ -729,6 +727,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
             $all_recipients[] = $recipient_address;
           }
 
+//dpm($all_recipients);
           $total_recipients = count($all_recipients);
           $listed_recipients = implode(', ', $all_recipients[0]);
 
@@ -756,7 +755,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           if ($nodecc == 1) {
             // Save the message as a node.
-            _mass_contact_save_node($params, $node_message, $from_email, $category, $to, $success['result']);
+            _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, $success['result']);
           }
         }
       }
@@ -789,7 +788,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 //      if ($nodecc == 1) {
         // Save the message as a node.
 //        _mass_contact_save_node($params['subject'], $node_message, $listed_recipients, $category->category, $roles, $user->uid);
-//        _mass_contact_save_node($params, $node_message, $from_email, $categories, $roles, $listed_recipients);
+//        _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $categories, $roles, $listed_recipients);
 //      }
 
       // Log the operation.
@@ -799,6 +798,10 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       // Inform the user.
       if (count($total_recipients) > 0) {
         drupal_set_message(t('Message sent successfully to @total users: @e-mails', array('@total' => $total_recipients, '@e-mails' => $listed_recipients)));
+//dpm($total_recipients);
+//dpm($listed_recipients);
+//dpm($all_recipients);
+//dpm($all_recipients[0]);
       }
     }
     else {
@@ -870,37 +873,36 @@ function _mass_contact_prepare_bodies($form_values) {
 
   if (module_exists('mimemail')) {
     // Start with the message prefix.
-    $message_addon = _mass_contact_prepare_message_addon('prefix', 'html');
-    if ($message_addon) {
-      $body .= $message_addon . '<br /><br />';
-    }
+    $body .= _mass_contact_prepare_message_addon('prefix', 'html');
 
     // Add in the actual message.
-    $body .= $form_values['message'];
+    if (!empty($form_values['message']['value'])) {
+      global $language;
+      $body .= check_markup($form_values['message']['value'], $form_values['message']['format'], ($language) ? $language->language : LANGUAGE_NONE);
+    }
+    else {
+      $body .= $form_values['message'];
+    }
 
     // End with the message suffix.
-    $message_addon = _mass_contact_prepare_message_addon('suffix', 'html');
-    if ($message_addon) {
-      $body .= '<br /><br />' . $message_addon;
-    }
+    $body .= _mass_contact_prepare_message_addon('suffix', 'html');
   }
   // Mime mail is not installed, so this message will only be processed as
   // plain text.
   else {
     // Start with the message prefix.
-    $message_addon = _mass_contact_prepare_message_addon('prefix', 'converted');
-    if ($message_addon) {
-      $body .= $message_addon . "\n\n";
-    }
+    $body .= _mass_contact_prepare_message_addon('prefix', 'converted');
 
     // Add in the actual message.
-    $body .= wordwrap(drupal_html_to_text($form_values['message'])) . "\n";
+    if (!empty($form_values['message']['value'])) {
+      $body .= wordwrap(drupal_html_to_text($form_values['message']['value'])) . "\n";
+    }
+    else {
+      $body .= wordwrap(drupal_html_to_text($form_values['message'])) . "\n";
+    }
 
     // End with the message suffix.
-    $message_addon = _mass_contact_prepare_message_addon('suffix', 'converted');
-    if ($message_addon) {
-      $body .= "\n\n" . $message_addon;
-    }
+    $body .= _mass_contact_prepare_message_addon('suffix', 'converted');
   }
 
   return $body;
@@ -941,35 +943,37 @@ function _mass_contact_prepare_message_addon($addon, $style) {
   }
 
   if (is_array($message_addon)) {
-    $message_addon = $message_addon['value'];
+    $message_addon_text = $message_addon['value'];
   }
 
-  if (!empty($message_addon)) {
+  if (!empty($message_addon_text)) {
     switch ($style) {
       case 'plain text':
         if ($token_module_exists) {
-          $message .= wordwrap(token_replace($message_addon));
+          $message .= wordwrap(token_replace($message_addon_text));
         }
         else {
-          $message .= wordwrap($message_addon);
+          $message .= wordwrap($message_addon_text);
         }
         break;
 
       case 'html':
+//dpm($message_addon['format']);
+        global $language;
         if ($token_module_exists) {
-          $message .= token_replace($message_addon);
+          $message .= check_markup(token_replace($message_addon_text), $message_addon['format'], ($language) ? $language->language : LANGUAGE_NONE);
         }
         else {
-          $message .= $message_addon;
+          $message .= check_markup($message_addon_text, $message_addon['format'], ($language) ? $language->language : LANGUAGE_NONE);
         }
         break;
 
       case 'converted':
         if ($token_module_exists) {
-          $message .= drupal_html_to_text(token_replace($message_addon));
+          $message .= drupal_html_to_text(token_replace($message_addon_text));
         }
         else {
-          $message .= drupal_html_to_text($message_addon);
+          $message .= drupal_html_to_text($message_addon_text);
         }
         break;
     }
@@ -1187,23 +1191,22 @@ function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
 /**
  * Save a copy of the sent message as a node.
  *
- * @param subject
- *   The subject of the message and the title of the node.
+ * @param params
  * @param body
  *   The body of the message and node.
+ * @param fomat
  * @param from
  *   The e-mail address representing the user that is sending the message.
- * @param categories
+ * @param category
  *   The categories of users sent to.
- * @param roles
- *   The various roles the categories represent.
  * @param recipients
  *   The users who received the message.
- * @param uid
- *   The user who sent the message is also the user who owns the node.
+ * @param result
  */
 //function _mass_contact_save_node($subject, $body, $recipients, $category, $roles, $uid, $has_attachments) {
-function _mass_contact_save_node($params, $body, $from, $category, $recipients, $result) {
+function _mass_contact_save_node($params, $body, $format, $from, $category, $recipients, $result) {
+//dpm($params);
+//dpm($body);
   // Create a new node object.
   $node = new stdClass();
 
@@ -1216,10 +1219,11 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
   // Set the user id of the node to that of the current user.
   global $user;
   $node->uid = $user->uid;
+  $node->name = $user->name;
 
   // Or any language code if Locale module is enabled.
   global $language;
-  $node->language = ($language) ? $language->language  : LANGUAGE_NONE;
+  $node->language = ($language) ? $language->language : LANGUAGE_NONE;
 
   // Set the title of the node to the subject of the message.
   $node->title = $params['subject'];
@@ -1229,8 +1233,7 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
   // Set the teaser or summary of the body.
   $node->body[$node->language][0]['summary'] = text_summary($body);
   // Set the text format of the message body.
-  $text_format = variable_get('mass_contact_html_format');
-  $node->body[$node->language][0]['format'] = $text_format['format'];
+  $node->body[$node->language][0]['format'] = $format;
 
   // Set the From field.
   $node->field_mass_contact_from[$node->language][0]['value'] = $from;
@@ -1265,7 +1268,7 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
     // Set the teaser or summary of the Headers.
     $node->field_mass_contact_headers[$node->language][0]['summary'] = text_summary($headers);
     // Set the text format of the Headers.
-    $node->field_mass_contact_headers[$node->language][0]['format'] = $text_format['format'];
+    $node->field_mass_contact_headers[$node->language][0]['format'] = 'plain_text';
   }
 
   // Set the Result field.
@@ -1274,7 +1277,7 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
   // Set the teaser or summary of the Result.
   $node->field_mass_contact_result[$node->language][0]['summary'] = text_summary($result);
   // Set the text format of the Result.
-  $node->field_mass_contact_result[$node->language][0]['format'] = $text_format['format'];
+  $node->field_mass_contact_result[$node->language][0]['format'] = 'plain_text';
 
   // If any attachments exist, add them.
   if (isset($params['attachments'])) {
@@ -1301,7 +1304,7 @@ function _mass_contact_save_node($params, $body, $from, $category, $recipients, 
 
   // Save the node.
   node_save($node);
-
+//dpm($node);
   // Log the node creation.
   watchdog('content', 'Mass Contact content added "%title".', array('%title' => $params['subject']), WATCHDOG_NOTICE, l(t('View'), 'node/' . $node->nid));
 

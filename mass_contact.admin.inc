@@ -583,8 +583,8 @@ function mass_contact_admin_settings_body($form, $form_state) {
     $mass_contact_html_format = variable_get('mass_contact_html_format');
     $form['mass_contact_html_settings']['mass_contact_html_format'] = array(
       '#type' => 'text_format',
-      '#base_type' => 'item',
       '#title' => t('The default text format'),
+      '#default_value' => t('This text of this field is not saved or used anywhere.'),
       '#format' => isset($mass_contact_html_format['format']) ? $mass_contact_html_format['format'] : NULL,
       '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not aloow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
     );
@@ -594,13 +594,6 @@ function mass_contact_admin_settings_body($form, $form_state) {
       '#title' => t('Allow sender to override the text format.'),
       '#default_value' => variable_get('mass_contact_html_format_override', 0),
     );
-
-//    $form['mass_contact_html_settings']['mass_contact_check_markup'] = array(
-//      '#type' => 'checkbox',
-//      '#title' => t('Check HTML markup.'),
-//      '#default_value' => variable_get('mass_contact_check_markup', 1),
-//      '#description' => t('Runs the body text through an HTML markup checker. Disabling this is not recommeneded. However, if your messages are not coming through as they should, this may fix it.'),
-//    );
   }
   else {
     $form['mass_contact_html_settings']['mass_contact_no_mimemail'] = array(
