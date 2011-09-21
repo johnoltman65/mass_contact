@@ -1,3 +1,8 @@
+2011-09-21 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Put in place a work around for the problem with the node not being
+      completely saved until a real solution is found (if there is one).
+
 2011-09-20 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Set a default text format, in case the admin has not done so.

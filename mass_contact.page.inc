@@ -1205,8 +1205,6 @@ function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
  */
 //function _mass_contact_save_node($subject, $body, $recipients, $category, $roles, $uid, $has_attachments) {
 function _mass_contact_save_node($params, $body, $format, $from, $category, $recipients, $result) {
-//dpm($params);
-//dpm($body);
   // Create a new node object.
   $node = new stdClass();
 
@@ -1219,11 +1217,13 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
   // Set the user id of the node to that of the current user.
   global $user;
   $node->uid = $user->uid;
-  $node->name = $user->name;
 
-  // Or any language code if Locale module is enabled.
-  global $language;
-  $node->language = ($language) ? $language->language : LANGUAGE_NONE;
+  // Set the language code if Locale module is enabled.
+//  global $language;
+//  $node->language = ($language) ? $language->language : LANGUAGE_NONE;
+  // The node data is not completely saved if $node->language is not set to
+  // LANGUAGE_NONE.
+  $node->language = LANGUAGE_NONE;
 
   // Set the title of the node to the subject of the message.
   $node->title = $params['subject'];
@@ -1304,7 +1304,7 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
 
   // Save the node.
   node_save($node);
-//dpm($node);
+
   // Log the node creation.
   watchdog('content', 'Mass Contact content added "%title".', array('%title' => $params['subject']), WATCHDOG_NOTICE, l(t('View'), 'node/' . $node->nid));
 
