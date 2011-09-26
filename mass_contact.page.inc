@@ -22,8 +22,6 @@
  *   rendered form.
  */
 function mass_contact_site_page() {
-  global $user;
-
   if (!user_access('administer mass contact') && !flood_is_allowed('mass_contact', variable_get('mass_contact_hourly_threshold', 3))) {
     $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('mass_contact_hourly_threshold', 3)));
   }
@@ -418,7 +416,6 @@ function mass_contact_mail_page_validate($form, &$form_state) {
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_mail_page_submit($form, &$form_state) {
-//dpm($form); dpm($form_state);
   // Initialize some variables.
   $params = array();
   $bcc = $form_state['values']['bcc'];
@@ -448,22 +445,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     $from_email = variable_get('site_mail');
   }
 
-  // Check for the exsistance of attachments.
-  $attachments = FALSE;
-  if (module_exists('mimemail')) {
-    for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-      if (isset($_FILES['files']['size']['attachment_' . $i]) && $_FILES['files']['size']['attachment_' . $i] > 0) {
-        $attachments = TRUE;
-        break;
-      }
-    }
-  }
-
 
   // Prepare the message header. This currently only sets the character set.
   $params = _mass_contact_prepare_header();
 
-  // Prepare the message body parts.
+  // Prepare the message body part(s).
   $message = _mass_contact_prepare_bodies($form_state['values']);
 
   // For the node copy, we want to handle attachments differently, so we'll
@@ -472,9 +458,15 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     $node_message = $message;
   }
 
+
   // If there are attachments, add them.
-  if ($attachments) {
-    $params['attachments'] = _mass_contact_process_mime_mail_attachments($nodecc);
+  if (module_exists('mimemail')) {
+    for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
+      if (isset($_FILES['files']['size']['attachment_' . $i]) && $_FILES['files']['size']['attachment_' . $i] > 0) {
+        $params['attachments'] = _mass_contact_process_mime_mail_attachments($nodecc);
+        break;
+      }
+    }
   }
 
 
@@ -494,11 +486,11 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     ->fields('mc')
     ->execute();
 
-  // Check to see of the authenticated users role was specified in any
-  // category.
   $everyone = FALSE;
   $message_subject = '';
 
+  // Check to see if the authenticated users role was specified in any
+  // category.
   foreach ($categories as $category) {
     // Get the list of roles which were chosen through the categry selection.
     $roles = explode(',', $category->recipients);
@@ -621,60 +613,42 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   if (!$no_recipients) {
     // We have recipients, so send the message to them.
 
-//    global $user;
+    // The count of all e-mail addresses thie message is sent to.
     $total_recipients = 0;
+    // An array of all categories and e-mail addresses thie message is sent to.
     $all_recipients = array();
 
-//dpm($recipient_lists);
     // Iterate through each recipient list.
     foreach ($recipient_lists as $category => $recipient_list) {
-//dpm($category); dpm($recipient_list);
       // Only process this recipient list if it is not empty.
       if (count($recipient_list['recipients']) > 0) {
         // If there's a recipient limit, break up recipient list.
         $recipient_limit = variable_get('mass_contact_recipient_limit', 0);
-        if (count($recipient_list) > $recipient_limit && $recipient_limit != 0) {
+        if (count($recipient_list['recipients']) > $recipient_limit && $recipient_limit != 0) {
           $recipient_count = 0;
-          $ccc = 0;
+          // The batch count.
+          $batch = 0;
+          // An array of the current grouping of categories and e-mail addresses thie
+          // message is sent to.
+          $current_recipients = array();
 
-          foreach ($recipient_list as $recipient_name => $recipient_address) {
-            // $all_recipients[] = $recipient_name . " <" . $recipient_address . ">";
-            // $partial_list[] = $recipient_name . " <" . $recipient_address . ">";
-            $all_recipients[] = $recipient_address;
+          foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
+            //$current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
+            //$partial_list[] = $recipient_name . " <" . $recipient_address . ">";
+            $current_recipients[] = $recipient_address;
             $partial_list[] = $recipient_address;
             $recipient_count = count($partial_list);
 
             if ($recipient_count == $recipient_limit) {
-              $recipients = implode(', ', $partial_list);
+              // Increment the batch count.
+              ++$batch;
 
-              // If blind carbon copy (BCC) was selected, put the recipients in
-              // the Bcc field.
-              if ($bcc == 1) {
-                $params['headers']['Bcc'] = $recipients;
-                $to = $from_email;
-              }
-              // Else, put the recipients in the To field.
-              else {
-                $to = $recipients;
-              }
+              //  Finalizes the headers, by setting the To, Subject, and
+              //  possibly, Bcc fields.
+              $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_email, $recipient_list['subject']);
 
-              $params['subject'] = $recipient_list['subject'];
-
-              ++$ccc;
-
-              $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
-
-              if ($success['result']) {
-                drupal_set_message(t('[Success] Send #@ccc: @e-mails', array('@ccc' => $ccc, '@e-mails' => $recipients)));
-              }
-              else {
-                ++$send_error;
-              }
-
-              if ($nodecc == 1) {
-                // Save the message as a node.
-                _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, $success['result']);
-              }
+              // Send the message. Save the inverse of the result for tallying.
+              $send_error += !(_mass_contact_send_message('mail_page_' . $batch, $to, $params, $from_email, '[Success] Sent batch #' . $batch . '.'));
 
               // Reset the variables.
               $partial_list = array();
@@ -684,128 +658,85 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           // Send the remainder.
           if ($recipient_count != 0) {
-            $recipients = implode(', ', $partial_list);
+            //  Finalizes the headers, by setting the To, Subject, and
+            //  possibly, Bcc fields.
+            $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_email, $recipient_list['subject']);
 
-            // If blind carbon copy (BCC) was selected, put the recipients in
-            // the Bcc field.
-            if ($bcc == 1) {
-              $params['headers']['Bcc'] = $recipients;
-              $to = $from_email;
-            }
-            else {
-              // Else, put the recipients in the To field.
-              $to = $recipients;
-            }
-
-            $params['subject'] = $recipient_list['subject'];
-
-            ++$ccc;
-
-            $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
-
-            if ($success['result']) {
-              drupal_set_message(t('[Success] Send Remainder: @e-mails', array('@e-mails' => $recipients)));
-            }
-            else {
-              ++$send_error;
-            }
-
-            if ($nodecc == 1) {
-              // Save the message as a node.
-              _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, $success['result']);
-            }
+            // Send the message. Save the inverse of the result for tallying.
+            $send_error += !(_mass_contact_send_message('mail_page_last', $to, $params, $from_email, '[Success] Sent remainder.'));
           }
-//dpm($all_recipients);
-          $total_recipients = count($all_recipients);
-          $listed_recipients = implode(', ', $all_recipients);
+
+          $total_recipients = count($current_recipients);
+          $listed_recipients = implode(', ', $current_recipients);
+          $all_recipients = array_merge($all_recipients, $current_recipients);
         }
         // There's no recipient limit, so send the message to all the recipients
         // at the same time.
         else {
-          foreach ($recipient_list as $recipient_name => $recipient_address) {
-            //          $all_recipients[] = $recipient_name . " <" . $recipient_address . ">";
-            $all_recipients[] = $recipient_address;
+          // An array of the current grouping of categories and e-mail addresses thie
+          // message is sent to.
+          $current_recipients = array();
+
+          foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
+            //$current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
+            $current_recipients[] = $recipient_address;
           }
 
-//dpm($all_recipients);
-          $total_recipients = count($all_recipients);
-          $listed_recipients = implode(', ', $all_recipients[0]);
+          $total_recipients = count($current_recipients);
+          $listed_recipients = implode(', ', $current_recipients);
+          $all_recipients = array_merge($all_recipients, $current_recipients);
 
-          // If blind carbon copy (BCC) was selected, put the recipients in
-          // the Bcc field.
-          if ($bcc == 1) {
-            $params['headers']['Bcc'] = $listed_recipients;
-            $to = $from_email;
+          //  Finalizes the headers, by setting the To, Subject, and possibly,
+          //  Bcc fields.
+          $to = _mass_contact_finalize_headers($bcc, implode(', ', $current_recipients), $params, $from_email, $recipient_list['subject']);
+
+          // Send the message. Save the inverse of the result for tallying.
+          $send_error += !(_mass_contact_send_message('mail_page', $to, $params, $from_email, '[Success] Sent all at once.'));
+        }
+      }
+
+      // Archive the message as a node.
+      if ($nodecc) {
+        _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, !$send_error);
+      }
+    }
+
+    // If there were no errors, do the final operations.
+    if (!$send_error) {
+      // If the sender requested a copy, send it.
+      if (!$no_recipients && $form_state['values']['copy'] && !$bcc) {
+        if (!_mass_contact_send_message('user-copy', $from_email, $params, $from_email, 'A copy was sent to you.')) {
+          // There was an error, so inform the user.
+          if (!module_exists('help')) {
+            drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's !help page or README.txt.", array('!help' => l(t('help'), 'admin/help/mass_contact'))));
           }
           else {
-            // Else, put the recipients in the To field.
-            $to = $listed_recipients;
-          }
-
-          $params['subject'] = $recipient_list['subject'];
-
-          $success = drupal_mail('mass_contact', 'mail_page', $to, language_default(), $params, $from_email);
-
-          if ($success['result']) {
-            drupal_set_message(t('[Success] Send Once: @e-mails', array('@e-mails' => $listed_recipients)));
-          }
-          else {
-            ++$send_error;
-          }
-
-          if ($nodecc == 1) {
-            // Save the message as a node.
-            _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, $success['result']);
+            drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's README.txt."));
           }
         }
       }
-    }
-  }
 
-  // Send a copy to self, if requested.
-  if (!$no_recipients && $form_state['values']['copy'] && !$bcc) {
-    $success = drupal_mail('mass_contact', 'user-copy', $to, language_default(), $params, $from_email);
-
-    // Inform the user.
-    if ($success['result']) {
-      drupal_set_message(t('A copy was sent to you.'));
-    }
-    else {
-      if (!module_exists('help')) {
-        drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's !help page or README.txt.", array('@errors' => $send_error, '!help' => l(t('help'), 'admin/help/mass_contact'))));
-      }
-      else {
-        drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's README.txt.", array('@errors' => $send_error)));
-      }
-    }
-  }
-
-  // Final tasks.
-  if (!$no_recipients) {
-    // Check for errors.
-    if ($send_error == 0) {
-      // If there are no errors, check to see if we need to save the message as a node.
-//      if ($nodecc == 1) {
-        // Save the message as a node.
-//        _mass_contact_save_node($params['subject'], $node_message, $listed_recipients, $category->category, $roles, $user->uid);
-//        _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $categories, $roles, $listed_recipients);
-//      }
+      // Register this message send to the flood control mechanism.
+      flood_register_event('mass_contact');
 
       // Log the operation.
-      flood_register_event('mass_contact');
-      watchdog('mass_contact', '%name-from sent an e-mail to the %category group.', array('%name-from' => $from_name . ' <' . $from_email . '>', '%category' => $category));
+      watchdog('mass_contact', '%name-from sent a message to the %category group, which included these recipients: @e-mails.', array('%name-from' => $from_name . ' <' . $from_email . '>', '%category' => $category, '@e-mails' => $listed_recipients));
 
-      // Inform the user.
-      if (count($total_recipients) > 0) {
-        drupal_set_message(t('Message sent successfully to @total users: @e-mails', array('@total' => $total_recipients, '@e-mails' => $listed_recipients)));
-//dpm($total_recipients);
-//dpm($listed_recipients);
-//dpm($all_recipients);
-//dpm($all_recipients[0]);
+      // Prepare some variables for the printing of the final results.
+      $total_recipients = count($all_recipients);
+      $unique_addresses_count = count(array_unique($all_recipients));
+      $listed_recipients = implode(', ', $all_recipients);
+
+      // Print out the final results of the complete operation.
+      if ($total_recipients == $unique_addresses_count) {
+        drupal_set_message(t('Your message was successfully sent to a total of @total e-mail addresses: @e-mails', array('@total' =>  $total_recipients, '@e-mails' => $listed_recipients)));
+      }
+      else {
+        drupal_set_message(t('Your message was successfully sent to a total of @total e-mail addresses, of which, there may have been !dups duplicates: @e-mails', array('@total' =>  $total_recipients, '!dups' => $total_recipients - $unique_addresses_count, '@e-mails' => $listed_recipients)));
       }
     }
     else {
-      // Inform the user of the error.
+      // Otherwise, inform the user that there were error(s).
       if (module_exists('help')) {
         drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's !help page or README.txt.", array('@errors' => $send_error, '!help' => l(t('help'), 'admin/help/mass_contact'))));
       }
@@ -950,15 +881,14 @@ function _mass_contact_prepare_message_addon($addon, $style) {
     switch ($style) {
       case 'plain text':
         if ($token_module_exists) {
-          $message .= wordwrap(token_replace($message_addon_text));
+          $message .= wordwrap(check_plain(token_replace($message_addon_text)));
         }
         else {
-          $message .= wordwrap($message_addon_text);
+          $message .= wordwrap(check_plain($message_addon_text));
         }
         break;
 
       case 'html':
-//dpm($message_addon['format']);
         global $language;
         if ($token_module_exists) {
           $message .= check_markup(token_replace($message_addon_text), $message_addon['format'], ($language) ? $language->language : LANGUAGE_NONE);
@@ -1189,21 +1119,94 @@ function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
 
 
 /**
- * Save a copy of the sent message as a node.
+ * Finalizes the headers, by setting the To, Subject, and possibly, Bcc fields.
  *
- * @param params
- * @param body
- *   The body of the message and node.
- * @param fomat
- * @param from
- *   The e-mail address representing the user that is sending the message.
- * @param category
- *   The categories of users sent to.
- * @param recipients
- *   The users who received the message.
- * @param result
+ * @param boolean $bcc
+ *   Indicates whether the recipients are to be put into the To or Bcc field.
+ *   TRUE indicates the Bcc field, and FALSE indicates the To field.
+ * @param string $recipients
+ *   The list of recipients, separated by a comma.
+ * @param array &$params
+ *   The message array.
+ * @param string $from_email
+ *   The message sender's e-mail address.
+ * @param string $subject
+ *   The subject of the message.
+ *
+ * @return string
+ *   The contents of the To field. If $bcc is TRUE, this will be $from_email.
+ *   If it is FALSE, it will be $recipients.
+ *
  */
-//function _mass_contact_save_node($subject, $body, $recipients, $category, $roles, $uid, $has_attachments) {
+function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email, $subject) {
+  // If blind carbon copy (BCC) was selected, put the recipients in
+  // the Bcc field.
+  if ($bcc) {
+    $params['headers']['Bcc'] = $recipients;
+    $to = $from_email;
+  }
+  else {
+    // Else, put the recipients in the To field.
+    $to = $recipients;
+  }
+
+  $params['subject'] = $subject;
+
+  return $to;
+} // End of _mass_contact_finalize_headers().
+
+
+/**
+ * Finalizes the message and sends it.
+ *
+ * @param string $to
+ *   To whom the message will be delivered.
+ * @param array &$params
+ *   The message array.
+ * @param string $from_email
+ *   The message sender's e-mail address.
+ * @param string $success_message
+ *   The message that will be displayed to the user, if sending is successful.
+ * @param string $message_key
+ *   A key to identify the e-mail sent.
+ *
+ * @return boolean
+ *   The result of the call to drupal_mail():
+ *     The $message array structure containing all details of the
+ *     message. If already sent ($send = TRUE), then the 'result' element
+ *     will contain the success indicator of the e-mail, failure being already
+ *     written to the watchdog. (Success means nothing more than the message being
+ *     accepted at php-level, which still doesn't guarantee it to be delivered.)
+ */
+function _mass_contact_send_message($message_key, $to, &$params, $from_email, $success_message) {
+  $success = drupal_mail('mass_contact', $message_key, $to, language_default(), $params, $from_email);
+
+  if ($success['result']) {
+    drupal_set_message(t($success_message . ' (To: @e-mails.)', array('@e-mails' => (isset($params['headers']['Bcc'])) ? $params['headers']['Bcc'] : $to)));
+  }
+
+  return $success['result'];
+} // End of _mass_contact_send_message().
+
+
+/**
+ * Archive a copy of the sent message as a node.
+ *
+ * @param array $params
+ *   The message array.
+ * @param string $body
+ *   The body of the message and node.
+ * @param array $fomat
+ *   The text format the body is to use.
+ * @param string $from
+ *   The e-mail address representing who the message is from.
+ * @param string $category
+ *   The categories of users sent to.
+ * @param string $recipients
+ *   The users who received the message.
+ * @param boolean $result
+ *   The result of sending the message.
+ */
 function _mass_contact_save_node($params, $body, $format, $from, $category, $recipients, $result) {
   // Create a new node object.
   $node = new stdClass();
@@ -1211,12 +1214,8 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
   // Set the node type.
   $node->type = 'mass_contact';
 
-  // Set some default values.
+  // Prepare the node object for editing and fill in a few default values.
   node_object_prepare($node);
-
-  // Set the user id of the node to that of the current user.
-  global $user;
-  $node->uid = $user->uid;
 
   // Set the language code if Locale module is enabled.
 //  global $language;
@@ -1298,9 +1297,6 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
       );
     }
   }
-
-  // Prepare node for a saving.
-  $node = node_submit($node);
 
   // Save the node.
   node_save($node);

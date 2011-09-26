@@ -1,3 +1,14 @@
+2011-09-26 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Fix various syntax and logic errors with getting and setting recipients
+      and recipient counts. Added _mass_contact_finalize_headers() and
+      _mass_contact_send_message() to help with that.
+
+2011-09-22 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Fixed setting correct text filter when admin as preselected one and does
+      not allow users to change it.
+
 2011-09-21 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Put in place a work around for the problem with the node not being
