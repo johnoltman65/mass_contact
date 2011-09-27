@@ -3,6 +3,8 @@
     * Fix various syntax and logic errors with getting and setting recipients
       and recipient counts. Added _mass_contact_finalize_headers() and
       _mass_contact_send_message() to help with that.
+  * mass_contact.admin.inc, mass_contact.page.inc:
+    * Revamped the body and text format code for all aspects and situations.
 
 2011-09-22 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:

@@ -232,21 +232,24 @@ function mass_contact_mail_page($form, $form_state) {
     // Get the HTML input format setting and the corresponding name.
     if (module_exists('mimemail')) {
       // Get the admin specified default text format.
-      $html_filter_format = variable_get('mass_contact_html_format', filter_default_format($user));
+      $specified_filter_format = variable_get('mass_contact_html_format', filter_default_format($user));
 
-      // Get all the text formats the user is allowed access to.
-      $filter_formats = filter_formats($user);
-
-      // Cycle through the list of possible text formats.
-      foreach ($filter_formats as $filter_format) {
-        // If the current text format matches the admin specified one...
-        if ($filter_format->format == $html_filter_format['format'] || $filter_format->format == $html_filter_format) {
-          // ...save it for later use.
-          $default_filter_format = $filter_format;
+      // The admin has not specified one, there wou'nt be a match for the
+      // default.
+      if (!empty($specified_filter_format)) {
+        // Get all the text formats the user is allowed access to.
+        $filter_formats = filter_formats($user);
+        // Cycle through the list of possible text formats.
+        foreach ($filter_formats as $filter_format) {
+          // If the current filter format matches the admin specified one...
+          if ($filter_format->format == $specified_filter_format['format'] || $filter_format->format == $specified_filter_format) {
+            // ...save it for later use.
+            $default_filter_format = $filter_format;
+          }
         }
       }
 
-      // In case nothing was selected above, set it to the Drupal system
+      // If nothing was selected above, set the default to the Drupal system
       // default.
       if (empty($default_filter_format)) {
         $default_filter_format = $filter_formats[filter_fallback_format()];
@@ -256,10 +259,10 @@ function mass_contact_mail_page($form, $form_state) {
       if (variable_get('mass_contact_html_format_override', 0)) {
         // The user is allowed to override the text format, so display a
         // textarea that has the text format selection field attached.
-        $form['body_filter']['message'] = array(
+        $form['body']['message'] = array(
           '#type' => 'text_format',
           '#title' => t('Message'),
-          '#format' => isset($default_filter_format->format) ? $default_filter_format->format : NULL,
+          '#format' => !empty($default_filter_format->format) ? $default_filter_format->format : NULL,
           '#rows' => 12,
           '#required' => TRUE,
         );
@@ -268,20 +271,19 @@ function mass_contact_mail_page($form, $form_state) {
         // The user is not allowed to override the text format, so display a
         // textarea that does not have the text format selection field
         // attached.
-        $form['body_filter']['message'] = array(
+        $form['body']['message'] = array(
           '#type' => 'textarea',
           '#title' => t('Message'),
           '#rows' => 12,
           '#required' => TRUE,
         );
         // Save the text format information for later use.
-        $form['html_format'] = array(
+        $form['body_filter_format'] = array(
           '#type' => 'value',
           '#value' => $default_filter_format,
         );
-
         // Display text format information to the user.
-        $form['html_info'] = array(
+        $form['body_filter_format_info'] = array(
           '#type' => 'item',
           '#description' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent using the %filter text format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('%filter' => $default_filter_format->name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
         );
@@ -302,14 +304,19 @@ function mass_contact_mail_page($form, $form_state) {
       // Mime Mail is not installed, so display a textarea that does not have
       // the text format selection field attached, as this message will only
       // be sent as plain text.
-      $form['body_filter']['message'] = array(
+      $form['body']['message'] = array(
         '#type' => 'textarea',
         '#title' => t('Message'),
         '#rows' => 12,
         '#required' => TRUE,
       );
+      // Save the text format information for later use.
+      $form['body_filter_format'] = array(
+        '#type' => 'value',
+        '#value' => filter_format_load('plain_text'),
+      );
       // Display text format information to the user.
-      $form['html_info'] = array(
+      $form['body_filter_format_info'] = array(
         '#type' => 'item',
         '#description' => '<p>' . t('The message will be sent as plain text.') . '</p>',
       );
@@ -462,7 +469,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   // If there are attachments, add them.
   if (module_exists('mimemail')) {
     for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-      if (isset($_FILES['files']['size']['attachment_' . $i]) && $_FILES['files']['size']['attachment_' . $i] > 0) {
+//      if (isset($_FILES['files']['size']['attachment_' . $i]) && $_FILES['files']['size']['attachment_' . $i] > 0) {
+      if (!empty($_FILES['files']['size']['attachment_' . $i])) {
         $params['attachments'] = _mass_contact_process_mime_mail_attachments($nodecc);
         break;
       }
@@ -697,7 +705,12 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
       // Archive the message as a node.
       if ($nodecc) {
-        _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, !$send_error);
+        if (is_array($form_state['values']['message'])) {
+          _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, !$send_error);
+        }
+        else {
+          _mass_contact_save_node($params, $node_message, $form_state['values']['body_filter_format']->format, $from_email, $category, $to, !$send_error);
+        }
       }
     }
 
@@ -806,13 +819,14 @@ function _mass_contact_prepare_bodies($form_values) {
     // Start with the message prefix.
     $body .= _mass_contact_prepare_message_addon('prefix', 'html');
 
+    global $language;
+
     // Add in the actual message.
-    if (!empty($form_values['message']['value'])) {
-      global $language;
+    if (is_array($form_values['message'])) {
       $body .= check_markup($form_values['message']['value'], $form_values['message']['format'], ($language) ? $language->language : LANGUAGE_NONE);
     }
     else {
-      $body .= $form_values['message'];
+      $body .= check_markup($form_values['message'], $form_values['body_filter_format']->format, ($language) ? $language->language : LANGUAGE_NONE);
     }
 
     // End with the message suffix.
@@ -825,11 +839,11 @@ function _mass_contact_prepare_bodies($form_values) {
     $body .= _mass_contact_prepare_message_addon('prefix', 'converted');
 
     // Add in the actual message.
-    if (!empty($form_values['message']['value'])) {
-      $body .= wordwrap(drupal_html_to_text($form_values['message']['value'])) . "\n";
+    if (is_array($form_values['message']['value'])) {
+      $body .= wordwrap(check_plain($form_values['message']['value'])) . "\n";
     }
     else {
-      $body .= wordwrap(drupal_html_to_text($form_values['message'])) . "\n";
+      $body .= wordwrap(check_plain($form_values['message'])) . "\n";
     }
 
     // End with the message suffix.
@@ -866,15 +880,28 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
   switch ($addon) {
     case 'prefix':
-      $message_addon = variable_get('mass_contact_message_prefix', '');
+      if ($token_module_exists) {
+        $message_addon = variable_get('mass_contact_message_prefix', t('[current-user:name] has sent you a group e-mail from [site:name].'));
+      }
+      else {
+        $message_addon = variable_get('mass_contact_message_prefix', t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))));
+      }
       break;
     case 'suffix':
-      $message_addon = variable_get('mass_contact_message_suffix', '');
+      if ($token_module_exists) {
+        $message_addon = variable_get('mass_contact_message_suffix', '');
+      }
+      else {
+        $message_addon = variable_get('mass_contact_message_suffix', '');
+      }
       break;
   }
 
   if (is_array($message_addon)) {
     $message_addon_text = $message_addon['value'];
+  }
+  else {
+    $message_addon_text = $message_addon;
   }
 
   if (!empty($message_addon_text)) {
@@ -890,11 +917,21 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
       case 'html':
         global $language;
-        if ($token_module_exists) {
-          $message .= check_markup(token_replace($message_addon_text), $message_addon['format'], ($language) ? $language->language : LANGUAGE_NONE);
+        if (is_array($message_addon)) {
+          if ($token_module_exists) {
+            $message .= check_markup(token_replace($message_addon_text), $message_addon['format'], ($language) ? $language->language : LANGUAGE_NONE);
+          }
+          else {
+            $message .= check_markup($message_addon_text, $message_addon['format'], ($language) ? $language->language : LANGUAGE_NONE);
+          }
         }
         else {
-          $message .= check_markup($message_addon_text, $message_addon['format'], ($language) ? $language->language : LANGUAGE_NONE);
+          if ($token_module_exists) {
+            $message .= check_markup(token_replace($message_addon_text), filter_fallback_format(), ($language) ? $language->language : LANGUAGE_NONE);
+          }
+          else {
+            $message .= check_markup($message_addon_text, filter_fallback_format(), ($language) ? $language->language : LANGUAGE_NONE);
+          }
         }
         break;
 
@@ -1279,7 +1316,7 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
   $node->field_mass_contact_result[$node->language][0]['format'] = 'plain_text';
 
   // If any attachments exist, add them.
-  if (isset($params['attachments'])) {
+  if (!empty($params['attachments'])) {
     foreach ($params['attachments'] as $attachment) {
       // Attach the attachment to the node.
       $node->field_mass_contact_attachments[$node->language][] = array(

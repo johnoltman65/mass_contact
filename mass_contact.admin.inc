@@ -204,6 +204,7 @@ function mass_contact_admin_edit_submit($form, &$form_state) {
       $newformrec[] = $recip;
     }
   }
+
   $form_state['values']['recipients'] = implode(',', $newformrec);
 
   if (!isset($form_state['values']['reply'])) {
@@ -376,11 +377,9 @@ function mass_contact_admin_settings_misc($form, $form_state) {
   ////////////////////////////////////////////////////////////
   // Flood control options.
   $form['mass_contact_hourly_threshold'] = array(
-//    '#type' => 'select',
     '#type' => 'textfield',
     '#size' => 10,
     '#title' => t('Hourly threshold'),
-//    '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50, 75, 100)),
     '#default_value' => variable_get('mass_contact_hourly_threshold', 3),
     '#description' => t('The maximum number of Mass Contact form submissions a user can perform per hour.'),
   );
@@ -514,16 +513,32 @@ function mass_contact_admin_settings_body($form, $form_state) {
 
   if ($mimemail) {
     $field_type = 'text_format';
-    $prefix_format = isset($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL;
-    $suffix_format = isset($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL;
 
-    if ($token) {
-      $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[current-user:name] has sent you a group e-mail from [site:name].');
-      $suffix_default_value = isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+    if (is_array($mass_contact_message_prefix)) {
+      $prefix_format = !empty($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL;
+      $suffix_format = !empty($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL;
+
+      if ($token) {
+        $prefix_default_value = !empty($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[current-user:name] has sent you a group e-mail from [site:name].');
+        $suffix_default_value = !empty($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+      }
+      else {
+        $prefix_default_value = !empty($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
+        $suffix_default_value = !empty($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+      }
     }
     else {
-      $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
-      $suffix_default_value = isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+      $prefix_format = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : NULL;
+      $suffix_format = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : NULL;
+
+      if ($token) {
+        $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group e-mail from [site:name].');
+        $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+      }
+      else {
+        $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
+        $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+      }
     }
   }
   else {
@@ -532,12 +547,12 @@ function mass_contact_admin_settings_body($form, $form_state) {
     $suffix_format = NULL;
 
     if ($token) {
-      $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group e-mail from [site:name].');
-      $suffix_default_value = isset($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+      $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group e-mail from [site:name].');
+      $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
     }
     else {
-      $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
-      $suffix_default_value = isset($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+      $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
+      $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
     }
   }
 
@@ -585,7 +600,7 @@ function mass_contact_admin_settings_body($form, $form_state) {
       '#type' => 'text_format',
       '#title' => t('The default text format'),
       '#default_value' => t('This text of this field is not saved or used anywhere.'),
-      '#format' => isset($mass_contact_html_format['format']) ? $mass_contact_html_format['format'] : NULL,
+      '#format' => !empty($mass_contact_html_format['format']) ? $mass_contact_html_format['format'] : NULL,
       '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not aloow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
     );
 
