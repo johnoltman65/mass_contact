@@ -2,10 +2,7 @@
 
 /**
  * @file
- * This is the main code file for the Mass Contact module.
- *
- * This module enables users to send messages (contact) to multiple users
- * through selected roles.
+ * This is the code file for the main form for sending the messages.
  */
 
  /* ********************************
@@ -50,7 +47,6 @@ function mass_contact_mail_page($form, $form_state) {
   $default_category = array();
   $default_category_name = '';
 
-//  $result = db_query("SELECT cid, category, selected FROM {mass_contact} ORDER BY weight, category");
   $result = db_select('mass_contact', 'mc')
     ->fields('mc', array('cid', 'category', 'selected'))
     ->orderBy('weight', 'ASC')
@@ -430,6 +426,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   $message = '';
   $send_error = 0;
 
+  // Set the sender's name.
   $default_sender_name = variable_get('mass_contact_default_sender_name');
   if (!empty($form_state['values']['name'])) {
     $from_name = $form_state['values']['name'];
@@ -441,6 +438,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     $from_name = variable_get('site_name');
   }
 
+  // Set the sender's e-mail address.
   $default_sender_email = variable_get('mass_contact_default_sender_email');
   if (!empty($form_state['values']['mail'])) {
     $from_email = $form_state['values']['mail'];
@@ -469,7 +467,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   // If there are attachments, add them.
   if (module_exists('mimemail')) {
     for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-//      if (isset($_FILES['files']['size']['attachment_' . $i]) && $_FILES['files']['size']['attachment_' . $i] > 0) {
       if (!empty($_FILES['files']['size']['attachment_' . $i])) {
         $params['attachments'] = _mass_contact_process_mime_mail_attachments($nodecc);
         break;
@@ -671,7 +668,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
             $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_email, $recipient_list['subject']);
 
             // Send the message. Save the inverse of the result for tallying.
-            $send_error += !(_mass_contact_send_message('mail_page_last', $to, $params, $from_email, '[Success] Sent remainder.'));
+            $send_error += !(_mass_contact_send_message('mail_page_last', $to, $params, $from_email, '[Success] Sent the remainder.'));
           }
 
           $total_recipients = count($current_recipients);
@@ -832,7 +829,7 @@ function _mass_contact_prepare_bodies($form_values) {
     // End with the message suffix.
     $body .= _mass_contact_prepare_message_addon('suffix', 'html');
   }
-  // Mime mail is not installed, so this message will only be processed as
+  // Mime Mail is not installed, so this message will only be processed as
   // plain text.
   else {
     // Start with the message prefix.
@@ -1194,7 +1191,7 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
 
 
 /**
- * Finalizes the message and sends it.
+ * Sends the message.
  *
  * @param string $to
  *   To whom the message will be delivered.
@@ -1259,6 +1256,7 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
 //  $node->language = ($language) ? $language->language : LANGUAGE_NONE;
   // The node data is not completely saved if $node->language is not set to
   // LANGUAGE_NONE.
+  // @TODO: Find out if this is a bug in Drupal or not.
   $node->language = LANGUAGE_NONE;
 
   // Set the title of the node to the subject of the message.

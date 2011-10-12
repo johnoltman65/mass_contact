@@ -4,8 +4,7 @@
  * @file
  * This is the main code file for the Mass Contact module.
  *
- * This module enables users to send messages (contact) to multiple users
- * through selected roles.
+ * This is primarily where all the hooks are implemented.
  */
 
 /* ************************************************
@@ -327,51 +326,9 @@ function mass_contact_user_presave(&$edit, $account, $category) {
 
 
 /**
- * Implements hook_node_delete().
- * /
-function mass_contact_node_delete($node) {
-  if ($node->type == 'mass_contact') {
-    // Look for the key phrase in the node body. If it exists, then there is
-    // an attachment that needs to be deleted.
-dpm($node);
-$test_node = node_load(14);
-dpm($test_node);
-    $offset1 = strpos($node->body, '<hr>Attachment:<br />');
-    if ($offset1) {
-      // Using the saved attachment path, find the file name.
-      $file_location = variable_get('mass_contact_attachment_location', file_directory_path() . '/mass_contact_attachments');
-      $file_location_start = strpos($node->body, $file_location, $offset1);
-      if ($file_location_start) {
-        // Get the attachment file name.
-        $file_location_end = strpos($node->body, '">', $file_location_start);
-        $file_path_name = drupal_substr($node->body, $file_location_start, $file_location_end - $file_location_start);
-
-        if (file_exists($file_path_name)) {
-          if (!file_delete($file_path_name)) {
-            // Log an error.
-            watchdog('mass_contact', 'There was an error deleting the attachment.', WATCHDOG_ERROR);
-          }
-        }
-        else {
-          // Log an error.
-          watchdog('mass_contact', 'There was an indication of an attachment within the node body, but the attachment was not found. If the attachment is still there, it was NOT deleted.', WATCHDOG_WARNING);
-        }
-      }
-      else {
-        // Log an error.
-        watchdog('mass_contact', 'There was an indication of an attachment within the node body, but the attachment path was not found. If the attachment is still there, it was NOT deleted.', WATCHDOG_WARNING);
-      }
-    }
-  }
-} // End of mass_contact_node_delete().
-*/
-
-
-/**
  * Implements hook_mail().
  */
 function mass_contact_mail($key, &$message, $params) {
-//dpm($key); dpm($message); dpm($params);
   if (!empty($params['headers'])) {
     foreach ($params['headers'] as $key => $value) {
       $message['headers'][$key] = $params['headers'][$key];
@@ -385,5 +342,4 @@ function mass_contact_mail($key, &$message, $params) {
   else {
     $message['body'][] = $params['body'];
   }
-//dpm($key); dpm($message); dpm($params);
 } // End of mass_contact_mail().

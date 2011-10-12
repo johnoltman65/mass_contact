@@ -2,10 +2,7 @@
 
 /**
  * @file
- * This is the main code file for the Mass Contact module.
- *
- * This module enables users to send messages (contact) to multiple users
- * through selected roles.
+ * This is the code file for the administrative settings pages.
  */
 
 /* **************************************************************
