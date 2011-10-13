@@ -133,7 +133,7 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
   );
   $form['selected_categories']['reset_selected'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Reset all previously selected categories to <em>No</em>.'),
+    '#title' => t('Reset all previously selected categories to <em>No</em>'),
   );
 
   $form['cid'] = array(
@@ -362,13 +362,8 @@ function mass_contact_admin_settings_misc($form, $form_state) {
   // Node copy options.
   $form['mass_contact_nodecc_d'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Save a copy as a node by default.'),
+    '#title' => t('Archive messages by saving a copy as a node'),
     '#default_value' => variable_get('mass_contact_nodecc_d', 1),
-  );
-  $form['mass_contact_nodecc_d_override'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow sender to override node copy setting.'),
-    '#default_value' => variable_get('mass_contact_nodecc_d_override', 1),
   );
 
   ////////////////////////////////////////////////////////////
@@ -427,31 +422,20 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#maxlength' => 128,
     '#description' => t('The optional user e-mail address to send e-mail as. Replaces the "Your e-mail address" value when sending mass e-mails.'),
   );
-  $form['mass_contact_default_sender']['mass_contact_default_sender_changable'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow the sender to change these values.'),
-    '#default_value' => variable_get('mass_contact_default_sender_changable', 0),
-    '#description' => t('If checked, gives the sender the ability of changing the default sender and e-mail address when creating the message. If unchecked, the fields will be disabled.'),
-  );
 
   ////////////////////////////////////////////////////////////
   // BCC options.
   $form['mass_contact_bcc_d'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Send as BCC (hide recipients) by default.'),
+    '#title' => t('Send as BCC (hide recipients) by default'),
     '#default_value' => variable_get('mass_contact_bcc_d', 1),
-  );
-  $form['mass_contact_bcc_d_override'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Allow sender to override BCC setting.'),
-    '#default_value' => variable_get('mass_contact_bcc_d_override', 1),
   );
 
   ////////////////////////////////////////////////////////////
   // Category options.
   $form['mass_contact_category_override'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Include category in subject line.'),
+    '#title' => t('Include category in subject line'),
     '#default_value' => variable_get('mass_contact_category_override', 1),
     '#description' => t("If you choose this option, the category name will be printed in square brackets preceeding the message sender's subject.
                         If the message sender has multiple categories selected with this option choosen, each category will be processed separately.
@@ -599,12 +583,6 @@ function mass_contact_admin_settings_body($form, $form_state) {
       '#default_value' => t('This text of this field is not saved or used anywhere.'),
       '#format' => !empty($mass_contact_html_format['format']) ? $mass_contact_html_format['format'] : NULL,
       '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not aloow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
-    );
-
-    $form['mass_contact_html_settings']['mass_contact_html_format_override'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Allow sender to override the text format.'),
-      '#default_value' => variable_get('mass_contact_html_format_override', 0),
     );
   }
   else {

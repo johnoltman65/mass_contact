@@ -19,7 +19,7 @@
  *   rendered form.
  */
 function mass_contact_site_page() {
-  if (!user_access('administer mass contact') && !flood_is_allowed('mass_contact', variable_get('mass_contact_hourly_threshold', 3))) {
+  if (!user_access('mass contact administer') && !flood_is_allowed('mass_contact', variable_get('mass_contact_hourly_threshold', 3))) {
     $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => variable_get('mass_contact_hourly_threshold', 3)));
   }
   else {
@@ -53,7 +53,7 @@ function mass_contact_mail_page($form, $form_state) {
     ->orderBy('category', 'ASC')
     ->execute();
   foreach ($result as $category) {
-    if (user_access('send to users in the ' . $category->category . ' category')) {
+    if (user_access('mass contact send to users in the ' . $category->category . ' category')) {
       $categories[$category->cid] = $category->category;
 
       if ($category->selected) {
@@ -78,7 +78,7 @@ function mass_contact_mail_page($form, $form_state) {
     // Add the field for specifying the sender's name.
     $mass_contact_default_sender_name = variable_get('mass_contact_default_sender_name', '');
     if ($mass_contact_default_sender_name) {
-      if (variable_get('mass_contact_default_sender_changable', 0)) {
+      if (user_access('mass contact change default sender information')) {
         $form['name'] = array(
           '#type' => 'textfield',
           '#title' => t('Your name'),
@@ -91,7 +91,7 @@ function mass_contact_mail_page($form, $form_state) {
         $form['name'] = array(
           '#type' => 'item',
           '#title' => t('Your name'),
-          '#value' => $mass_contact_default_sender_name,
+          '#markup' => $mass_contact_default_sender_name,
         );
       }
     }
@@ -109,7 +109,7 @@ function mass_contact_mail_page($form, $form_state) {
     // Add the field for specifying the sender's e-mail address.
     $mass_contact_default_sender_email = variable_get('mass_contact_default_sender_email', '');
     if ($mass_contact_default_sender_email) {
-      if (variable_get('mass_contact_default_sender_changable', 0)) {
+      if (user_access('mass contact change default sender information')) {
         $form['mail'] = array(
           '#type' => 'textfield',
           '#title' => t('Your e-mail address'),
@@ -122,7 +122,7 @@ function mass_contact_mail_page($form, $form_state) {
         $form['mail'] = array(
           '#type' => 'item',
           '#title' => t('Your e-mail address'),
-          '#value' => $mass_contact_default_sender_email,
+          '#markup' => $mass_contact_default_sender_email,
         );
       }
     }
@@ -153,11 +153,12 @@ function mass_contact_mail_page($form, $form_state) {
       // Otherwise, just use the default category.
       $form['cid'] = array(
         '#type' => 'value',
-        '#value' => $default_category, // This must be an array, otherwise the code breaks upon submit.
+        '#value' => $default_category,
       );
       $form['cid-info'] = array(
-        '#type' => 'markup',
-        '#value' => '<p>Sending to all users subscribed to the ' . $default_category_name . ' category.</p>',
+        '#type' => 'item',
+        '#title' => t('Category'),
+        '#markup' => '<p>This message will be sent to all users in the ' . $default_category_name . ' category.</p>',
       );
     }
 
@@ -169,7 +170,7 @@ function mass_contact_mail_page($form, $form_state) {
     // 0 => 'No', 1 == 'Yes', 2 == 'Selected categories'.
     if ($optout_setting == 1 || $optout_setting == 2) {
       // Allow to override or respect opt-outs if admin, otherwise use default.
-      if (user_access('administer mass contact')) {
+      if (user_access('mass contact administer')) {
         $form['optout'] = array(
           '#type' => 'checkbox',
           '#title' => t('Respect user opt-outs.'),
@@ -193,11 +194,11 @@ function mass_contact_mail_page($form, $form_state) {
     ////////////////////////////////////////////////////////////
     // Add the field for specifying whether the recipients are in the To or
     // BCC field of the message.
-    // Check if the user can override the BCC setting.
-    if (variable_get('mass_contact_bcc_d_override', 1)) {
+    // Check if the user is allowed to override the BCC setting.
+    if (user_access('mass contact override bcc')) {
       $form['bcc'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Send as BCC (hide recipients).'),
+        '#title' => t('Send as BCC (hide recipients)'),
         '#default_value' => variable_get('mass_contact_bcc_d', 1),
       );
     }
@@ -208,8 +209,9 @@ function mass_contact_mail_page($form, $form_state) {
         '#value' => variable_get('mass_contact_bcc_d', 1),
       );
       $form['bcc-info'] = array(
-        '#type' => 'markup',
-        '#value' => '<p>' . (variable_get('mass_contact_bcc_d', 1) ? t('Recipients will be hidden.') : t('Recipients will NOT be hidden.')) . '</p>',
+        '#type' => 'item',
+        '#title' => t('Send as BCC (hide recipients)'),
+        '#markup' => '<p>' . (variable_get('mass_contact_bcc_d', 1) ? t('Recipients will be hidden from each other.') : t('Recipients will NOT be hidden from each other.')) . '</p>',
       );
     }
 
@@ -252,7 +254,7 @@ function mass_contact_mail_page($form, $form_state) {
       }
 
       // Check if the user is allowed to override the text format.
-      if (variable_get('mass_contact_html_format_override', 0)) {
+      if (user_access('mass contact override text format')) {
         // The user is allowed to override the text format, so display a
         // textarea that has the text format selection field attached.
         $form['body']['message'] = array(
@@ -287,7 +289,7 @@ function mass_contact_mail_page($form, $form_state) {
 
       ////////////////////////////////////////////////////////////
       // If the user has access, add the field for specifying the attachment.
-      if (user_access('send mass contact attachments')) {
+      if (user_access('mass contact include attachments')) {
         for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
           $form['attachment_' . $i] = array(
             '#type' => 'file',
@@ -331,12 +333,12 @@ function mass_contact_mail_page($form, $form_state) {
     ////////////////////////////////////////////////////////////
     // Add the field for specifying whether to save the message as a node or
     // not.
-    if (user_access('choose whether to archive mass contact messages')) {
-      // Check if the user can override the node copy setting.
-      if (variable_get('mass_contact_nodecc_d_override', 1)) {
+    if (user_access('mass contact archive messages')) {
+      // Check if the user is allowed to override the node copy setting.
+      if (user_access('mass contact override archiving')) {
         $form['nodecc'] = array(
           '#type' => 'checkbox',
-          '#title' => t('Save a copy as a node.'),
+          '#title' => t('Archive a copy of this message on this website'),
           '#default_value' => variable_get('mass_contact_nodecc_d', 1),
         );
       }
@@ -346,6 +348,11 @@ function mass_contact_mail_page($form, $form_state) {
           '#type' => 'hidden',
           '#default_value' => variable_get('mass_contact_nodecc_d', 1),
         );
+        $form['nodecc'] = array(
+          '#type' => 'item',
+          '#title' => t('Archive a copy of this message on this website'),
+          '#markup' => t('A copy of this message will !not be archived on this website.', array('!not' => variable_get('mass_contact_nodecc_d', 1) ? '' : 'not')),
+        );
       }
     }
     // If not, then do it or not based on the administrative setting.
@@ -353,6 +360,11 @@ function mass_contact_mail_page($form, $form_state) {
       $form['nodecc'] = array(
         '#type' => 'hidden',
         '#default_value' => variable_get('mass_contact_nodecc_d', 1),
+      );
+      $form['nodecc'] = array(
+        '#type' => 'item',
+        '#title' => t('Archive a copy of this message on this website'),
+        '#markup' => t('A copy of this message will !not be archived on this website.', array('!not' => variable_get('mass_contact_nodecc_d', 1) ? '' : 'not')),
       );
     }
 
@@ -369,7 +381,7 @@ function mass_contact_mail_page($form, $form_state) {
     );
   }
 
-  if (user_access('administer mass contact')) {
+  if (user_access('mass contact administer')) {
     $form['tasklist'] = array(
       '#type' => 'fieldset',
       '#title' => t('Related tasks'),
@@ -404,7 +416,7 @@ function mass_contact_mail_page_validate($form, &$form_state) {
     form_set_error('category', t('You must select a valid category.'));
   }
 
-  if (variable_get('mass_contact_default_sender_changable', 0) == 1 && !valid_email_address($form_state['values']['mail'])) {
+  if (user_access('mass contact change default sender information') == 1 && !valid_email_address($form_state['values']['mail'])) {
     form_set_error('mass_contact', t('You must enter a valid e-mail address.'));
   }
 } // End of mass_contact_mail_page_validate().

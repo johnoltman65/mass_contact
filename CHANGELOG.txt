@@ -1,3 +1,37 @@
+2011-10-13 Jason Flatt drupal@oadaeh.net
+  * mass_contact.install:
+    * Added an update function to remove the variables that were converted into
+      permissions.
+  * mass_contact.admin.inc:
+    * Renamed the 'Save a copy as a node by default.' administrative setting to
+      'Archive messages by saving a copy as a node'. No setting was changed.
+  * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc:
+    * Every single permission and several administrative settings have been
+      changed, as described below (**** BE SURE TO CLEAR ALL ALL CACHES AT
+      admin/config/development/performance AFTER UPDATING. ****):
+      * All permission identifiers were changed to have the module name precede
+        them.
+      * Changed existing permissions names:
+        * 'Administer mass contact' is now 'Administer Mass Contact'.
+        * 'Attach files to outgoing messages' is now 'Attach files to
+          messages'.
+      * Converted four administrative settings into permissions (which is what
+        they should have been to begin with):
+        * 'Allow sender to override BCC setting.' is now 'Override BCC
+          setting'.
+        * 'Allow sender to override node copy setting.' is now 'Override
+          message archival setting'.
+        * 'Allow sender to override the text format.' is now 'Override default
+          text format'.
+        * 'Allow the sender to change these values.' (within the 'Default
+          sender information' fieldset) is now 'Change default sender
+          information'.
+      * Arranged all permissions so that they appear in alphabetized order (in
+        English).
+  * mass_contact.page.inc:
+    * Updated the displayed text and some fields of the main form, based on the
+      changes above.
+
 2011-10-12 Jason Flatt drupal@oadaeh.net
   * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc:
     * Removed more commented out code and updated some comments.

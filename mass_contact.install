@@ -333,3 +333,14 @@ function mass_contact_uninstall() {
   // Purge all field infromation
   field_purge_batch(1000);
 } // End of mass_contact_uninstall().
+
+
+/**
+ * Remove variables that were converted into permissions. Read CHANGELOG.txt before continuing.
+ */
+function mass_contact_update_7100(&$sandbox) {
+  variable_del('mass_contact_bcc_d_override');
+  variable_del('mass_contact_default_sender_changable');
+  variable_del('mass_contact_html_format_override');
+  variable_del('mass_contact_nodecc_d_override');
+} // End of mass_contact_update_7100().

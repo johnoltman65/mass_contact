@@ -80,21 +80,37 @@ function mass_contact_help($path, $arg) {
  */
 function mass_contact_permission() {
   $permissions = array(
-    'administer mass contact' => array(
-      'title' => t('Administer mass contact'),
-      'description' => t('This permission sets whether the user is allowed to modify the categories and configuration settings of Mass Contact.'),
+    'mass contact administer' => array(
+      'title' => t('Administer Mass Contact'),
+      'description' => t('Allows the user to add, change & delete categories and to change the administrative settings of Mass Contact.'),
     ),
-    'send mass contact e-mails' => array(
-      'title' => t('Send messages with Mass Contact'),
-      'description' => t('This permission sets whether the user is allowed to send messages with the Mass Contact.'),
-    ),
-    'send mass contact attachments' => array(
-      'title' => t('Attach files to outgoing messages'),
-      'description' => t('This permission sets whether the sender of the message is allowed to include attachments with the message.'),
-    ),
-    'choose whether to archive mass contact messages' => array(
+    'mass contact archive messages' => array(
       'title' => t('Archive messages as content'),
-      'description' => t('This permission sets whether the sender of the message is allowed to save an archive copy of the message as a node.'),
+      'description' => t('Allows the message sender to save an archive copy of the message as a node.'),
+    ),
+    'mass contact include attachments' => array(
+      'title' => t('Attach files to messages'),
+      'description' => t('Allows the message sender to include attachments with the message.'),
+    ),
+    'mass contact change default sender information' => array(
+      'title' => t('Change default sender information'),
+      'description' => t('Allows the message sender to change the default sender name and e-mail address.'),
+    ),
+    'mass contact override archiving' => array(
+      'title' => t('Override message archival setting'),
+      'description' => t('Allows the message sender to override the "Archive messages by saving a copy as a node" administrative setting when creating the message.'),
+    ),
+    'mass contact override bcc' => array(
+      'title' => t('Override BCC setting'),
+      'description' => t('Allows the message sender to override the "Send as BCC (hide recipients) by default" administrative setting when creating the message.'),
+    ),
+    'mass contact override text format' => array(
+      'title' => t('Override default text format'),
+      'description' => t("Allows the message sender to override the message body's default text format when creating the message."),
+    ),
+    'mass contact send messages' => array(
+      'title' => t('Send messages with Mass Contact'),
+      'description' => t('Allows the user to send messages with the Mass Contact.'),
     ),
   );
 
@@ -103,7 +119,7 @@ function mass_contact_permission() {
     ->execute();
   if (!empty($result)) {
     foreach ($result as $category) {
-      $permission = 'send to users in the ' . $category->category . ' category';
+      $permission = 'mass contact send to users in the ' . $category->category . ' category';
       $permissions[$permission] = array(
         'title' => t('Send to users in the @category category', array('@category' => $category->category)),
         'description' => t('Allows the user to send messages to the users in the @category category', array('@category' => $category->category)),
@@ -123,14 +139,14 @@ function mass_contact_menu() {
   $items['admin/config/system/mass_contact'] = array(
     'title' => 'Mass Contact',
     'page callback' => 'mass_contact_admin_categories',
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'description' => 'Configure Mass Contact and set up categories of people to send mail to.',
     'file' => 'mass_contact.admin.inc',
   );
   $items['admin/config/system/mass_contact/list'] = array(
     'title' => 'Category list',
     'page callback' => 'mass_contact_admin_categories',
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'description' => 'A listing of all existing categories.',
     'file' => 'mass_contact.admin.inc',
@@ -139,7 +155,7 @@ function mass_contact_menu() {
     'title' => 'Add category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mass_contact_admin_edit'),
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'description' => 'Add a new category.',
@@ -149,7 +165,7 @@ function mass_contact_menu() {
     'title' => 'Edit Mass Contact category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mass_contact_admin_edit'),
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_CALLBACK,
     'description' => 'Modify an existing category.',
     'file' => 'mass_contact.admin.inc',
@@ -158,7 +174,7 @@ function mass_contact_menu() {
     'title' => 'Delete Mass Contact category',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mass_contact_admin_delete'),
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_CALLBACK,
     'description' => 'Remove an existing category.',
     'file' => 'mass_contact.admin.inc',
@@ -167,7 +183,7 @@ function mass_contact_menu() {
     'title' => 'Settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mass_contact_admin_settings_misc'),
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
     'description' => 'Configuration options for Mass Contact.',
@@ -177,7 +193,7 @@ function mass_contact_menu() {
     'title' => 'Miscellaneous',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mass_contact_admin_settings_misc'),
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'description' => 'Miscellaneous configuration options for Mass Contact.',
     'file' => 'mass_contact.admin.inc',
@@ -186,7 +202,7 @@ function mass_contact_menu() {
     'title' => 'Message header',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mass_contact_admin_settings_header'),
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'description' => 'Configuration options for the headers of the messages to be sent.',
@@ -196,7 +212,7 @@ function mass_contact_menu() {
     'title' => 'Message body',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mass_contact_admin_settings_body'),
-    'access arguments' => array('administer mass contact'),
+    'access arguments' => array('mass contact administer'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
     'description' => 'Configuration options for the bodies of the messages to be sent.',
@@ -205,7 +221,7 @@ function mass_contact_menu() {
   $items['mass_contact'] = array(
     'title' => 'Mass Contact',
     'page callback' => 'mass_contact_site_page',
-    'access arguments' => array('send mass contact e-mails'),
+    'access arguments' => array('mass contact send messages'),
     'description' => 'Send an e-mail message to multiple users of this website.',
     'file' => 'mass_contact.page.inc',
   );
