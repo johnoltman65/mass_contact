@@ -71,7 +71,7 @@ function mass_contact_mail_page($form, $form_state) {
   if (count($categories) > 0) {
     $form['#token'] = $user->name . $user->mail;
     $form['contact_information'] = array(
-      '#markup' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an e-mail message using the contact form below.'))),
+      '#markup' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an email message using the contact form below.'))),
     );
 
     ////////////////////////////////////////////////////////////
@@ -106,13 +106,13 @@ function mass_contact_mail_page($form, $form_state) {
     }
 
     ////////////////////////////////////////////////////////////
-    // Add the field for specifying the sender's e-mail address.
+    // Add the field for specifying the sender's email address.
     $mass_contact_default_sender_email = variable_get('mass_contact_default_sender_email', '');
     if ($mass_contact_default_sender_email) {
       if (user_access('mass contact change default sender information')) {
         $form['mail'] = array(
           '#type' => 'textfield',
-          '#title' => t('Your e-mail address'),
+          '#title' => t('Your email address'),
           '#maxlength' => 255,
           '#default_value' => $mass_contact_default_sender_email,
           '#required' => TRUE,
@@ -121,7 +121,7 @@ function mass_contact_mail_page($form, $form_state) {
       else {
         $form['mail'] = array(
           '#type' => 'item',
-          '#title' => t('Your e-mail address'),
+          '#title' => t('Your email address'),
           '#markup' => $mass_contact_default_sender_email,
         );
       }
@@ -129,7 +129,7 @@ function mass_contact_mail_page($form, $form_state) {
     else {
       $form['mail'] = array(
         '#type' => 'textfield',
-        '#title' => t('Your e-mail address'),
+        '#title' => t('Your email address'),
         '#maxlength' => 255,
         '#default_value' => $user->uid ? $user->mail : '',
         '#required' => TRUE,
@@ -166,7 +166,7 @@ function mass_contact_mail_page($form, $form_state) {
     // Add the field for specifying whether opt-outs are respected or not.
     $optout_setting = variable_get('mass_contact_optout_d', 0);
 
-    // Allow users to opt-out of mass e-mails:
+    // Allow users to opt-out of mass emails:
     // 0 => 'No', 1 == 'Yes', 2 == 'Selected categories'.
     if ($optout_setting == 1 || $optout_setting == 2) {
       // Allow to override or respect opt-outs if admin, otherwise use default.
@@ -372,7 +372,7 @@ function mass_contact_mail_page($form, $form_state) {
     // Add the submit button.
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Send e-mail'),
+      '#value' => t('Send email'),
     );
   }
   else {
@@ -417,7 +417,7 @@ function mass_contact_mail_page_validate($form, &$form_state) {
   }
 
   if (user_access('mass contact change default sender information') == 1 && !valid_email_address($form_state['values']['mail'])) {
-    form_set_error('mass_contact', t('You must enter a valid e-mail address.'));
+    form_set_error('mass_contact', t('You must enter a valid email address.'));
   }
 } // End of mass_contact_mail_page_validate().
 
@@ -437,8 +437,16 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   $nodecc = $form_state['values']['nodecc'];
   $message = '';
   $send_error = 0;
+  $recipient_lists = array();
+  $empty_lists = 0;
 
-  // Set the sender's name.
+
+  // Process some parts the message header (more will be processed later).
+
+  // Prepare the message header.
+  $params = _mass_contact_prepare_header();
+
+  // Specify the sender's name.
   $default_sender_name = variable_get('mass_contact_default_sender_name');
   if (!empty($form_state['values']['name'])) {
     $from_name = $form_state['values']['name'];
@@ -450,7 +458,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     $from_name = variable_get('site_name');
   }
 
-  // Set the sender's e-mail address.
+  // Specify the sender's email address.
   $default_sender_email = variable_get('mass_contact_default_sender_email');
   if (!empty($form_state['values']['mail'])) {
     $from_email = $form_state['values']['mail'];
@@ -463,8 +471,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   }
 
 
-  // Prepare the message header. This currently only sets the character set.
-  $params = _mass_contact_prepare_header();
+  // Process the message body.
 
   // Prepare the message body part(s).
   $message = _mass_contact_prepare_bodies($form_state['values']);
@@ -474,7 +481,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   if (variable_get('mass_contact_nodecc_d', 1) || ($nodecc == 1)) {
     $node_message = $message;
   }
-
 
   // If there are attachments, add them.
   if (module_exists('mimemail')) {
@@ -486,128 +492,35 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     }
   }
 
-
   // Add the message to the main variable.
   $params['body'] = $message;
 
 
-  // Load the category information.
+  // Process the recipients (some more of the message header).
+
+  // Get the IDs of the chosen categories.
   $cids = array();
   foreach ($form_state['values']['cid'] as $cid) {
     $cids[] = $cid;
   }
 
-  // Select the chosen categories from the database.
-  $categories = db_select('mass_contact', 'mc')
-    ->condition('cid', $cids, 'IN')
-    ->fields('mc')
-    ->execute();
+  // Get the category objects, based on the IDs, and save them into an array
+  // for latter use.
+  $results = db_query("SELECT * FROM {mass_contact} WHERE cid IN(:cids)", array(':cids' => $cids));
+  foreach ($results as $category) {
+    $categories[] = $category;
+  }
 
-  $everyone = FALSE;
-  $message_subject = '';
-
-  // Check to see if the authenticated users role was specified in any
-  // category.
+  // Create the recipient lists, based on category.
   foreach ($categories as $category) {
-    // Get the list of roles which were chosen through the categry selection.
-    $roles = explode(',', $category->recipients);
-    foreach ($roles as $role) {
-      // Role 2 is the authenticated users role, which means everyone. This
-      // needs to be checked for first. Otherwise, duplicate messages could be
-      // sent.
-      if ($role == 2) {
-        $everyone = TRUE;
-
-        if (variable_get('mass_contact_category_override', 1)) {
-          $message_subject = t('[@category] @subject', array('@category' => $category->category, '@subject' => $form_state['values']['subject']));
-        }
-
-        break 2;
-      }
-    }
-  }
-
-  // Get the list of users who've opted out of this mailing.
-  $opt_out_users = array();
-
-  if ($form_state['values']['optout']) {
-    // Get the list of users who've opted out.
-    $opt_out_users = _mass_contact_create_opt_out_list($categories);
-  }
-
-
-  // Create the recipient lists.
-
-  // Initialize the array of recipients and subjects.
-  $recipient_lists = array();
-
-  // If the 'authentecated users' role was selected in any category, we ignore
-  // all categories.
-  if ($everyone) {
-    // Set subject.
-    if ($message_subject == '') {
-      $message_subject = $form_state['values']['subject'];
-    }
-
-    // Create the recipient list, consisting of all users.
-    $recipient_lists['All authenticated users'] = array(
+    // Create the recipient lists, per category.
+    $recipient_lists[$category->category] = array(
       // Set the recipients.
-      'recipients' => _mass_contact_create_recipient_list(array(2), $opt_out_users),
+      'recipients' => _mass_contact_create_recipient_list($category, $form_state['values']['optout']),
       // Set the subject.
-      'subject' => $message_subject,
+      'subject' => t('[@category] @subject', array('@category' => $category->category, '@subject' => $form_state['values']['subject'])),
     );
   }
-  // If the module is configured to not include the category in the subject,
-  // combine all users in all categories/roles into a single listing of
-  // recpients.
-  elseif (!variable_get('mass_contact_category_override', 1)) {
-    $roles = array();
-
-    // Select the chosen categories from the database.
-    $categories = db_select('mass_contact', 'mc')
-      ->condition('cid', $cids, 'IN')
-      ->fields('mc')
-      ->execute();
-
-    // Cycle through all the choosen categories.
-    foreach ($categories as $category) {
-      // Get the list of roles which were chosen through the categry selection.
-      $roles = array_merge($roles, explode(',', $category->recipients));
-    }
-
-    // Create the recipient list.
-    $recipient_lists['All categories combined'] = array(
-      // Set the recipients.
-      'recipients' => _mass_contact_create_recipient_list($roles, $opt_out_users),
-      // Set the subject.
-      'subject' => $form_state['values']['subject'],
-    );
-  }
-  // Cycle through all categories and create groups of recipients.
-  else {
-    // Select the chosen categories from the database.
-    $categories = db_select('mass_contact', 'mc')
-      ->condition('cid', $cids, 'IN')
-      ->fields('mc')
-      ->execute();
-    foreach ($categories as $category) {
-      // Get the list of roles which were chosen through the categry selection.
-      $roles = explode(',', $category->recipients);
-
-      // Create the recipient lists, per category.
-      $recipient_lists[$category->category] = array(
-        // Set the recipients.
-        'recipients' => _mass_contact_create_recipient_list($roles, $opt_out_users),
-        // Set the subject.
-        'subject' => t('[@category] @subject', array('@category' => $category->category, '@subject' => $form_state['values']['subject'])),
-      );
-    }
-  }
-
-
-  // Verify we have someone to send to.
-  $no_recipients = FALSE;
-  $recipients_count = 0;
 
   // Iterate through each recipient list to verify there are recipients
   // somewhere.
@@ -615,25 +528,48 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     foreach ($recipient_lists as $recipient_list) {
       // Check for empty recipient list.
       if (count($recipient_list['recipients']) == 0) {
-        $recipients_count++;
+        $empty_lists++;
       }
     }
   }
 
-  // There are categories selected, but all of them are empty.
-  if (count($recipient_lists) == $recipients_count) {
-    drupal_set_message(t('No users were in the selected category(ies), and therefore, the message was not sent.'));
-    $no_recipients = TRUE;
-    $form_state['redirect'] = '/';
-  }
+  if (count($recipient_lists) == $empty_lists) {
+    // There are categories selected, but all of them are empty.
 
-  if (!$no_recipients) {
+    // Post a message to the user and exit.
+    drupal_set_message(t('No users were in the selected category(ies), and therefore, the message was not sent.'));
+  }
+  else {
     // We have recipients, so send the message to them.
 
-    // The count of all e-mail addresses thie message is sent to.
+    // Initialize more variables.
+    // The count of all email addresses the message is sent to.
     $total_recipients = 0;
-    // An array of all categories and e-mail addresses thie message is sent to.
+    // An array of all categories and email addresses thie message is sent to.
     $all_recipients = array();
+
+    // If the module is configured to not include the category in the subject,
+    // combine all users in all categories into a single listing of recpients.
+    if (!variable_get('mass_contact_category_override', 1)) {
+      $new_recipient_list = array('All categories combined' => array());
+
+      // Cycle through all the categories adding all the recipients to the one
+      // list.
+      foreach ($recipient_lists as $category) {
+        if (!empty($new_recipient_list['All categories combined']['recipients'])) {
+          $new_recipient_list['All categories combined']['recipients'] = array_merge($new_recipient_list['All categories combined']['recipients'], $category['recipients']);
+        }
+        else {
+          $new_recipient_list['All categories combined']['recipients'] = $category['recipients'];
+        }
+      }
+
+      // Add the subject.
+      $new_recipient_list['All categories combined']['subject'] = t('@subject', array('@subject' => $form_state['values']['subject']));
+
+      // Set the original list to the new combined, unduplicated list.
+      $recipient_lists = array_unique($new_recipient_list);
+    }
 
     // Iterate through each recipient list.
     foreach ($recipient_lists as $category => $recipient_list) {
@@ -642,10 +578,12 @@ function mass_contact_mail_page_submit($form, &$form_state) {
         // If there's a recipient limit, break up recipient list.
         $recipient_limit = variable_get('mass_contact_recipient_limit', 0);
         if (count($recipient_list['recipients']) > $recipient_limit && $recipient_limit != 0) {
+          // Initialize still more variables.
+          // The count of current recipients.
           $recipient_count = 0;
           // The batch count.
           $batch = 0;
-          // An array of the current grouping of categories and e-mail addresses thie
+          // An array of the current grouping of categories and email addresses thie
           // message is sent to.
           $current_recipients = array();
 
@@ -690,7 +628,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
         // There's no recipient limit, so send the message to all the recipients
         // at the same time.
         else {
-          // An array of the current grouping of categories and e-mail addresses thie
+          // An array of the current grouping of categories and email addresses thie
           // message is sent to.
           $current_recipients = array();
 
@@ -710,15 +648,15 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           // Send the message. Save the inverse of the result for tallying.
           $send_error += !(_mass_contact_send_message('mail_page', $to, $params, $from_email, '[Success] Sent all at once.'));
         }
-      }
 
-      // Archive the message as a node.
-      if ($nodecc) {
-        if (is_array($form_state['values']['message'])) {
-          _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, !$send_error);
-        }
-        else {
-          _mass_contact_save_node($params, $node_message, $form_state['values']['body_filter_format']->format, $from_email, $category, $to, !$send_error);
+        // Archive the message as a node.
+        if ($nodecc) {
+          if (is_array($form_state['values']['message'])) {
+            _mass_contact_save_node($params, $node_message, $form_state['values']['message']['format'], $from_email, $category, $to, !$send_error);
+          }
+          else {
+            _mass_contact_save_node($params, $node_message, $form_state['values']['body_filter_format']->format, $from_email, $category, $to, !$send_error);
+          }
         }
       }
     }
@@ -726,7 +664,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     // If there were no errors, do the final operations.
     if (!$send_error) {
       // If the sender requested a copy, send it.
-      if (!$no_recipients && $form_state['values']['copy'] && !$bcc) {
+      if ($form_state['values']['copy'] && !$bcc) {
         if (!_mass_contact_send_message('user-copy', $from_email, $params, $from_email, 'A copy was sent to you.')) {
           // There was an error, so inform the user.
           if (!module_exists('help')) {
@@ -742,7 +680,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       flood_register_event('mass_contact');
 
       // Log the operation.
-      watchdog('mass_contact', '%name-from sent a message to the %category group, which included these recipients: @e-mails.', array('%name-from' => $from_name . ' <' . $from_email . '>', '%category' => $category, '@e-mails' => $listed_recipients));
+      watchdog('mass_contact', '%name-from sent a message to the %category group, which included these recipients: @emails.', array('%name-from' => $from_name . ' <' . $from_email . '>', '%category' => $category, '@emails' => $listed_recipients));
 
       // Prepare some variables for the printing of the final results.
       $total_recipients = count($all_recipients);
@@ -751,10 +689,10 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
       // Print out the final results of the complete operation.
       if ($total_recipients == $unique_addresses_count) {
-        drupal_set_message(t('Your message was successfully sent to a total of @total e-mail addresses: @e-mails', array('@total' =>  $total_recipients, '@e-mails' => $listed_recipients)));
+        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses: @emails', array('@total' =>  $total_recipients, '@emails' => $listed_recipients)));
       }
       else {
-        drupal_set_message(t('Your message was successfully sent to a total of @total e-mail addresses, of which, there may have been !dups duplicates: @e-mails', array('@total' =>  $total_recipients, '!dups' => $total_recipients - $unique_addresses_count, '@e-mails' => $listed_recipients)));
+        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses, of which, there may have been !dups duplicates: @emails', array('@total' =>  $total_recipients, '!dups' => $total_recipients - $unique_addresses_count, '@emails' => $listed_recipients)));
       }
     }
     else {
@@ -783,6 +721,9 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
 /**
  * Prepares the message's header.
+ *
+ * This currently only sets the character set, but it's left here for potential
+ * future additions.
  *
  * @param boundary_attachment
  *   A string containing boundary for the attachments.
@@ -890,10 +831,10 @@ function _mass_contact_prepare_message_addon($addon, $style) {
   switch ($addon) {
     case 'prefix':
       if ($token_module_exists) {
-        $message_addon = variable_get('mass_contact_message_prefix', t('[current-user:name] has sent you a group e-mail from [site:name].'));
+        $message_addon = variable_get('mass_contact_message_prefix', t('[current-user:name] has sent you a group email from [site:name].'));
       }
       else {
-        $message_addon = variable_get('mass_contact_message_prefix', t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))));
+        $message_addon = variable_get('mass_contact_message_prefix', t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))));
       }
       break;
     case 'suffix':
@@ -960,7 +901,7 @@ function _mass_contact_prepare_message_addon($addon, $style) {
 
 
 /**
- * Process attachments for use with Mime Mail.
+ * Processes attachments for use with Mime Mail.
  *
  * @param nodecc
  *   An boolean identifying whether a copy of the message will be saved as a
@@ -1055,107 +996,59 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
 
 
 /**
- * Creates a list of users who have opted out of receiving messages.
- *
- * @param categories
- *   An object containing the list of categories the message is to.
- *
- * @return
- *   An array with the keys being the user ids and the values being 1 to
- *   indicate the users' desire to opt out of the current mailing.
- */
-function _mass_contact_create_opt_out_list($categories) {
-  $opt_out_users = array();
-
-  // Check for opt-out unless overridden by admin.
-  $optout_setting = variable_get('mass_contact_optout_d', 0);
-
-  // Allow users to opt-out of mass e-mails:
-  // 0 == 'No', 1 == 'Yes', 2 == 'Selected categories'.
-  if ($optout_setting == 1 || $optout_setting == 2) {
-    // Select all active users to determine who has opted out.
-    $active_users = db_select('users', 'u')
-      ->fields('u', array('uid'))
-      ->condition('status', 0, '<>')
-      ->execute();
-    foreach ($active_users as $user) {
-      // Load the user so that we may access his/her data.
-      $account = user_load($user->uid);
-      if ($optout_setting == 1 && $account->mass_contact_optout == 1) {
-        // If the user opted out of all messages, add their user id to the
-        // list.
-        $opt_out_users[$user->uid] = 1;
-      }
-      elseif ($optout_setting == 2) {
-        // Cycle through all the categories selected for this message.
-        foreach ($categories as $category) {
-          $optout_cid = 'mass_contact_optout_' . $category->cid;
-          if ($account->$optout_cid == 1) {
-            // If the user opted out of this particular category, add their
-            // user id to the list.
-            $opt_out_users[$user->uid] = 1;
-          }
-        }
-      }
-    }
-  }
-
-  return $opt_out_users;
-} // End of _mass_contact_create_opt_out_list().
-
-
-/**
  * Creates a list of recipients.
  *
- * @param roles
- *   An array of roles to get users from.
- * @param opt_out_users
- *   An array of user ids for users who've indicated they want to be excluded
- *   from mass mailings. This list can be obtained by calling the
- *   _mass_contact_create_opt_out_list() function.
+ * TODO: This function currently has hard coded role information in it. I'm
+ * striving to make this and the opt out functions the only place where role
+ * information is hard coded so that in the future they will become the place
+ * where where contrib modules can hook in their category filling functions.
+ *
+ * @param category
+ *   An object containing the category of users the message is to.
+ * @param respect_opt_outs
+ *   A boolean which represents the 'Respect user opt-outs' value from the
+ *   message sending form.
  *
  * @return
- *   An array of users' e-mail addresses, keyed by their user name.
+ *   An array of users' email addresses, keyed by their user name.
  */
-function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
+function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
+  $recipient_list = array();
+  $opt_out_setting = variable_get('mass_contact_optout_d', 0);
   global $user;
 
-  $recipient_list = array();
+  // Get the user IDs for all the users in all the roles included in the
+  // category.
+  $query = "SELECT u.name, u.mail, u.data FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid WHERE ur.rid IN(:ur_rids) AND u.status <> 0";
+  $results = db_query($query, array(':ur_rids' => $category->recipients));
+  foreach ($results as $account) {
+    $account_data = unserialize($account->data);
 
-  foreach ($roles as $role) {
-    // Get the list of users in this role.
-    if ($role == 2) {
-      $query = "SELECT u.uid FROM {users} u WHERE u.status <> 0";
-      $recipient_ids = db_query($query);
-    }
-    else {
-      $query = "SELECT ur.uid FROM {users_roles} ur LEFT JOIN {users} u ON ur.uid = u.uid WHERE ur.rid = :ur_rid AND u.status <> 0";
-      $recipient_ids = db_query($query, array(':ur_rid' => $role));
-    }
-//    $recipient_ids = db_query($query, array(':ur_rid' => $role))->fetchObject();
-//    $recipient_ids = db_select('users_roles', 'ur')
-//      ->fields('ur', array('uid'))
-//      ->leftJoin('users', 'u', 'ur.uid = u.uid')
-//      ->condition('rid', $role)
-//      ->condition('status', 0, '<>')
-//      ->execute();
-
-    foreach ($recipient_ids as $recipient_id) {
-      $recipient = db_select('users', 'u')
-        ->fields('u', array('name', 'mail'))
-        ->condition('uid', $recipient_id->uid)
-        ->execute()
-        ->fetchObject();
-
-      if (isset($opt_out_users[$recipient_id->uid])) {
-        if ($recipient->name != $user->name && !$opt_out_users[$recipient_id->uid]) {
-          $recipient_list[$recipient->name] = $recipient->mail;
+    // Check if this account is the current user. We don't include the user
+    // unless requested, and then it's a separate mailing.
+    if ($account->name != $user->name) {
+      // Check to see if users may opt out of all mailings.
+      if ($respect_opt_outs && $opt_out_setting == 1) {
+        // Check to see if this account has opted out.
+        if (empty($account_data['mass_contact_optout'])) {
+          // Add the account info to the list.
+          $recipient_list[$account->name] = $account->mail;
         }
       }
-      else {
-        if ($recipient->name != $user->name) {
-          $recipient_list[$recipient->name] = $recipient->mail;
+      // Check to see if users may opt out of selected categories.
+      elseif ($respect_opt_outs && $opt_out_setting == 2) {
+        // Specify the category ID to check.
+        $optout_cid = 'mass_contact_optout_' . $category->cid;
+        // Check to see if this account has opted out.
+        if (empty($account_data[$optout_cid])) {
+          // Add the account info to the list.
+          $recipient_list[$account->name] = $account->mail;
         }
+      }
+      // Opt outs are not allowed and/or not being respected.
+      else {
+        // Add the account info to the list.
+        $recipient_list[$account->name] = $account->mail;
       }
     }
   }
@@ -1175,7 +1068,7 @@ function _mass_contact_create_recipient_list($roles, $opt_out_users = array()) {
  * @param array &$params
  *   The message array.
  * @param string $from_email
- *   The message sender's e-mail address.
+ *   The message sender's email address.
  * @param string $subject
  *   The subject of the message.
  *
@@ -1210,17 +1103,17 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
  * @param array &$params
  *   The message array.
  * @param string $from_email
- *   The message sender's e-mail address.
+ *   The message sender's email address.
  * @param string $success_message
  *   The message that will be displayed to the user, if sending is successful.
  * @param string $message_key
- *   A key to identify the e-mail sent.
+ *   A key to identify the email sent.
  *
  * @return boolean
  *   The result of the call to drupal_mail():
  *     The $message array structure containing all details of the
  *     message. If already sent ($send = TRUE), then the 'result' element
- *     will contain the success indicator of the e-mail, failure being already
+ *     will contain the success indicator of the email, failure being already
  *     written to the watchdog. (Success means nothing more than the message being
  *     accepted at php-level, which still doesn't guarantee it to be delivered.)
  */
@@ -1228,7 +1121,7 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
   $success = drupal_mail('mass_contact', $message_key, $to, language_default(), $params, $from_email);
 
   if ($success['result']) {
-    drupal_set_message(t($success_message . ' (To: @e-mails.)', array('@e-mails' => (isset($params['headers']['Bcc'])) ? $params['headers']['Bcc'] : $to)));
+    drupal_set_message(t($success_message . ' (To: @emails.)', array('@emails' => (isset($params['headers']['Bcc'])) ? $params['headers']['Bcc'] : $to)));
   }
 
   return $success['result'];
@@ -1245,7 +1138,7 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
  * @param array $fomat
  *   The text format the body is to use.
  * @param string $from
- *   The e-mail address representing who the message is from.
+ *   The email address representing who the message is from.
  * @param string $category
  *   The categories of users sent to.
  * @param string $recipients

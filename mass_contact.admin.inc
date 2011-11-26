@@ -94,7 +94,7 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
     '#title' => t('Category'),
     '#maxlength' => 255,
     '#default_value' => $edit['category'],
-    '#description' => t("Will appear in the subject of your e-mail as [category]."),
+    '#description' => t("Will appear in the subject of your email as [category]."),
     '#required' => TRUE,
   );
 
@@ -111,10 +111,10 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
   }
   $form['recipients'] = array(
     '#type' => 'checkboxes',
-    '#title' => t('Roles to receive e-mail'),
+    '#title' => t('Roles to receive email'),
     '#options' => $rolesarray,
     '#default_value' => explode(',', $edit['recipients']),
-    '#description' => t('These roles will be added to the mailing list. Note: if you check "authenticated users", other roles will not be added, as they will receive the e-mail anyway.'),
+    '#description' => t('These roles will be added to the mailing list. Note: if you check "authenticated users", other roles will not be added, as they will receive the email anyway.'),
   );
 
   $form['selected_categories'] = array(
@@ -318,7 +318,7 @@ function mass_contact_admin_settings_misc($form, $form_state) {
   $form['mass_contact_form_information'] = array(
     '#type' => 'textarea',
     '#title' => t('Additional information for Mass Contact form'),
-    '#default_value' => variable_get('mass_contact_form_information', t('Send e-mails using the following form.')),
+    '#default_value' => variable_get('mass_contact_form_information', t('Send email messages using the following form.')),
     '#description' => t('Information to show on the <a href="@form">Mass Contact page</a>.', array('@form' => url('mass_contact'))),
   );
 
@@ -326,7 +326,7 @@ function mass_contact_admin_settings_misc($form, $form_state) {
   // The maximum number of users to send to at one time.
   $form['mass_contact_recipient_limit'] = array(
     '#type' => 'textfield',
-    '#title' => t('Maximum number of recipients before splitting up the e-mail'),
+    '#title' => t('Maximum number of recipients before splitting up the email'),
     '#size' => 10,
     '#default_value' => variable_get('mass_contact_recipient_limit', 0),
     '#description' => t('This is a workaround for server-side limits on the number of recipients in a single mail message. Once this limit is reached, the recipient list will be broken up and multiple copies of the message will be sent out until all recipients receive the mail. Setting this to "0" will turn off this feature.'),
@@ -341,20 +341,20 @@ function mass_contact_admin_settings_misc($form, $form_state) {
   );
   $form['mass_contact_optout_options']['mass_contact_optout_d'] = array(
     '#type' => 'radios',
-    '#title' => t('Allow users to opt-out of mass e-mails'),
+    '#title' => t('Allow users to opt-out of mass email messages'),
     '#default_value' => variable_get('mass_contact_optout_d', 0),
     '#options' => array(
       0 => 'No',
       1 => 'Yes',
       2 => 'Selected categories',
     ),
-    '#description' => t("Allow users to opt-out of receiving mass e-mails. If 'No' is chosen, then the site's users will not be able to opt-out of receiving mass e-mails. If 'Yes' is chosen, then the site's users will be able to opt-out of receiving mass e-mails, and they will not receive any from any category. If 'Selected categories' is chosen, then the site's users will be able to opt-out of receiving mass e-mails from which ever categories they choose."),
+    '#description' => t("Allow users to opt-out of receiving mass email messages. If 'No' is chosen, then the site's users will not be able to opt-out of receiving mass email messages. If 'Yes' is chosen, then the site's users will be able to opt-out of receiving mass email messages, and they will not receive any from any category. If 'Selected categories' is chosen, then the site's users will be able to opt-out of receiving mass email messages from which ever categories they choose."),
   );
 
   $form['mass_contact_optout_options']['mass_contact_optout_message'] = array(
     '#type' => 'textarea',
     '#title' => t('The message to display to users when giving them the option to opt out'),
-    '#default_value' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass e-mails from privileged users. Note that site administrators are able to include you in mass e-mails even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
+    '#default_value' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass email messages from privileged users. Note that site administrators are able to include you in mass email messages even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
     '#description' => t('This is the message users will see in thier account settings page when they are presented with a list of categories to opt out of.'),
   );
 
@@ -396,15 +396,15 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#type' => 'textfield',
     '#title' => t('Character set'),
     '#default_value' => variable_get('mass_contact_character_set', ''),
-    '#description' => t('You may specify an alternate character set to use when sending e-mails. If left blank, the default of UTF-8 will be used. If you are unsure of what to put here, then leave it blank. Caution: setting this may not get you the results you desire. Other modules may come along and change that value after it has been set by this module.'),
+    '#description' => t('You may specify an alternate character set to use when sending emails. If left blank, the default of UTF-8 will be used. If you are unsure of what to put here, then leave it blank. Caution: setting this may not get you the results you desire. Other modules may come along and change that value after it has been set by this module.'),
   );
 
   ////////////////////////////////////////////////////////////
-  // The sender's name and e-mail address.
+  // The sender's name and email address.
   $form['mass_contact_default_sender'] = array(
     '#type' => 'fieldset',
     '#title' => t('Default sender information'),
-    '#description' => t('If anything is specified in here, it is used in place of the "Your name" and "Your e-mail address" fileds when sending the mass e-mail. Otherwise, the sender\'s name and e-mail address will be the default values. You must fill in both values, if you want to specify a default.'),
+    '#description' => t('If anything is specified in here, it is used in place of the "Your name" and "Your email address" fileds when sending the mass email. Otherwise, the sender\'s name and email address will be the default values. You must fill in both values, if you want to specify a default.'),
   );
   $form['mass_contact_default_sender']['mass_contact_default_sender_name'] = array(
     '#type' => 'textfield',
@@ -412,15 +412,15 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#default_value' => variable_get('mass_contact_default_sender_name', ''),
     '#size' => 60,
     '#maxlength' => 128,
-    '#description' => t('The optional user name to send e-mail as. Replaces the "Your name" value when sending mass e-mails.'),
+    '#description' => t('The optional user name to send email as. Replaces the "Your name" value when sending mass emails.'),
   );
   $form['mass_contact_default_sender']['mass_contact_default_sender_email'] = array(
     '#type' => 'textfield',
-    '#title' => t('Default sender e-mail address'),
+    '#title' => t('Default sender email address'),
     '#default_value' => variable_get('mass_contact_default_sender_email', ''),
     '#size' => 60,
     '#maxlength' => 128,
-    '#description' => t('The optional user e-mail address to send e-mail as. Replaces the "Your e-mail address" value when sending mass e-mails.'),
+    '#description' => t('The optional user email address to send email as. Replaces the "Your email address" value when sending mass emails.'),
   );
 
   ////////////////////////////////////////////////////////////
@@ -456,13 +456,13 @@ function mass_contact_admin_settings_header($form, $form_state) {
 function mass_contact_admin_settings_header_validate($form, &$form_state) {
   if (!empty($form_state['values']['mass_contact_default_sender_name'])) {
     if (empty($form_state['values']['mass_contact_default_sender_email'])) {
-      form_set_error('mass_contact_default_sender_email', t('If you are going to specify default user settings, you must specify both a user name and a user e-mail address.'));
+      form_set_error('mass_contact_default_sender_email', t('If you are going to specify default user settings, you must specify both a user name and a user email address.'));
     }
   }
 
   if (!empty($form_state['values']['mass_contact_default_sender_email'])) {
     if (empty($form_state['values']['mass_contact_default_sender_name'])) {
-      form_set_error('mass_contact_default_sender_name', t('If you are going to specify default user settings, you must specify both a user name and a user e-mail address.'));
+      form_set_error('mass_contact_default_sender_name', t('If you are going to specify default user settings, you must specify both a user name and a user email address.'));
     }
   }
 } // End of mass_contact_admin_settings_header_validate().
@@ -486,7 +486,7 @@ function mass_contact_admin_settings_body($form, $form_state) {
   $form['mass_contact_supplemental_texts'] = array(
     '#type' => 'fieldset',
     '#title' => t('Supplemental message body texts'),
-    '#description' => t('You may specify additional text to insert before and/or after the message text of every mass e-mail that is sent.'),
+    '#description' => t('You may specify additional text to insert before and/or after the message text of every mass email that is sent.'),
   );
 
   $mass_contact_message_prefix = variable_get('mass_contact_message_prefix');
@@ -500,11 +500,11 @@ function mass_contact_admin_settings_body($form, $form_state) {
       $suffix_format = !empty($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL;
 
       if ($token) {
-        $prefix_default_value = !empty($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[current-user:name] has sent you a group e-mail from [site:name].');
+        $prefix_default_value = !empty($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[current-user:name] has sent you a group email from [site:name].');
         $suffix_default_value = !empty($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
       }
       else {
-        $prefix_default_value = !empty($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
+        $prefix_default_value = !empty($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
         $suffix_default_value = !empty($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
       }
     }
@@ -513,11 +513,11 @@ function mass_contact_admin_settings_body($form, $form_state) {
       $suffix_format = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : NULL;
 
       if ($token) {
-        $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group e-mail from [site:name].');
+        $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group email from [site:name].');
         $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
       }
       else {
-        $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
+        $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
         $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
       }
     }
@@ -528,11 +528,11 @@ function mass_contact_admin_settings_body($form, $form_state) {
     $suffix_format = NULL;
 
     if ($token) {
-      $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group e-mail from [site:name].');
+      $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group email from [site:name].');
       $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
     }
     else {
-      $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group e-mail from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
+      $prefix_default_value = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
       $suffix_default_value = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
     }
   }
@@ -588,7 +588,7 @@ function mass_contact_admin_settings_body($form, $form_state) {
   else {
     $form['mass_contact_html_settings']['mass_contact_no_mimemail'] = array(
       '#type' => 'item',
-      '#description' => t('This module no longer supports HTML e-mail without the Mime Mail module, which can be found here: http://drupal.org/project/mimemail.'),
+      '#description' => t('This module no longer supports HTML email without the Mime Mail module, which can be found here: http://drupal.org/project/mimemail.'),
     );
   }
 

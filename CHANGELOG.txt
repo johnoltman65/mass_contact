@@ -1,3 +1,12 @@
+2011-11-25 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Due to a syntax bug (http://drupal.org/node/1314372) and a logic bug in
+      the opt out selection code, re-thought and re-worked how user selections
+      are done.
+  * README.txt, mass_contact.info, mass_contact.install, mass_contact.module,
+    mass_contact.admin.inc, mass_contact.page.inc:
+    * Changed 'e-mail' to 'email', per new standards.
+
 2011-10-13 Jason Flatt drupal@oadaeh.net
   * mass_contact.install:
     * Added an update function to remove the variables that were converted into

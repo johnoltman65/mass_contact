@@ -22,7 +22,7 @@ Here are a list of some of the features this module has:
  * Large recipient lists may be broken up into smaller chunks.
  * The site administrator can control how many messages are allowed to be sent
    by a single person in an hour.
- * The message may be sent such that the recipients' e-mail addresses are
+ * The message may be sent such that the recipients' email addresses are
    hidden from each other, via the BCC (blind carbon copy) field.
  * The message may be sent as plain text or HTML, even specifying the input
    format filter to use.
@@ -44,22 +44,23 @@ While an attempt has been made at setting sensible defaults, the configuration
 should be reviewed and tweaked before sending any messages. It is located at
 admin/config/system/mass_contact/settings.
 
-Before sending any mass e-mails, at least one category needs to be created,
-which can be done at the same location where the administrative settings are.
+Before sending any mass email messages, at least one category needs to be
+created, which can be done at the same location where the administrative
+settings are.
 
-By default, the e-mails are sent as plain text. If the MIME Mail module is
-enabled, the e-mails may be sent as HTML and may include one or more binary
-file attachments (if permitted by admin).
+By default, the email messages are sent as plain text. If the MIME Mail module
+is enabled, the email messages may be sent as HTML and may include one or more
+binary file attachments (if permitted by admin).
 
 
 MORE INFORMATION:
-This module works by sending a single e-mail to your mail server with the
-recipients' e-mail addresses in either the 'To:' or 'Bcc:' field. The mail
+This module works by sending a single email to your mail server with the
+recipients' email addresses in either the 'To:' or 'Bcc:' field. The mail
 server is then responsible for parsing out the recipients' addresses and
 forwarding the message along to everyone.
 
 When using the Bcc option, recipients are not potentially left open to abuse
-due to their e-mail addresses being visible to all other recipients.
+due to their email addresses being visible to all other recipients.
 
 Here is some scaling information:
  * This module retrieves user ids and emails in a scaled way: no
@@ -108,8 +109,8 @@ settings          |                   | operates. There    |
                   |                   | one.               |
 ------------------------------------------------------------------------------
 /mass_contact     | Mass Contact      | The main Mass      | send mass
-                  |                   | Contact form for   | contact e-mails
-                  |                   | sending messages.  |
+                  |                   | Contact form for   | contact email
+                  |                   | sending messages.  | messages
 ------------------------------------------------------------------------------
 /node/add/        | Mass Contact      | The form for       | create
 mass_contact      |                   | adding a Mass      | mass_contact
@@ -136,10 +137,10 @@ people's broken code (rather than just my own), but I'm hoping this will
 ultimately lead to a better module.
 
 With that in mind, and due to the fact that Drupal 7 now assumes everything is
-an HTML e-mail and converts it to plain text by default,  I'm using the Mime
-Mail module (http://drupal.org/project/mimemail) to send HTML e-mail and e-mail
+an HTML email and converts it to plain text by default,  I'm using the Mime
+Mail module (http://drupal.org/project/mimemail) to send HTML email and email
 with attachments, rather than do that part myself. I'll still handle the basic
-plain text e-mails.
+plain text email messages.
 
 
 TROUBLESHOOTING:
@@ -154,11 +155,11 @@ TROUBLESHOOTING:
    category name and make sure you do not have any stray characters or any
    characters that Drupal does not allow, especially the single quote
    character: '.
- * If you experience "return-path" errors when sending e-mail, you can try the
+ * If you experience "return-path" errors when sending email, you can try the
    Return-Path module (http://drupal.org/project/returnpath) to see if that
    solves your problem.
  * If PHP's mail() function encounters an error, it just returns FALSE and
-   Drupal presents a message like this: 'Unable to send e-mail. Contact the
+   Drupal presents a message like this: 'Unable to send email. Contact the
    site administrator if the problem persists. To find what the cause of the
    error is, you may need to reference a number of logs:
    * Drupal's log messages in the Reports section

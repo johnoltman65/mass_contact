@@ -26,16 +26,16 @@ function mass_contact_help($path, $arg) {
         '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
         '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
         '<li>' . l(t('Set permissions'), 'admin/user/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
-        '<li>' . l(t('Send a mass e-mail message'), 'mass_contact') . '</li></ul>';
+        '<li>' . l(t('Send a mass email message'), 'mass_contact') . '</li></ul>';
 
       $output .= '<h3>' . t('Configuration and setup') . '</h3>';
       $output .= '<p>' . t('While an attempt has been made at setting sensible defaults, the configuration should be reviewed and tweaked before sending any messages.') . '</p>';
-      $output .= '<p>' . t('Before sending any mass e-mails, at least one category needs to be created, which can be done at the same location where the administrative settings are. ') . '</p>';
-      $output .= '<p>' . t("By default, the e-mails are sent as plain text. If the Mime Mail module is enabled, the e-mails may be sent as HTML and may include one or more binary file attachments (if permitted by admin).") . '</p>';
+      $output .= '<p>' . t('Before sending any mass email messages, at least one category needs to be created, which can be done at the same location where the administrative settings are. ') . '</p>';
+      $output .= '<p>' . t("By default, the email messages are sent as plain text. If the Mime Mail module is enabled, the email messages may be sent as HTML and may include one or more binary file attachments (if permitted by admin).") . '</p>';
 
       $output .= '<h3>' . t('Miscelaneous information') . '</h3>';
-      $output .= '<p>' . t("This module works by sending a single e-mail to your mail server with all of the recipients' e-mail addresses in either the 'To:' or 'Bcc:' field. The mail server is then responsible for parsing out the recipients' addresses and forwarding the message along to everyone.") . '</p>';
-      $output .= '<p>' . t("When using the Bcc option, recipients are not potentially left open to abuse due to their e-mail addresses being visible to all other recipients.") . '</p>';
+      $output .= '<p>' . t("This module works by sending a single email to your mail server with all of the recipients' email addresses in either the 'To:' or 'Bcc:' field. The mail server is then responsible for parsing out the recipients' addresses and forwarding the message along to everyone.") . '</p>';
+      $output .= '<p>' . t("When using the Bcc option, recipients are not potentially left open to abuse due to their email addresses being visible to all other recipients.") . '</p>';
 
       $output .= '<h3>' . t('Menu structure') . '</h3>';
       $output .= '<p>' . t('Here is a description of the menu items and links Mass Contact provides:') . '</p>';
@@ -47,7 +47,7 @@ function mass_contact_help($path, $arg) {
       $output .= '<tr><td>' . t('/admin/config/system/mass_contact/edit/$category_id') . '</td><td>' . t("Edit Mass Contact category (the 'edit' operation in the Category list)") . '</td><td>' . t('Edit an existing category') . '</td><td>' . t('administer mass contact') . '</td></tr>';
       $output .= '<tr><td>' . t('/admin/config/system/mass_contact/delete/$category_id') . '</td><td>' . t("Delete Mass Contact category (the 'delete' operation in the Category list)") . '</td><td>' . t('Delete an existing category.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
       $output .= '<tr><td>' . t('/admin/config/system/mass_contact/settings') . '</td><td>' . t('Settings') . '</td><td>' . t('Administrative settings to modify how Mass Contact operates. There are three sub pages under this one: Miscellaneous, Message header and Message body.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
-      $output .= '<tr><td>' . t('/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The main Mass Contact form for sending messages.') . '</td><td>' . t('send mass contact e-mails') . '</td></tr>';
+      $output .= '<tr><td>' . t('/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The main Mass Contact form for sending messages.') . '</td><td>' . t('send mass contact email messages') . '</td></tr>';
       $output .= '<tr><td>' . t('/node/add/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The add content page for adding a Mass Contact content item. This is not really useful on its own.') . '</td><td>' . t('create mass_contact content') . '</td></tr>';
       $output .= '</tbody></table>';
 
@@ -55,14 +55,14 @@ function mass_contact_help($path, $arg) {
       $output .= '<p>' . t('Verify the permission set correctly.') . '</p>';
       $output .= '<p>' . t('When sending messages as Bcc (hiding the recipients from each other) and breaking up a large recipient list into smaller chunks or sending to multiple categories while retaining the category name in the subject, keep in mind that the sender will receive a copy of the message for every group of recipients the list is broken up into. That is normal behavior and cannot be changed.') . '</p>';
       $output .= '<p>' . t('If your category permissions are not showing up correctly, check your category name and make sure you do not have any stray characters or any characters that Drupal does not allow.') . '</p>';
-      $output .= '<p>' . t('If you experience "return-path" errors when sending e-mail, you can try the !returnpath module to see if that solves your problem.', array('!returnpath' => l('Return-Path', 'http://drupal.org/project/returnpath'))) . '</p>';
+      $output .= '<p>' . t('If you experience "return-path" errors when sending email, you can try the !returnpath module to see if that solves your problem.', array('!returnpath' => l('Return-Path', 'http://drupal.org/project/returnpath'))) . '</p>';
       if (user_access('view site reports')) {
         $drupal_logs = t("Drupal's !logs in the !reports.", array('!logs' => l('log messages', 'admin/reports/dblog'), '!reports' => l('Reports section', 'admin/reports')));
       }
       else {
         $drupal_logs = t("Drupal's log messages in the Reports section.");
       }
-      $output .= '<p>' . t("If PHP's mail() function encounters an error, it just returns FALSE and Drupal presents a message like this: 'Unable to send e-mail. Contact the site administrator if the problem persists.'
+      $output .= '<p>' . t("If PHP's mail() function encounters an error, it just returns FALSE and Drupal presents a message like this: 'Unable to send email. Contact the site administrator if the problem persists.'
                             To find what the cause of the error is, you may need to reference a number of logs:") .
                             '<ul><li>' . $drupal_logs . '</li>' .
                             '<li>' . t("The host server's system logs. For most Linux systems, the log files are usually stored in /var/log. The system messages are usually stored in /var/log/messages or /var/log/syslog.") . '</li>' .
@@ -94,7 +94,7 @@ function mass_contact_permission() {
     ),
     'mass contact change default sender information' => array(
       'title' => t('Change default sender information'),
-      'description' => t('Allows the message sender to change the default sender name and e-mail address.'),
+      'description' => t('Allows the message sender to change the default sender name and email address.'),
     ),
     'mass contact override archiving' => array(
       'title' => t('Override message archival setting'),
@@ -222,7 +222,7 @@ function mass_contact_menu() {
     'title' => 'Mass Contact',
     'page callback' => 'mass_contact_site_page',
     'access arguments' => array('mass contact send messages'),
-    'description' => 'Send an e-mail message to multiple users of this website.',
+    'description' => 'Send an email message to multiple users of this website.',
     'file' => 'mass_contact.page.inc',
   );
   return $items;
@@ -255,9 +255,9 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
       );
       $form['mass_contact']['mass_contact_optout'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Opt-out of mass e-mails'),
+        '#title' => t('Opt-out of mass email messages'),
         '#default_value' => !empty($account->data['mass_contact_optout']) ? $account->data['mass_contact_optout'] : 0,
-        '#description' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass e-mails from privileged users. Note that site administrators are able to include you in mass e-mails even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
+        '#description' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass email messages from privileged users. Note that site administrators are able to include you in mass email messages even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
       );
     }
     elseif (variable_get('mass_contact_optout_d', 0) == 2) {
@@ -302,14 +302,14 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
           '#title' => t('Mass contact settings'),
           '#weight' => 5,
           '#collapsible' => TRUE,
-          '#description' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass e-mails from privileged users. Note that site administrators are able to include you in mass e-mails even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
+          '#description' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass email messages from privileged users. Note that site administrators are able to include you in mass email messages even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
         );
 
         foreach ($included_categories as $category_cid => $category_category) {
           // If the category's role is one the user is part of, show the category.
           $form['mass_contact']['mass_contact_optout_' . $category_cid] = array(
             '#type' => 'checkbox',
-            '#title' => t('Opt-out of mass e-mails to the %category category.', array('%category' => $category_category)),
+            '#title' => t('Opt-out of mass email messages to the %category category.', array('%category' => $category_category)),
             '#default_value' => !empty($account->data['mass_contact_optout_' . $category_cid]) ? $account->data['mass_contact_optout_' . $category_cid] : 0,
           );
         }
