@@ -1019,7 +1019,12 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
 
   // Get the user IDs for all the users in all the roles included in the
   // category.
-  $query = "SELECT u.name, u.mail, u.data FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid WHERE ur.rid IN(:ur_rids) AND u.status <> 0";
+  if ($category->recipients == 2) {
+    $query = "SELECT u.name, u.mail, u.data FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid WHERE u.status <> 0";
+  }
+  else {
+    $query = "SELECT u.name, u.mail, u.data FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid WHERE ur.rid IN(:ur_rids) AND u.status <> 0";
+  }
   $results = db_query($query, array(':ur_rids' => $category->recipients));
   foreach ($results as $account) {
     $account_data = unserialize($account->data);
