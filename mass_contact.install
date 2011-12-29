@@ -29,7 +29,7 @@ function mass_contact_schema() {
         'default' => '',
       ),
       'recipients' => array(
-        'description' => 'A list of the users to receive the message.',
+        'description' => 'Field that has information about users to receive the message.',
         'type' => 'text',
         'size' => 'big',
         'not null' => TRUE,
@@ -344,3 +344,14 @@ function mass_contact_update_7100(&$sandbox) {
   variable_del('mass_contact_html_format_override');
   variable_del('mass_contact_nodecc_d_override');
 } // End of mass_contact_update_7100().
+
+/**
+ * Move mass_contact.recipients database field to serialized data.
+ */
+function mass_contact_update_7101(&$sandbox) {
+  $records = db_query('SELECT cid, recipients FROM {mass_contact}');
+  foreach ($records as $record) {
+    $recipients = serialize(array('mass_contact_role' => explode(',', $record->recipients)));
+    db_query('UPDATE {mass_contact} SET recipients = :recipients WHERE cid = :cid', array(':cid' => $record->cid, ':recipients' => $recipients));
+  }
+}

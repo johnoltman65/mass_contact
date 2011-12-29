@@ -1017,15 +1017,23 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
   $opt_out_setting = variable_get('mass_contact_optout_d', 0);
   global $user;
 
-  // Get the user IDs for all the users in all the roles included in the
-  // category.
-  if ($category->recipients == 2) {
-    $query = "SELECT u.name, u.mail, u.data FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid WHERE u.status <> 0";
+  // Collect user id's by executing all plugin's
+  // create_recipient_list_callback functions.
+  ctools_include('plugins');
+  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+  $user_uids = array();
+  foreach ($plugins as $plugin) {
+    $function = ctools_plugin_get_function($plugin, 'create_recipient_list_callback');
+    $user_uids += $function(unserialize($category->recipients));
   }
-  else {
-    $query = "SELECT u.name, u.mail, u.data FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid WHERE ur.rid IN(:ur_rids) AND u.status <> 0";
+
+  $uids = array_unique(array_values($user_uids));
+  if (empty($uids)) {
+    return array();
   }
-  $results = db_query($query, array(':ur_rids' => $category->recipients));
+
+  $query = "SELECT u.name, u.mail, u.data FROM {users} u WHERE uid IN (:uids) AND u.status <> 0";
+  $results = db_query($query, array(':uids' => $uids));
   foreach ($results as $account) {
     $account_data = unserialize($account->data);
 

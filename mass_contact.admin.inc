@@ -25,21 +25,20 @@ function mass_contact_admin_categories() {
     ->orderBy('category', 'ASC')
     ->execute();
   foreach ($results as $category) {
-    $roles = array();
 
-    foreach (explode(',', $category->recipients) as $rid) {
-      $role = db_select('role', 'r')
-        ->fields('r', array('name'))
-        ->condition('rid', $rid)
-        ->execute()
-        ->fetchObject();
-      $roles[] = ($role->name);
+    // Execute all plugins 'mass_contact_admin_categories_callback' functions
+    // to prepare string for Recipients column.
+    ctools_include('plugins');
+    $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+    $recipients = array();
+    foreach ($plugins as $plugin) {
+      $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_categories_callback');
+      $recipients[] = $function(unserialize($category->recipients));
     }
 
-    $rolenames = implode(', ', $roles);
     $rows[] = array(
       $category->category,
-      $rolenames,
+      implode('<br/>', array_filter($recipients)),
       ($category->selected ? t('Yes') : t('No')),
       l(t('edit'), 'admin/config/system/mass_contact/edit/' . $category->cid),
       l(t('delete'), 'admin/config/system/mass_contact/delete/' . $category->cid)
@@ -98,24 +97,17 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
     '#required' => TRUE,
   );
 
-  // Get a list of all roles, except for the anonymous user role.
-  $allroles = db_select('role', 'r')
-    ->fields('r', array('rid', 'name'))
-    ->condition('rid', 1, '>')
-    ->orderBy('name', 'ASC')
-    ->execute();
-  foreach ($allroles as $roleobj) {
-    $onerid = $roleobj->rid;
-    $onename = $roleobj->name;
-    $rolesarray[$onerid] = $onename;
-  }
   $form['recipients'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Roles to receive email'),
-    '#options' => $rolesarray,
-    '#default_value' => explode(',', $edit['recipients']),
-    '#description' => t('These roles will be added to the mailing list. Note: if you check "authenticated users", other roles will not be added, as they will receive the email anyway.'),
+    '#tree' => TRUE,
   );
+
+  // Add form elements provided by groupping_method plugins.
+  ctools_include('plugins');
+  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+  foreach ($plugins as $plugin_name => $plugin) {
+    $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_edit');
+    $form['recipients'][$plugin_name] = $function(unserialize($edit['recipients']));
+  }
 
   $form['selected_categories'] = array(
     '#type' => 'fieldset',
@@ -158,13 +150,21 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_admin_edit_validate($form, &$form_state) {
-  $recipients = $form_state['values']['recipients'];
-  foreach ($recipients as $checkr) {
-    if ($checkr > 1) {
-      return;
+  // Execute validation callbacks for each plugin.
+  ctools_include('plugins');
+  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+  $values_empty = TRUE;
+  foreach ($plugins as $plugin) {
+    $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_edit_validate');
+    if ($values_empty) {
+      $values_empty = $function($form, $form_state);
     }
   }
-  form_set_error('recipients', t('You must check one or more recipients.'));
+  // If all validation callbacks return TRUE that means that user
+  // hasn't selected any selection rules.
+  if ($values_empty) {
+    form_set_error('recipients', t('You must check one or more recipients.'));
+  }
 } // End of mass_contact_admin_edit_validate().
 
 /**
@@ -183,26 +183,16 @@ function mass_contact_admin_edit_submit($form, &$form_state) {
       ->execute();
   }
 
-  // Remove 0s for unselected roles, convert to csv.
-  $recipients = $form_state['values']['recipients'];
-
-  // If all authenticated users are already added, remove all roles.
-  if ($recipients[2] == 2) {
-    foreach ($recipients as $checkr) {
-      if ($checkr > 2) {
-        $recipients[$checkr] = 0;
-      }
-    }
+  // Execute submit callbacks for each plugin. Collect recipients.
+  ctools_include('plugins');
+  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+  $recipients = array();
+  foreach ($plugins as $plugin_name => $plugin) {
+    $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_edit_submit');
+    $recipients[$plugin_name] = $function($form, $form_state);
   }
 
-  // Remove roles that were not selected.
-  foreach ($recipients as $recip) {
-    if ($recip != 0) {
-      $newformrec[] = $recip;
-    }
-  }
-
-  $form_state['values']['recipients'] = implode(',', $newformrec);
+  $recipients = serialize($recipients);
 
   if (!isset($form_state['values']['reply'])) {
     $form_state['values']['reply'] = '';
@@ -211,30 +201,21 @@ function mass_contact_admin_edit_submit($form, &$form_state) {
     $form_state['values']['weight'] = 0;
   }
 
+  $record = array(
+    'category' => $form_state['values']['category'],
+    'recipients' => $recipients,
+    'reply' => $form_state['values']['reply'],
+    'weight' => $form_state['values']['weight'],
+    'selected' => $form_state['values']['selected'],
+  );
   if (arg(4) == 'add') {
-    db_insert('mass_contact')
-      ->fields(array(
-        'category' => $form_state['values']['category'],
-        'recipients' => $form_state['values']['recipients'],
-        'reply' => $form_state['values']['reply'],
-        'weight' => $form_state['values']['weight'],
-        'selected' => $form_state['values']['selected'],
-      ))
-      ->execute();
+    drupal_write_record('mass_contact', $record);
     drupal_set_message(t('Category %category has been added.', array('%category' => $form_state['values']['category'])));
     watchdog('mass_contact', 'Mass Contact form: category %category added.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/config/system/mass_contact'));
   }
   else {
-    db_update('mass_contact')
-      ->fields(array(
-        'category' => $form_state['values']['category'],
-        'recipients' => $form_state['values']['recipients'],
-        'reply' => $form_state['values']['reply'],
-        'weight' => $form_state['values']['weight'],
-        'selected' => $form_state['values']['selected'],
-      ))
-      ->condition('cid', $form_state['values']['cid'])
-      ->execute();
+    $record['cid'] = $form_state['values']['cid'];
+    drupal_write_record('mass_contact', $record, array('cid'));
     drupal_set_message(t('Category %category has been updated.', array('%category' => $form_state['values']['category'])));
     watchdog('mass_contact', 'Mass Contact form: category %category updated.', array('%category' => $form_state['values']['category']), WATCHDOG_NOTICE, l(t('view'), 'admin/config/system/mass_contact'));
   }
