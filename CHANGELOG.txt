@@ -1,3 +1,13 @@
+2011-12-28 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Fix problem where selecting authenticated users role resulted in no users
+      being selected: http://drupal.org/node/1353504
+  * mass_contact.admin.inc, mass_contact.info, mass_contact.install,
+    mass_contact.module, mass_contact.page.inc, plugins/mass_contact_role.inc,
+    plugins/mass_contact_taxonomy.inc
+    * Added a method for creating alternate grouping methods, using ctools, by
+      ygerasimov: http://drupal.org/node/144343
+
 2011-11-25 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Due to a syntax bug (http://drupal.org/node/1314372) and a logic bug in
