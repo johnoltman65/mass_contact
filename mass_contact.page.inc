@@ -348,7 +348,7 @@ function mass_contact_mail_page($form, $form_state) {
           '#type' => 'hidden',
           '#default_value' => variable_get('mass_contact_nodecc_d', 1),
         );
-        $form['nodecc'] = array(
+        $form['nodecc_notice'] = array(
           '#type' => 'item',
           '#title' => t('Archive a copy of this message on this website'),
           '#markup' => t('A copy of this message will !not be archived on this website.', array('!not' => variable_get('mass_contact_nodecc_d', 1) ? '' : 'not')),
@@ -361,7 +361,7 @@ function mass_contact_mail_page($form, $form_state) {
         '#type' => 'hidden',
         '#default_value' => variable_get('mass_contact_nodecc_d', 1),
       );
-      $form['nodecc'] = array(
+      $form['nodecc_notice'] = array(
         '#type' => 'item',
         '#title' => t('Archive a copy of this message on this website'),
         '#markup' => t('A copy of this message will !not be archived on this website.', array('!not' => variable_get('mass_contact_nodecc_d', 1) ? '' : 'not')),

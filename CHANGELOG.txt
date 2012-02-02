@@ -1,3 +1,8 @@
+2012-02-02 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Fixed a form field being overwritten by another field of the same name,
+      per mjorlitzky at http://drupal.org/node/1423224.
+
 2011-12-28 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Fix problem where selecting authenticated users role resulted in no users
