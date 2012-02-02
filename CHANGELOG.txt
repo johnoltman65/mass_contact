@@ -5,6 +5,9 @@
   * mass_contact.admin.inc:
     * Fixed the situation where the admin could not set the prefix to be blank,
       per mjorlitzky at http://drupal.org/node/1423306.
+  * plugins/mass_contact_taxonomy.inc:
+    * Added a check for an empty variable, per floeschie at
+      http://drupal.org/node/1425678.
 
 2011-12-28 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
