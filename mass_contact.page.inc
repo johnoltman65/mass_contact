@@ -69,7 +69,7 @@ function mass_contact_mail_page($form, $form_state) {
   }
 
   if (count($categories) > 0) {
-    $form['#token'] = $user->name . $user->mail;
+//    $form['#token'] = $user->name . $user->mail;
     $form['contact_information'] = array(
       '#markup' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an email message using the contact form below.'))),
     );
@@ -664,7 +664,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     // If there were no errors, do the final operations.
     if (!$send_error) {
       // If the sender requested a copy, send it.
-      if ($form_state['values']['copy'] && !$bcc) {
+      if (!empty($form_state['values']['copy']) && !$bcc) {
         if (!_mass_contact_send_message('user-copy', $from_email, $params, $from_email, 'A copy was sent to you.')) {
           // There was an error, so inform the user.
           if (!module_exists('help')) {
@@ -689,10 +689,10 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
       // Print out the final results of the complete operation.
       if ($total_recipients == $unique_addresses_count) {
-        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses: @emails', array('@total' =>  $total_recipients, '@emails' => $listed_recipients)));
+        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses.', array('@total' =>  $total_recipients)));
       }
       else {
-        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses, of which, there may have been !dups duplicates: @emails', array('@total' =>  $total_recipients, '!dups' => $total_recipients - $unique_addresses_count, '@emails' => $listed_recipients)));
+        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses, of which, there may have been !dups duplicates.', array('@total' =>  $total_recipients, '!dups' => $total_recipients - $unique_addresses_count)));
       }
     }
     else {
@@ -1039,7 +1039,7 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
 
     // Check if this account is the current user. We don't include the user
     // unless requested, and then it's a separate mailing.
-    if ($account->name != $user->name) {
+    if (empty($user->name) || ($account->name != $user->name)) {
       // Check to see if users may opt out of all mailings.
       if ($respect_opt_outs && $opt_out_setting == 1) {
         // Check to see if this account has opted out.
@@ -1134,7 +1134,7 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
   $success = drupal_mail('mass_contact', $message_key, $to, language_default(), $params, $from_email);
 
   if ($success['result']) {
-    drupal_set_message(t($success_message . ' (To: @emails.)', array('@emails' => (isset($params['headers']['Bcc'])) ? $params['headers']['Bcc'] : $to)));
+    drupal_set_message(t($success_message));
   }
 
   return $success['result'];

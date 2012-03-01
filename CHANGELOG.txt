@@ -1,5 +1,11 @@
 2012-02-02 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
+    * Made it possible for anonymous users to use this module, per chaloalvarezj
+      at http://drupal.org/node/1446506.
+    * Removed e-mail addresses from status messages.
+
+2012-02-02 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
     * Fixed a form field being overwritten by another field of the same name,
       per mjorlitzky at http://drupal.org/node/1423224.
   * mass_contact.admin.inc:
