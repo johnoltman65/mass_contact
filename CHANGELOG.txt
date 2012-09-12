@@ -1,3 +1,7 @@
+2012-09-05 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Added extra permissions checks.
+
 2012-02-02 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Made it possible for anonymous users to use this module, per chaloalvarezj
