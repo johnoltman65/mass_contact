@@ -1,3 +1,8 @@
+2012-10-02 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Fix problem with retrieving the correct filter format in certain
+      situations. http://drupal.org/node/1793078
+
 2012-09-05 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Added extra permissions checks.

@@ -747,14 +747,14 @@ function _mass_contact_compute_default_filter_format() {
     foreach ($filter_formats as $filter_format) {
       // If the current filter format matches the admin specified one...
       if ($filter_format->format == $specified_filter_format['format'] || $filter_format->format == $specified_filter_format) {
-        return $filter_format;
+        return $filter_format->format;
       }
     }
   }
 
   // If nothing was selected above, set the default to the Drupal system
   // default.
-  return $filter_formats[filter_fallback_format()];
+  return filter_fallback_format();
 }
 
 
