@@ -1,3 +1,8 @@
+2012-10-09 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Attempt to fix reported problem w/sender's info being replaced.
+      http://drupal.org/node/1793078
+
 2012-10-02 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Fix problem with retrieving the correct filter format in certain

@@ -441,29 +441,26 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     }
   }
 
-  // Process some parts the message header (more will be processed later).
 
+  // Process some parts the message header (more will be processed later).
   // Prepare the message header.
   $params = _mass_contact_prepare_header();
 
   // Specify the sender's name.
-  $default_sender_name = variable_get('mass_contact_default_sender_name');
-  $from_name = variable_get('site_name');
-  if (!empty($default_sender_name)) {
-    $from_name = $default_sender_name;
+  $from_name = variable_get('mass_contact_default_sender_name');
+  if (empty($from_name)) {
+    $from_name = variable_get('site_name');
   }
 
   // Specify the sender's email address.
-  $default_sender_email = variable_get('mass_contact_default_sender_email');
-  $from_email = variable_get('site_mail');
-  if (!empty($default_sender_email)) {
-    $from_email = $default_sender_email;
+  $from_email = variable_get('mass_contact_default_sender_email');
+  if (empty($from_email)) {
+    $from_email = variable_get('site_mail');
   }
 
   if (user_access('mass contact change default sender information')) {
-    // User is allowed to change the default from address and name,
-    // so we check the form for submitted values.
-
+    // User is allowed to change the default from address and name, so we check
+    // the form for submitted values.
     if (isset($form_state['values']['name']) && !empty($form_state['values']['name'])) {
       $from_name = $form_state['values']['name'];
     }
@@ -475,7 +472,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
 
   // Process the message body.
-
   // Prepare the message body part(s).
   $message = _mass_contact_prepare_bodies($form_state['values']);
 
