@@ -25,7 +25,7 @@ function mass_contact_help($path, $arg) {
         '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
         '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
         '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
-        '<li>' . l(t('Set permissions'), 'admin/user/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
+        '<li>' . l(t('Set permissions'), 'admin/people/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
         '<li>' . l(t('Send a mass email message'), 'mass_contact') . '</li></ul>';
 
       $output .= '<h3>' . t('Configuration and setup') . '</h3>';

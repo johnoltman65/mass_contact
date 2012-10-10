@@ -1,3 +1,8 @@
+2012-10-10 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact.page.inc:
+    * Correct the links to Mass Contact's permissions, per hoersche on
+      https://drupal.org/node/1797454
+
 2012-10-09 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Attempt to fix reported problem w/sender's info being replaced.

@@ -370,7 +370,7 @@ function mass_contact_mail_page($form, $form_state) {
     );
     $form['tasklist']['list'] = array(
       '#markup' => '<p><ol>' .
-        '<li>' . l(t('Set Permissions'), 'admin/user/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
+        '<li>' . l(t('Set Permissions'), 'admin/people/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
         '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
         '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
         '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
