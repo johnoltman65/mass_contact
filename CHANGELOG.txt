@@ -15,7 +15,8 @@
 
 2012-09-05 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
-    * Added extra permissions checks.
+    * Added extra permissions checks, per security advisory here:
+      http://drupal.org/node/1782832
 
 2012-02-02 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
