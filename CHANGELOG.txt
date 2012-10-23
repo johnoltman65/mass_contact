@@ -1,3 +1,8 @@
+2012-10-23 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Fix the logic for selecting the from name and email address back to the
+      way it was before the security patch went in.
+
 2012-10-10 Jason Flatt drupal@oadaeh.net
   * mass_contact.module, mass_contact.page.inc:
     * Correct the links to Mass Contact's permissions, per hoersche on
