@@ -385,7 +385,7 @@ function mass_contact_admin_settings_header($form, $form_state) {
   $form['mass_contact_default_sender'] = array(
     '#type' => 'fieldset',
     '#title' => t('Default sender information'),
-    '#description' => t('If anything is specified in here, it is used in place of the "Your name" and "Your email address" fileds when sending the mass email. Otherwise, the sender\'s name and email address will be the default values. You must fill in both values, if you want to specify a default.'),
+    '#description' => t('If anything is specified in here, it is used in place of the "Your name" and "Your email address" fields when sending the mass email. Otherwise, the sender\'s name and email address will be the default values. You must fill in both values, if you want to specify a default.'),
   );
   $form['mass_contact_default_sender']['mass_contact_default_sender_name'] = array(
     '#type' => 'textfield',

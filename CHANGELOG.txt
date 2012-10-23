@@ -2,6 +2,8 @@
   * mass_contact.page.inc:
     * Fix the logic for selecting the from name and email address back to the
       way it was before the security patch went in.
+  * mass_contact.admin.inc:
+    * Correct misspelling of word.
 
 2012-10-10 Jason Flatt drupal@oadaeh.net
   * mass_contact.module, mass_contact.page.inc:
