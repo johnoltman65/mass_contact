@@ -1,3 +1,11 @@
+2012-11-20 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Complete adding the option of including a from and/or to name.
+
+2012-10-27 Jason Flatt drupal@oadaeh.net
+  * mass_contact.admin.inc:
+    * Begin adding the option of including a from and/or to name.
+
 2012-10-23 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Fix the logic for selecting the from name and email address back to the

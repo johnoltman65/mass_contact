@@ -411,8 +411,6 @@ function mass_contact_mail_page_validate($form, &$form_state) {
  */
 function mass_contact_mail_page_submit($form, &$form_state) {
   // Initialize some variables.
-  $params = array();
-  $message = '';
   $send_error = 0;
   $recipient_lists = array();
   $empty_lists = 0;
@@ -449,7 +447,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   // Get the admin specified default sender's name.
   $from_name = variable_get('mass_contact_default_sender_name');
   // Get the admin specified default sender's email address.
-   $from_email = variable_get('mass_contact_default_sender_email');
+  $from_email = variable_get('mass_contact_default_sender_email');
 
   if (empty($from_name) || empty($from_email) || user_access('mass contact change default sender information')) {
     // Either the admin has not specified a default name and email address or
@@ -461,6 +459,13 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     if (isset($form_state['values']['mail']) && !empty($form_state['values']['mail'])) {
       $from_email = $form_state['values']['mail'];
     }
+  }
+
+  if (variable_get('mass_contact_include_from_name', 1) == 1 && !empty($from_name)) {
+    $from_address = $from_name . ' <' . $from_email . '>';
+  }
+  else {
+    $from_address = $from_email;
   }
 
 
@@ -583,15 +588,20 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           $recipient_count = 0;
           // The batch count.
           $batch = 0;
-          // An array of the current grouping of categories and email addresses thie
-          // message is sent to.
+          // An array of the current grouping of categories and email addresses
+          // the message is sent to.
           $current_recipients = array();
 
           foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
-            //$current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
-            //$partial_list[] = $recipient_name . " <" . $recipient_address . ">";
-            $current_recipients[] = $recipient_address;
-            $partial_list[] = $recipient_address;
+            if (variable_get('mass_contact_include_to_name', 1) == 1) {
+              $current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
+              $partial_list[] = $recipient_name . " <" . $recipient_address . ">";
+            }
+            else {
+              $current_recipients[] = $recipient_address;
+              $partial_list[] = $recipient_address;
+            }
+
             $recipient_count = count($partial_list);
 
             if ($recipient_count == $recipient_limit) {
@@ -600,10 +610,10 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
               //  Finalizes the headers, by setting the To, Subject, and
               //  possibly, Bcc fields.
-              $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_email, $recipient_list['subject']);
+              $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_address, $recipient_list['subject']);
 
               // Send the message. Save the inverse of the result for tallying.
-              $send_error += !(_mass_contact_send_message('mail_page_' . $batch, $to, $params, $from_email, '[Success] Sent batch #' . $batch . '.'));
+              $send_error += !(_mass_contact_send_message('mail_page_' . $batch, $to, $params, $from_address, '[Success] Sent batch #' . $batch . '.'));
 
               // Reset the variables.
               $partial_list = array();
@@ -615,10 +625,10 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           if ($recipient_count != 0) {
             //  Finalizes the headers, by setting the To, Subject, and
             //  possibly, Bcc fields.
-            $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_email, $recipient_list['subject']);
+            $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_address, $recipient_list['subject']);
 
             // Send the message. Save the inverse of the result for tallying.
-            $send_error += !(_mass_contact_send_message('mail_page_last', $to, $params, $from_email, '[Success] Sent the remainder.'));
+            $send_error += !(_mass_contact_send_message('mail_page_last', $to, $params, $from_address, '[Success] Sent the remainder.'));
           }
 
           $total_recipients = count($current_recipients);
@@ -633,8 +643,12 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           $current_recipients = array();
 
           foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
-            //$current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
-            $current_recipients[] = $recipient_address;
+            if (variable_get('mass_contact_include_to_name', 1) == 1) {
+              $current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
+            }
+            else {
+              $current_recipients[] = $recipient_address;
+            }
           }
 
           $total_recipients = count($current_recipients);
@@ -643,15 +657,15 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           //  Finalizes the headers, by setting the To, Subject, and possibly,
           //  Bcc fields.
-          $to = _mass_contact_finalize_headers($bcc, implode(', ', $current_recipients), $params, $from_email, $recipient_list['subject']);
+          $to = _mass_contact_finalize_headers($bcc, implode(', ', $current_recipients), $params, $from_address, $recipient_list['subject']);
 
           // Send the message. Save the inverse of the result for tallying.
-          $send_error += !(_mass_contact_send_message('mail_page', $to, $params, $from_email, '[Success] Sent all at once.'));
+          $send_error += !(_mass_contact_send_message('mail_page', $to, $params, $from_address, '[Success] Sent all at once.'));
         }
 
         // Archive the message as a node.
         if ($nodecc) {
-          _mass_contact_save_node($params, $node_message, $format, $from_email, $category, $to, !$send_error);
+          _mass_contact_save_node($params, $node_message, $format, $from_address, $category, $to, !$send_error);
         }
       }
     }
@@ -660,7 +674,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     if (!$send_error) {
       // If the sender requested a copy, send it.
       if (!empty($form_state['values']['copy']) && !$bcc) {
-        if (!_mass_contact_send_message('user-copy', $from_email, $params, $from_email, 'A copy was sent to you.')) {
+        if (!_mass_contact_send_message('user-copy', $from_address, $params, $from_address, 'A copy was sent to you.')) {
           // There was an error, so inform the user.
           if (!module_exists('help')) {
             drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's !help page or README.txt.", array('!help' => l(t('help'), 'admin/help/mass_contact'))));

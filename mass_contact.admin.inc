@@ -405,6 +405,25 @@ function mass_contact_admin_settings_header($form, $form_state) {
   );
 
   ////////////////////////////////////////////////////////////
+  // Sender name options.
+  $form['mass_contact_include_name'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Include names with email addresses'),
+    '#description' => t("Checking either of the boxes below will include the name along with the email address, in the form of '%address'. If you have problems with sending mail, especially when your site is on a Windows server, try unchecking both checkboxes.", array('%address' => 'User name <email.address@example.com>')),
+  );
+  $form['mass_contact_include_name']['mass_contact_include_from_name'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include the name for the sender'),
+    '#default_value' => variable_get('mass_contact_include_from_name', 0),
+  );
+  $form['mass_contact_include_name']['mass_contact_include_to_name'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Include the names for the recipients'),
+    '#default_value' => variable_get('mass_contact_include_to_name', 0),
+    '#description' => t("The name used for the recipients will be their site login ID."),
+  );
+
+  ////////////////////////////////////////////////////////////
   // BCC options.
   $form['mass_contact_bcc_d'] = array(
     '#type' => 'checkbox',
