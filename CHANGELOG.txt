@@ -1,6 +1,7 @@
 2012-11-20 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Complete adding the option of including a from and/or to name.
+      https://drupal.org/node/574482
 
 2012-10-27 Jason Flatt drupal@oadaeh.net
   * mass_contact.admin.inc:

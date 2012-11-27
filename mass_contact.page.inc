@@ -689,7 +689,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       flood_register_event('mass_contact');
 
       // Log the operation.
-      watchdog('mass_contact', '%name-from sent a message to the %category group, which included these recipients: @emails.', array('%name-from' => $from_name . ' <' . $from_email . '>', '%category' => $category, '@emails' => $listed_recipients));
+      watchdog('mass_contact', '%name-from sent a message to the %category group, which included these recipients: @emails.', array('%name-from' => $from_address, '%category' => $category, '@emails' => $listed_recipients));
 
       // Prepare some variables for the printing of the final results.
       $total_recipients = count($all_recipients);
