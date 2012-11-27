@@ -1,3 +1,8 @@
+2012-11-26 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Format the user name using to the Drupal API, per tutumlum on
+      http://drupal.org/node/1850540
+
 2012-11-20 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Complete adding the option of including a from and/or to name.

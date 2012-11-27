@@ -69,7 +69,6 @@ function mass_contact_mail_page($form, $form_state) {
   }
 
   if (count($categories) > 0) {
-//    $form['#token'] = $user->name . $user->mail;
     $form['contact_information'] = array(
       '#markup' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an email message using the contact form below.'))),
     );
@@ -100,7 +99,7 @@ function mass_contact_mail_page($form, $form_state) {
         '#type' => 'textfield',
         '#title' => t('Your name'),
         '#maxlength' => 255,
-        '#default_value' => $user->uid ? $user->name : '',
+        '#default_value' => $user->uid ? check_plain(format_username($user)) : '',
         '#required' => TRUE,
       );
     }
