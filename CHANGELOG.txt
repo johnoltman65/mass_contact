@@ -1,3 +1,9 @@
+2013-01-14 Jason Flatt drupal@oadaeh.net
+  * mass_contact_role.inc:
+    * Fix problem when attempting to run a query with an empty variable, per
+      arkestra on https://drupal.org/node/1529212 and tutumlum on
+      https://drupal.org/node/1855650.
+
 2012-11-26 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Format the user name using to the Drupal API, per tutumlum on

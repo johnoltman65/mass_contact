@@ -33,17 +33,22 @@ function mass_contact_role_create_recipient_list($recipients) {
     $groups = $recipients['mass_contact_role'];
   }
 
+  $result = array();
+
   if (!empty($groups[0]) && $groups[0] == 2) {
     $query = "SELECT u.uid FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid";
     $result = db_query($query)->fetchAllAssoc('uid', PDO::FETCH_ASSOC);
   }
-  else {
+  elseif (!empty($groups)) {
     $query = "SELECT u.uid FROM {users} u LEFT JOIN {users_roles} ur ON u.uid = ur.uid WHERE ur.rid IN (:ur_rids)";
     $result = db_query($query, array(':ur_rids' => $groups))->fetchAllAssoc('uid', PDO::FETCH_ASSOC);
   }
+
   $uids = array();
-  foreach ($result as $record) {
-    $uids[] = $record['uid'];
+  if (!empty($result)) {
+    foreach ($result as $record) {
+      $uids[] = $record['uid'];
+    }
   }
   return $uids;
 }
@@ -61,11 +66,15 @@ function mass_contact_role_admin_categories($recipients) {
     return;
   }
 
-  $result = db_query('SELECT name FROM {role} WHERE rid IN (:rids)', array(':rids' => $groups));
+  if (!empty($groups)) {
+    $result = db_query('SELECT name FROM {role} WHERE rid IN (:rids)', array(':rids' => $groups));
+  }
 
   $role_names = array();
-  foreach ($result as $record) {
-    $role_names[] = $record->name;
+  if (!empty($result)) {
+    foreach ($result as $record) {
+      $role_names[] = $record->name;
+    }
   }
 
   return t('Roles: %roles', array('%roles' => implode(', ', $role_names)));
