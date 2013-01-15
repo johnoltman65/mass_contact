@@ -409,16 +409,17 @@ function mass_contact_mail_page_validate($form, &$form_state) {
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_mail_page_submit($form, &$form_state) {
-  // Initialize some variables.
   $send_error = 0;
   $recipient_lists = array();
   $empty_lists = 0;
 
+  // Set wether the recipients will be BCC or not.
   $bcc = variable_get('mass_contact_bcc_d', 1);
   if (user_access('mass contact override bcc')) {
     $bcc = $form_state['values']['bcc'];
   }
 
+  // Set whether a copy will be archived as a node.
   $nodecc = variable_get('mass_contact_nodecc_d', 1);
   if (user_access('mass contact archive messages') && user_access('mass contact override archiving')) {
     // Only set $nodecc if the user is allowed to archive messages AND
@@ -426,6 +427,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     $nodecc = $form_state['values']['nodecc'];
   }
 
+  // Set the input filter format.
   $format = _mass_contact_compute_default_filter_format();
   if (user_access('mass contact override text format')) {
     // Allow the form data to determine the message format if our user
@@ -438,9 +440,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     }
   }
 
-
-  // Process some parts the message header (more will be processed later).
-  // Prepare the message header.
+  // Process some parts of the message header (more will be processed later).
   $params = _mass_contact_prepare_header();
 
   // Get the admin specified default sender's name.
@@ -448,6 +448,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   // Get the admin specified default sender's email address.
   $from_email = variable_get('mass_contact_default_sender_email');
 
+  // Set the sender name and email address.
   if (empty($from_name) || empty($from_email) || user_access('mass contact change default sender information')) {
     // Either the admin has not specified a default name and email address or
     // the user is allowed to change them, so we check the form for submitted
@@ -460,13 +461,13 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     }
   }
 
+  // Format the sender name and email address.
   if (variable_get('mass_contact_include_from_name', 1) == 1 && !empty($from_name)) {
     $from_address = $from_name . ' <' . $from_email . '>';
   }
   else {
     $from_address = $from_email;
   }
-
 
   // Process the message body.
   // Prepare the message body part(s).
@@ -766,11 +767,6 @@ function _mass_contact_compute_default_filter_format() {
  * This currently only sets the character set, but it's left here for potential
  * future additions.
  *
- * @param boundary_attachment
- *   A string containing boundary for the attachments.
- * @param boundary_html
- *   A string containing boundary for the HTML part.
- *
  * @return
  *   An array containing the prepared header.
  */
@@ -778,8 +774,6 @@ function _mass_contact_prepare_header() {
   $params = array();
 
   if (module_exists('mimemail')) {
-//    $params['plain'] = !$email['html'];
-//    $params['plaintext'] = $email['html'] ? NULL : $email['message'];
     // Mime Mail requires this header or it will filter all text.
     $params['headers']['Content-Type'] = 'text/html; charset=UTF-8';
   }
@@ -788,7 +782,7 @@ function _mass_contact_prepare_header() {
   }
 
   return $params;
-} // End of _mass_contact_prepare_header().
+}
 
 
 /**
@@ -1152,6 +1146,8 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
 /**
  * Sends the message.
  *
+ * @param string $message_key
+ *   A key to identify the email sent.
  * @param string $to
  *   To whom the message will be delivered.
  * @param array &$params
@@ -1160,16 +1156,14 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
  *   The message sender's email address.
  * @param string $success_message
  *   The message that will be displayed to the user, if sending is successful.
- * @param string $message_key
- *   A key to identify the email sent.
  *
  * @return boolean
  *   The result of the call to drupal_mail():
- *     The $message array structure containing all details of the
- *     message. If already sent ($send = TRUE), then the 'result' element
- *     will contain the success indicator of the email, failure being already
- *     written to the watchdog. (Success means nothing more than the message being
- *     accepted at php-level, which still doesn't guarantee it to be delivered.)
+ *     The $message array structure containing all details of the message. If
+ *     already sent ($send = TRUE), then the 'result' element will contain the
+ *     success indicator of the email, failure being already written to the
+ *     watchdog. (Success means nothing more than the message being accepted at
+ *     php-level, which still doesn't guarantee it to be delivered.)
  */
 function _mass_contact_send_message($message_key, $to, &$params, $from_email, $success_message) {
   $success = drupal_mail('mass_contact', $message_key, $to, language_default(), $params, $from_email);
@@ -1179,7 +1173,7 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
   }
 
   return $success['result'];
-} // End of _mass_contact_send_message().
+}
 
 
 /**

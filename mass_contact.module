@@ -360,6 +360,7 @@ function mass_contact_mail($key, &$message, $params) {
   }
 } // End of mass_contact_mail().
 
+
 /**
  * Implements hook_ctools_plugin_type().
  */
@@ -368,6 +369,7 @@ function mass_contact_ctools_plugin_type() {
     'groupping_method' => array(),
   );
 }
+
 
 /**
  * Implements hook_ctools_plugin_directory().

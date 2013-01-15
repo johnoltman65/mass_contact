@@ -3,6 +3,7 @@
     * Fix problem when attempting to run a query with an empty variable, per
       arkestra on https://drupal.org/node/1529212 and tutumlum on
       https://drupal.org/node/1855650.
+  * mass_contact.module, mass_contact.page.inc: Update some comments.
 
 2012-11-26 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
