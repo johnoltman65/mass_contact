@@ -334,12 +334,18 @@ function mass_contact_user_presave(&$edit, $account, $category) {
     ->execute();
   // Iterate through each category.
   foreach ($categories as $category) {
-    if (!empty($edit['mass_contact_optout_' . $category->cid])) {
-      // Set the ones that are checked.
-      $edit['data']['mass_contact_optout_' . $category->cid] = $edit['mass_contact_optout_' . $category->cid];
+    // Get the recipients for the category.
+    $recipients = unserialize($category->recipients);
+    // @todo this needs to change so that it accounts for any plugin type.
+    foreach ($recipients['mass_contact_role'] as $role_id) {
+      // If the item is either 0 or 1, then save its setting.
+      if (isset($edit['mass_contact_optout_' . $role_id])) {
+        // Set the new values, which will unset any that were opted back in.
+        $edit['data']['mass_contact_optout_' . $role_id] = $edit['mass_contact_optout_' . $role_id];
+      }
     }
   }
-} // End of mass_contact_user_presave().
+}
 
 
 /**

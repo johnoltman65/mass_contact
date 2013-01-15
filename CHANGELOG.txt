@@ -10,6 +10,9 @@
   * mass_contact.module:
     * Fix opting out of selected categories (for roles -- needs more work for
       taxonomies), per  george esper on https://drupal.org/node/1499440.
+  * mass_contact.module:
+    * Fix opting back in after opting out of a selected category, per
+      https://drupal.org/node/1461560.
 
 2012-11-26 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
