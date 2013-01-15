@@ -286,7 +286,8 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
       // Iterate through each category.
       foreach ($categories as $category) {
         // Pull out the roles that are a part of this category.
-        foreach (explode(',', $category->recipients) as $role_id) {
+        $recipients = unserialize($category->recipients);
+        foreach ($recipients['mass_contact_role'] as $role_id) {
           // If the category's role is one the user is part of, show the category.
           if (in_array($role_id, $users_roles)) {
             $included_categories[$category->cid] = $category->category;
