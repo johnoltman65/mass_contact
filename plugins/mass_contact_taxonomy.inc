@@ -30,19 +30,23 @@ function mass_contact_taxonomy_create_recipient_list($recipients) {
   // Query to select users by term.
   // Check all fields of user entity and if field is taxonomy term reference,
   // add condition.
-  $query = new EntityFieldQuery();
   $user_fields = field_info_instances('user');
+  $uids = array();
   foreach ($user_fields['user'] as $user_field_instance) {
     $field = field_info_field($user_field_instance['field_name']);
+
+    // EntityFieldQuery() cannot handle OR logic, so for each possible taxonomy
+    // term attached to a user, we make a seperate DB query.
     if ($field['module'] == 'taxonomy') {
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type','user');
       $query->fieldCondition($field['field_name'], 'tid', $tids, 'IN');
+      $result = $query->execute();
+      // Collect uids.
+      if (isset($result['user'])) {
+	$uids = array_keys($result['user']);
+      }
     }
-  }
-  $result = $query->execute();
-  // Collect uids.
-  $uids = array();
-  if (isset($result['user'])) {
-    $uids = array_keys($result['user']);
   }
 
   return $uids;
