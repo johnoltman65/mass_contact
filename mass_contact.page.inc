@@ -564,7 +564,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       $new_recipient_list['All categories combined']['subject'] = t('@subject', array('@subject' => $form_state['values']['subject']));
 
       // Set the original list to the new combined, unduplicated list.
-      $recipient_lists = array_unique($new_recipient_list);
+      $new_recipient_list['All categories combined']['recipients'] = array_unique($new_recipient_list['All categories combined']['recipients']);
+      $recipient_lists = $new_recipient_list;
     }
 
     // Iterate through each recipient list.

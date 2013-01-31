@@ -2,6 +2,9 @@
   * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc,
     mass_contact_role.inc, mass_contact_taxonomy.inc:
     * Final troubleshooting and bug fixing from the previous changes.
+  * mass_contact.page.inc:
+    * Run array_unique() on the recipient list, not the category, per zigazou on
+      https://drupal.org/node/1795286.
 
 2013-01-27 Jason Flatt drupal@oadaeh.net
   * mass_contact.module, mass_contact.page.inc, mass_contact_role.inc:
