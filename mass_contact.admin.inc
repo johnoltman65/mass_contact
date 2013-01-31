@@ -1,15 +1,8 @@
 <?php
-
 /**
  * @file
- * This is the code file for the administrative settings pages.
+ * The administrative settings pages.
  */
-
-/* **************************************************************
- *
- * Functions for listing, adding/editing and deleting categories.
- *
- * *************************************************************/
 
 /**
  * Displays a list of all existing categories.
@@ -25,14 +18,17 @@ function mass_contact_admin_categories() {
     ->orderBy('category', 'ASC')
     ->execute();
   foreach ($results as $category) {
-
-    // Execute all plugins 'mass_contact_admin_categories_callback' functions
-    // to prepare string for Recipients column.
+    // Prepare the string for the Recipients column.
     ctools_include('plugins');
-    $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+    // Get the information about all plugins that implemnent this type of
+    // plugin.
+    $plugins = ctools_get_plugins('mass_contact', 'grouping_method');
     $recipients = array();
     foreach ($plugins as $plugin) {
-      $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_categories_callback');
+      // Get the admin categories function name for this particular
+      // implementation.
+      $function = ctools_plugin_get_function($plugin, 'mass_contact_categories');
+      // Call the plugin function to get the list of categories.
       $recipients[] = $function(unserialize($category->recipients));
     }
 
@@ -101,11 +97,14 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
     '#tree' => TRUE,
   );
 
-  // Add form elements provided by groupping_method plugins.
+  // Add form elements provided by grouping_method plugins.
   ctools_include('plugins');
-  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+  // Get the information about all plugins that implemnent this type of plugin.
+  $plugins = ctools_get_plugins('mass_contact', 'grouping_method');
   foreach ($plugins as $plugin_name => $plugin) {
+    // Get the admin edit function name for this particular implementation.
     $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_edit');
+    // Call the plugin function to add the form snippet(s).
     $form['recipients'][$plugin_name] = $function(unserialize($edit['recipients']));
   }
 
@@ -152,11 +151,15 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
 function mass_contact_admin_edit_validate($form, &$form_state) {
   // Execute validation callbacks for each plugin.
   ctools_include('plugins');
-  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+  // Get the information about all plugins that implemnent this type of plugin.
+  $plugins = ctools_get_plugins('mass_contact', 'grouping_method');
   $values_empty = TRUE;
   foreach ($plugins as $plugin) {
+    // Get the admin edit validate function name for this particular
+    // implementation.
     $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_edit_validate');
     if ($values_empty) {
+      // Call the plugin function to validate the form.
       $values_empty = $function($form, $form_state);
     }
   }
@@ -183,12 +186,15 @@ function mass_contact_admin_edit_submit($form, &$form_state) {
       ->execute();
   }
 
-  // Execute submit callbacks for each plugin. Collect recipients.
+  // Collect the recipients.
   ctools_include('plugins');
-  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
+  // Get the information about all plugins that implemnent this type of plugin.
+  $plugins = ctools_get_plugins('mass_contact', 'grouping_method');
   $recipients = array();
   foreach ($plugins as $plugin_name => $plugin) {
+    // Get the recipient list function name for this particular implementation.
     $function = ctools_plugin_get_function($plugin, 'mass_contact_admin_edit_submit');
+    // Call the plugin function to submit the form data.
     $recipients[$plugin_name] = $function($form, $form_state);
   }
 
@@ -275,13 +281,6 @@ function mass_contact_admin_delete_submit($form, &$form_state) {
   watchdog('mass_contact', 'Mass Contact form: category %category deleted.', array('%category' => $form_state['values']['category']));
   $form_state['redirect'] = 'admin/config/system/mass_contact';
 } // End of mass_contact_admin_delete_submit().
-
-
-/* ***********************************************
- *
- * Functions for handling administrative settings.
- *
- * **********************************************/
 
 
 /**

@@ -1,15 +1,8 @@
 <?php
-
 /**
  * @file
- * This is the code file for the main form for sending the messages.
+ * The main form for creating and sending the messages.
  */
-
- /* ********************************
- *
- * Functions for sending a message.
- *
- * *******************************/
 
 /**
  * The mail page
@@ -441,7 +434,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   }
 
   // Process some parts of the message header (more will be processed later).
-  $params = _mass_contact_prepare_header();
+  $params = _mass_contact_prepare_header($form_state['values']);
 
   // Get the admin specified default sender's name.
   $from_name = variable_get('mass_contact_default_sender_name');
@@ -538,15 +531,13 @@ function mass_contact_mail_page_submit($form, &$form_state) {
     }
   }
 
+  // There are categories selected, but all of them are empty.
   if (count($recipient_lists) == $empty_lists) {
-    // There are categories selected, but all of them are empty.
-
     // Post a message to the user and exit.
     drupal_set_message(t('No users were in the selected category(ies), and therefore, the message was not sent.'));
   }
+  // We have recipients, so send the message to them.
   else {
-    // We have recipients, so send the message to them.
-
     // Initialize more variables.
     // The count of all email addresses the message is sent to.
     $total_recipients = 0;
@@ -721,13 +712,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 } // End of mass_contact_mail_page_submit().
 
 
-/* *************************
- *
- * Private helper functions.
- *
- * ************************/
-
-
 /**
  * Figures out the default filter format for the current user.
  *
@@ -767,18 +751,24 @@ function _mass_contact_compute_default_filter_format() {
  * This currently only sets the character set, but it's left here for potential
  * future additions.
  *
- * @return
- *   An array containing the prepared header.
+ * @param array form_values
+ *   The values returned from the message sending form.
+ *
+ * @return array
+ *   The prepared header.
  */
-function _mass_contact_prepare_header() {
+function _mass_contact_prepare_header($form_values) {
   $params = array();
 
-  if (module_exists('mimemail')) {
+  if (!empty($form_values['message']['format']) && $form_values['message']['format'] == 'plain_text') {
+    $params['headers']['Content-Type'] = 'text/plain; charset=' . variable_get('mass_contact_character_set', 'UTF-8') . '; format=flowed';
+  }
+  elseif (module_exists('mimemail')) {
     // Mime Mail requires this header or it will filter all text.
     $params['headers']['Content-Type'] = 'text/html; charset=UTF-8';
   }
-  elseif ($character_set = variable_get('mass_contact_character_set', '')) {
-    $params['headers']['Content-Type'] = 'text/plain; charset=' . $character_set . '; format=flowed';
+  else {
+    $params['headers']['Content-Type'] = 'text/plain; charset=' . variable_get('mass_contact_character_set', 'UTF-8') . '; format=flowed';
   }
 
   return $params;
@@ -788,55 +778,67 @@ function _mass_contact_prepare_header() {
 /**
  * Prepares the message's body.
  *
- * @param form_values
- *   A keyed array containing the values returned with the form.
+ * @param array form_values
+ *   The values returned from the message sending form.
  *
- * @return
- *   A keyed array containing the prepared body as two strings. There are two
- *   possible values:
- *     $body['plain']: The plain text body part is here.
- *     $body['html']: The HTML body part is here.
+ * @return array
+ *   The prepared body, including any possible addons.
  */
 function _mass_contact_prepare_bodies($form_values) {
-  $body = '';
+  $body = array();
 
-  if (module_exists('mimemail')) {
+  if (!empty($form_values['message']['format']) && $form_values['message']['format'] == 'plain_text') {
     // Start with the message prefix.
-    $body .= _mass_contact_prepare_message_addon('prefix', 'html');
+    $body[] = _mass_contact_prepare_message_addon('prefix', 'plain text');
+
+    // Add in the actual message.
+    if (is_array($form_values['message'])) {
+      $body[] = wordwrap(check_plain($form_values['message']['value']));
+    }
+    else {
+      $body[] = wordwrap(check_plain($form_values['message']));
+    }
+
+    // End with the message suffix.
+    $body[] = _mass_contact_prepare_message_addon('suffix', 'plain text');
+  }
+  elseif (module_exists('mimemail')) {
+    // Start with the message prefix.
+    $body[] = _mass_contact_prepare_message_addon('prefix', 'html');
 
     global $language;
 
     // Add in the actual message.
     if (is_array($form_values['message'])) {
-      $body .= check_markup($form_values['message']['value'], $form_values['message']['format'], ($language) ? $language->language : LANGUAGE_NONE);
+      $body[] = check_markup($form_values['message']['value'], $form_values['message']['format'], ($language) ? $language->language : LANGUAGE_NONE);
     }
     else {
-      $body .= check_markup($form_values['message'], $form_values['body_filter_format']->format, ($language) ? $language->language : LANGUAGE_NONE);
+      $body[] = check_markup($form_values['message'], $form_values['body_filter_format']->format, ($language) ? $language->language : LANGUAGE_NONE);
     }
 
     // End with the message suffix.
-    $body .= _mass_contact_prepare_message_addon('suffix', 'html');
+    $body[] = _mass_contact_prepare_message_addon('suffix', 'html');
   }
-  // Mime Mail is not installed, so this message will only be processed as
-  // plain text.
+  // Mime Mail is not installed, so this message will be converted as plain
+  // text.
   else {
     // Start with the message prefix.
-    $body .= _mass_contact_prepare_message_addon('prefix', 'converted');
+    $body[] = _mass_contact_prepare_message_addon('prefix', 'converted');
 
     // Add in the actual message.
-    if (is_array($form_values['message']['value'])) {
-      $body .= wordwrap(check_plain($form_values['message']['value'])) . "\n";
+    if (is_array($form_values['message'])) {
+      $body[] = wordwrap(check_plain($form_values['message']['value']));
     }
     else {
-      $body .= wordwrap(check_plain($form_values['message'])) . "\n";
+      $body[] = wordwrap(check_plain($form_values['message']));
     }
 
     // End with the message suffix.
-    $body .= _mass_contact_prepare_message_addon('suffix', 'converted');
+    $body[] = _mass_contact_prepare_message_addon('suffix', 'converted');
   }
 
   return $body;
-} // End of _mass_contact_prepare_bodies().
+}
 
 
 /**
@@ -946,7 +948,6 @@ function _mass_contact_prepare_message_addon($addon, $style) {
  *   The attachment information, as Mime Mail expects it.
  */
 function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
-  // Initialize the variable.
   $files = array();
 
   // Loop through each possible attachment.
@@ -1033,39 +1034,45 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
 /**
  * Creates a list of recipients.
  *
- * TODO: This function currently has hard coded role information in it. I'm
- * striving to make this and the opt out functions the only place where role
- * information is hard coded so that in the future they will become the place
- * where where contrib modules can hook in their category filling functions.
+ * @param object category
+ *   The category of users the message is to.
+ * @param boolean respect_opt_outs
+ *   The 'Respect user opt-outs' value from the message sending form.
  *
- * @param category
- *   An object containing the category of users the message is to.
- * @param respect_opt_outs
- *   A boolean which represents the 'Respect user opt-outs' value from the
- *   message sending form.
- *
- * @return
- *   An array of users' email addresses, keyed by their user name.
+ * @return array
+ *   Users' email addresses, keyed by their user name.
  */
 function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
   $recipient_list = array();
   $opt_out_setting = variable_get('mass_contact_optout_d', 0);
-  global $user;
 
-  // Collect user id's by executing all plugin's
-  // create_recipient_list_callback functions.
+  // Create the recipient list.
   ctools_include('plugins');
-  $plugins = ctools_get_plugins('mass_contact', 'groupping_method');
-  $user_uids = array();
+  // Get the information about all plugins that implemnent this type of plugin.
+  $plugins = ctools_get_plugins('mass_contact', 'grouping_method');
+  $user_ids = array();
+  $all_user_ids = array();
   foreach ($plugins as $plugin) {
-    $function = ctools_plugin_get_function($plugin, 'create_recipient_list_callback');
-    $user_uids += $function(unserialize($category->recipients));
+    // Get the recipient list function name for this particular implementation.
+    $function = ctools_plugin_get_function($plugin, 'mass_contact_recipients');
+    if (!empty($function)) {
+      // Call the plugin function to get the list of recipients.
+      $user_ids = $function(unserialize($category->recipients));
+      if (!empty($user_ids)) {
+        // If there are recipients for this plugin, add them to the total.
+        $all_user_ids = array_merge($all_user_ids, $user_ids);
+      }
+    }
   }
 
-  $uids = array_unique(array_values($user_uids));
-  if (empty($uids)) {
+  if (empty($all_user_ids)) {
     return array();
   }
+
+  // Eliminate duplicates.
+  $uids = array_unique(array_values($all_user_ids));
+
+  global $user;
 
   $query = "SELECT u.name, u.mail, u.data FROM {users} u WHERE uid IN (:uids) AND u.status <> 0";
   $results = db_query($query, array(':uids' => $uids));
@@ -1102,7 +1109,7 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
   }
 
   return $recipient_list;
-} // End of _mass_contact_create_recipient_list().
+}
 
 
 /**
@@ -1181,7 +1188,7 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
  *
  * @param array $params
  *   The message array.
- * @param string $body
+ * @param array $body
  *   The body of the message and node.
  * @param array $fomat
  *   The text format the body is to use.
@@ -1215,6 +1222,8 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
   // Set the title of the node to the subject of the message.
   $node->title = $params['subject'];
 
+  // Convert the body from an array to a string.
+  $body = implode("\n\n", $body);
   // Set the body of the node to the body of the message.
   $node->body[$node->language][0]['value'] = $body;
   // Set the teaser or summary of the body.
@@ -1294,4 +1303,4 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
 
   // Inform the user.
   drupal_set_message(t('A copy has been created as a node.'));
-} // End of _mass_contact_save_node().
+}

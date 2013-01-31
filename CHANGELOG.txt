@@ -1,3 +1,33 @@
+2013-01-30 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc,
+    mass_contact_role.inc, mass_contact_taxonomy.inc:
+    * Final troubleshooting and bug fixing from the previous changes.
+
+2013-01-27 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact.page.inc, mass_contact_role.inc:
+    * More troubleshooting and bug fixing from the previous changes.
+  * mass_contact.module, mass_contact.page.inc:
+    * Convert the body processing to an array, as required by hook_mail(), and
+      verify input formats are correctly accounted for.
+
+2013-01-25 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact.page.inc, mass_contact_role.inc:
+    * Troubleshooting and bug fixing from the previous changes.
+
+2013-01-21 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact_role.inc, mass_contact_taxonomy.inc:
+    * Continued modification of opting out of selected categories.
+
+2013-01-18 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact_role.inc, mass_contact_taxonomy.inc:
+    * Modified opting out of selected categories to use the Ctools plugin
+      integration.
+
+2013-01-17 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc,
+    mass_contact_role.inc, mass_contact_taxonomy.inc:
+    * Cleaned up Ctools plugin integration.
+
 2013-01-14 Jason Flatt drupal@oadaeh.net
   * mass_contact_role.inc:
     * Fix problem when attempting to run a query with an empty variable, per
@@ -9,7 +39,7 @@
     * w/EntityFieldQuery(), per arkestra on https://drupal.org/node/1529212.
   * mass_contact.module:
     * Fix opting out of selected categories (for roles -- needs more work for
-      taxonomies), per  george esper on https://drupal.org/node/1499440.
+      taxonomies), per george esper on https://drupal.org/node/1499440.
   * mass_contact.module:
     * Fix opting back in after opting out of a selected category, per
       https://drupal.org/node/1461560.

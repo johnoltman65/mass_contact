@@ -1,17 +1,10 @@
 <?php
-
 /**
  * @file
  * This is the main code file for the Mass Contact module.
  *
  * This is primarily where all the hooks are implemented.
  */
-
-/* ************************************************
- *
- * Functions for implementing various Drupal hooks.
- *
- * ***********************************************/
 
 /**
  * Implements hook_help().
@@ -244,9 +237,10 @@ function mass_contact_menu_alter(&$items) {
  */
 function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
   if ($form['#user_category'] == 'account') {
-    if (variable_get('mass_contact_optout_d', 0) == 1) {
-      $account = $form['#user'];
+    $account = $form['#user'];
 
+    // The admin allows a blanket opt out of all mass mailings.
+    if (variable_get('mass_contact_optout_d', 0) == 1) {
       $form['mass_contact'] = array(
         '#type' => 'fieldset',
         '#title' => t('Mass contact settings'),
@@ -260,54 +254,42 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
         '#description' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass email messages from privileged users. Note that site administrators are able to include you in mass email messages even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
       );
     }
+    // The admin allows a selective opt out of individual categories of mass
+    // mailings.
     elseif (variable_get('mass_contact_optout_d', 0) == 2) {
-      // Initialize the variables we're going to use.
-      $account = $form['#user'];
-      $users_roles = array();
-      $user_role = 0;
+      $form['mass_contact'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Mass contact settings'),
+        '#weight' => 5,
+        '#collapsible' => TRUE,
+        '#description' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass email messages from privileged users. Note that site administrators are able to include you in mass email messages even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
+      );
+
       $included_categories = array();
-
-      // Start with the 'authenticated user' role, as it's not in the database.
-      $users_roles[] = 2;
-      // Get all the roles this user is a memeber of.
-      $user_roles = db_select('users_roles', 'ur')
-        ->fields('ur', array('rid'))
-        ->condition('uid', $account->uid)
-        ->execute();
-      // Put them into an array for later reference.
-      foreach ($user_roles as $user_role) {
-        $users_roles[] = $user_role->rid;
-      }
-
-      // Get all Mass Contact categories.
-      $categories = db_select('mass_contact', 'mc')
-        ->fields('mc', array('cid', 'category', 'recipients'))
-        ->execute();
-      // Iterate through each category.
-      foreach ($categories as $category) {
-        // Pull out the roles that are a part of this category.
-        $recipients = unserialize($category->recipients);
-        foreach ($recipients['mass_contact_role'] as $role_id) {
-          // If the category's role is one the user is part of, show the category.
-          if (in_array($role_id, $users_roles)) {
-            $included_categories[$category->cid] = $category->category;
-          }
+      $all_included_categories = array();
+      // Add form elements provided by grouping_method plugins.
+      ctools_include('plugins');
+      // Get the information about all plugins that implemnent this type of
+      // plugin.
+      $plugins = ctools_get_plugins('mass_contact', 'grouping_method');
+      foreach ($plugins as $plugin_name => $plugin) {
+        // Get the admin edit function name for this particular implementation.
+        $function = ctools_plugin_get_function($plugin, 'mass_contact_user_edit');
+        // Call the plugin function to add the form snippet(s).
+        $included_categories = $function($form['#user']);
+        if (!empty($included_categories)) {
+          $all_included_categories += $included_categories;
         }
       }
 
-      // If the user is in any of the categories, show them for the option of
-      // opting out of mailings.
-      if ($included_categories) {
-        $form['mass_contact'] = array(
-          '#type' => 'fieldset',
-          '#title' => t('Mass contact settings'),
-          '#weight' => 5,
-          '#collapsible' => TRUE,
-          '#description' => variable_get('mass_contact_optout_message', t('Allows you to opt-out of receiving mass email messages from privileged users. Note that site administrators are able to include you in mass email messages even if you choose not to enable this feature, and the ability to opt-out may be removed by the administrator at any time.')),
-        );
+      if (!empty($all_included_categories)) {
+        // Eliminate duplicates.
+        $all_included_categories = array_unique($all_included_categories);
+        // Sort the contents, naturally and case insensitively.
+        natcasesort($all_included_categories);
 
-        foreach ($included_categories as $category_cid => $category_category) {
-          // If the category's role is one the user is part of, show the category.
+        foreach ($all_included_categories as $category_cid => $category_category) {
+          // If the user is in the category, show the option to opt out of it.
           $form['mass_contact']['mass_contact_optout_' . $category_cid] = array(
             '#type' => 'checkbox',
             '#title' => t('Opt-out of mass email messages to the %category category.', array('%category' => $category_category)),
@@ -317,32 +299,36 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
       }
     }
   }
-} // End of mass_contact_form_user_profile_form_alter().
+}
 
 
 /**
  * Implements hook_user_presave().
  */
 function mass_contact_user_presave(&$edit, $account, $category) {
-  if (!empty($edit['mass_contact_optout'])) {
-    $edit['data']['mass_contact_optout'] = $edit['mass_contact_optout'];
+  // Remove any previously saved category opt out data.
+  foreach ($edit['data'] as $key => $value) {
+    if (substr($key, 0, 20) == 'mass_contact_optout_') {
+      unset($key);
+    }
   }
 
   // Get all Mass Contact categories.
   $categories = db_select('mass_contact', 'mc')
     ->fields('mc', array('cid', 'category', 'recipients'))
     ->execute();
+
   // Iterate through each category.
   foreach ($categories as $category) {
-    // Get the recipients for the category.
-    $recipients = unserialize($category->recipients);
-    // @todo this needs to change so that it accounts for any plugin type.
-    foreach ($recipients['mass_contact_role'] as $role_id) {
-      // If the item is either 0 or 1, then save its setting.
-      if (isset($edit['mass_contact_optout_' . $role_id])) {
-        // Set the new values, which will unset any that were opted back in.
-        $edit['data']['mass_contact_optout_' . $role_id] = $edit['mass_contact_optout_' . $role_id];
-      }
+    // If the item is either 0 or 1, then save its setting. This will allow
+    // users to opt back in, after opting out.
+    if (isset($edit['mass_contact_optout_' . $category->cid]) && $edit['mass_contact_optout_' . $category->cid] == 0) {
+      // Set the new values, which will unset any that were opted back in.
+      unset($edit['data']['mass_contact_optout_' . $category->cid]);
+    }
+    elseif (isset($edit['mass_contact_optout_' . $category->cid]) && $edit['mass_contact_optout_' . $category->cid] == 1) {
+      // Set the new values, which will unset any that were opted back in.
+      $edit['data']['mass_contact_optout_' . $category->cid] = $edit['mass_contact_optout_' . $category->cid];
     }
   }
 }
@@ -359,13 +345,8 @@ function mass_contact_mail($key, &$message, $params) {
   }
   $message['subject'] = $params['subject'];
 
-  if (module_exists('mimemail')) {
-    $message['body'] = $params['body'];
-  }
-  else {
-    $message['body'][] = $params['body'];
-  }
-} // End of mass_contact_mail().
+  $message['body'] = $params['body'];
+}
 
 
 /**
@@ -373,7 +354,8 @@ function mass_contact_mail($key, &$message, $params) {
  */
 function mass_contact_ctools_plugin_type() {
   return array(
-    'groupping_method' => array(),
+    // The plugin type. This one uses a default configuration.
+    'grouping_method' => array(),
   );
 }
 
@@ -382,7 +364,8 @@ function mass_contact_ctools_plugin_type() {
  * Implements hook_ctools_plugin_directory().
  */
 function mass_contact_ctools_plugin_directory($module, $plugin) {
-  if (($module == 'mass_contact') && ($plugin == 'groupping_method')) {
+  if (($module == 'mass_contact') && ($plugin == 'grouping_method')) {
+    // The directory the plugins are stored in.
     return 'plugins';
   }
 }
