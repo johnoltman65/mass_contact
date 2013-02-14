@@ -156,9 +156,12 @@ function mass_contact_role_admin_edit($recipients) {
  * Sets the form error and returns, whether selection is empty or not.
  *
  * @param array $form
+ *   A nested array of form elements that comprise the form.
  * @param array $form_state
+ *   A keyed array containing the current state of the form.
  *
  * @return bool
+ *   Indicates whether a validation error has occurred or not.
  */
 function mass_contact_role_admin_edit_validate($form, &$form_state) {
   $selected_roles = array_filter($form_state['values']['recipients']['mass_contact_role']);
@@ -172,7 +175,9 @@ function mass_contact_role_admin_edit_validate($form, &$form_state) {
  * recepients field.
  *
  * @param array $form
+ *   A nested array of form elements that comprise the form.
  * @param array $form_state
+ *   A keyed array containing the current state of the form.
  *
  * @return array
  *   An array of role IDs.

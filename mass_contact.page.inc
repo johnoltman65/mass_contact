@@ -5,9 +5,9 @@
  */
 
 /**
- * The mail page
+ * The mail page.
  *
- * @return
+ * @return array
  *   Either an error, if flood control is active and triggered, or a
  *   rendered form.
  */
@@ -20,16 +20,16 @@ function mass_contact_site_page() {
   }
 
   return $output;
-} // End of mass_contact_site_page().
+}
 
 
 /**
  * Generates the main Mass Contact mail form.
  *
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  *
- * @return
+ * @return array
  *   An associative array that defines the form to be built.
  */
 function mass_contact_mail_page($form, $form_state) {
@@ -66,7 +66,6 @@ function mass_contact_mail_page($form, $form_state) {
       '#markup' => filter_xss_admin(variable_get('mass_contact_form_information', t('Send an email message using the contact form below.'))),
     );
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying the sender's name.
     $mass_contact_default_sender_name = variable_get('mass_contact_default_sender_name', '');
     if ($mass_contact_default_sender_name) {
@@ -97,7 +96,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying the sender's email address.
     $mass_contact_default_sender_email = variable_get('mass_contact_default_sender_email', '');
     if ($mass_contact_default_sender_email) {
@@ -128,7 +126,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying the category(ies).
     if ((count($categories) > 1) || !isset($default_category)) {
       // Display a choice when one is needed.
@@ -154,7 +151,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying whether opt-outs are respected or not.
     $optout_setting = variable_get('mass_contact_optout_d', 0);
 
@@ -183,7 +179,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying whether the recipients are in the To or
     // BCC field of the message.
     // Check if the user is allowed to override the BCC setting.
@@ -207,7 +202,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying the subject of the message.
     $form['subject'] = array(
       '#type' => 'textfield',
@@ -216,9 +210,7 @@ function mass_contact_mail_page($form, $form_state) {
       '#required' => TRUE,
     );
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying the body and text format of the message.
-    //
     // Get the HTML input format setting and the corresponding name.
     if (module_exists('mimemail')) {
       // Get the admin specified default text format.
@@ -258,7 +250,6 @@ function mass_contact_mail_page($form, $form_state) {
         );
       }
 
-      ////////////////////////////////////////////////////////////
       // If the user has access, add the field for specifying the attachment.
       if (user_access('mass contact include attachments')) {
         for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
@@ -291,7 +282,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // We do not allow anonymous users to send themselves a copy because it
     // can be abused to spam people.
     if ($user->uid) {
@@ -301,7 +291,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // Add the field for specifying whether to save the message as a node or
     // not.
     if (user_access('mass contact archive messages')) {
@@ -339,7 +328,6 @@ function mass_contact_mail_page($form, $form_state) {
       );
     }
 
-    ////////////////////////////////////////////////////////////
     // Add the submit button.
     $form['submit'] = array(
       '#type' => 'submit',
@@ -362,24 +350,24 @@ function mass_contact_mail_page($form, $form_state) {
     );
     $form['tasklist']['list'] = array(
       '#markup' => '<p><ol>' .
-        '<li>' . l(t('Set Permissions'), 'admin/people/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
-        '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
-        '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
-        '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
-        '<li>' . l(t('Help'), 'admin/help/mass_contact') . '</li></ol>',
+      '<li>' . l(t('Set Permissions'), 'admin/people/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
+      '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
+      '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
+      '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
+      '<li>' . l(t('Help'), 'admin/help/mass_contact') . '</li></ol>',
     );
   }
 
   return $form;
-} // End of mass_contact_mail_page().
+}
 
 
 /**
  * Validates the main Mass Contact mail form.
  *
- * @param form
+ * @param array $form
  *   An associative array containing the structure of the form.
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_mail_page_validate($form, &$form_state) {
@@ -390,15 +378,15 @@ function mass_contact_mail_page_validate($form, &$form_state) {
   if (user_access('mass contact change default sender information') == 1 && !valid_email_address($form_state['values']['mail'])) {
     form_set_error('mass_contact', t('You must enter a valid email address.'));
   }
-} // End of mass_contact_mail_page_validate().
+}
 
 
 /**
  * Processes the main Mass Contact mail form.
  *
- * @param form
+ * @param array $form
  *   An associative array containing the structure of the form.
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_mail_page_submit($form, &$form_state) {
@@ -489,7 +477,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
 
   // Process the recipients (some more of the message header).
-
   // Get the IDs of the chosen categories.
   $cids = array();
   foreach ($form_state['values']['cid'] as $cid) {
@@ -600,8 +587,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
               // Increment the batch count.
               ++$batch;
 
-              //  Finalizes the headers, by setting the To, Subject, and
-              //  possibly, Bcc fields.
+              // Finalizes the headers, by setting the To, Subject, and
+              // possibly, Bcc fields.
               $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_address, $recipient_list['subject']);
 
               // Send the message. Save the inverse of the result for tallying.
@@ -615,8 +602,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
           // Send the remainder.
           if ($recipient_count != 0) {
-            //  Finalizes the headers, by setting the To, Subject, and
-            //  possibly, Bcc fields.
+            // Finalizes the headers, by setting the To, Subject, and possibly,
+            // Bcc fields.
             $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_address, $recipient_list['subject']);
 
             // Send the message. Save the inverse of the result for tallying.
@@ -630,8 +617,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
         // There's no recipient limit, so send the message to all the recipients
         // at the same time.
         else {
-          // An array of the current grouping of categories and email addresses thie
-          // message is sent to.
+          // An array of the current grouping of categories and email addresses
+          // the message is being sent to.
           $current_recipients = array();
 
           foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
@@ -647,8 +634,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           $listed_recipients = implode(', ', $current_recipients);
           $all_recipients = array_merge($all_recipients, $current_recipients);
 
-          //  Finalizes the headers, by setting the To, Subject, and possibly,
-          //  Bcc fields.
+          // Finalizes the headers, by setting the To, Subject, and possibly,
+          // Bcc fields.
           $to = _mass_contact_finalize_headers($bcc, implode(', ', $current_recipients), $params, $from_address, $recipient_list['subject']);
 
           // Send the message. Save the inverse of the result for tallying.
@@ -681,7 +668,13 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       flood_register_event('mass_contact');
 
       // Log the operation.
-      watchdog('mass_contact', '%name-from sent a message to the %category group, which included these recipients: @emails.', array('%name-from' => $from_address, '%category' => $category, '@emails' => $listed_recipients));
+      watchdog('mass_contact', '%name-from sent a message to the %category group, which included these recipients: @emails.',
+        array(
+          '%name-from' => $from_address,
+          '%category' => $category,
+          '@emails' => $listed_recipients,
+        )
+      );
 
       // Prepare some variables for the printing of the final results.
       $total_recipients = count($all_recipients);
@@ -690,16 +683,26 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
       // Print out the final results of the complete operation.
       if ($total_recipients == $unique_addresses_count) {
-        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses.', array('@total' =>  $total_recipients)));
+        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses.', array('@total' => $total_recipients)));
       }
       else {
-        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses, of which, there may have been !dups duplicates.', array('@total' =>  $total_recipients, '!dups' => $total_recipients - $unique_addresses_count)));
+        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses, of which, there may have been !dups duplicates.',
+          array(
+            '@total' => $total_recipients,
+            '!dups' => $total_recipients - $unique_addresses_count,
+          )
+        ));
       }
     }
     else {
       // Otherwise, inform the user that there were error(s).
       if (module_exists('help')) {
-        drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's !help page or README.txt.", array('@errors' => $send_error, '!help' => l(t('help'), 'admin/help/mass_contact'))));
+        drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's !help page or README.txt.",
+          array(
+            '@errors' => $send_error,
+            '!help' => l(t('help'), 'admin/help/mass_contact'),
+          )
+        ));
       }
       else {
         drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's README.txt.", array('@errors' => $send_error)));
@@ -710,13 +713,13 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   // Redirect to the home page, rather than back to the mail page, to avoid
   // contradictory messages if flood control has been activated.
   $form_state['redirect'] = '/';
-} // End of mass_contact_mail_page_submit().
+}
 
 
 /**
  * Figures out the default filter format for the current user.
  *
- * @return
+ * @return string
  *   Either the user's selected format, the admin-specified one, or the
  *   system default depending on which of those the user is allowed to use.
  */
@@ -752,7 +755,7 @@ function _mass_contact_compute_default_filter_format() {
  * This currently only sets the character set, but it's left here for potential
  * future additions.
  *
- * @param array form_values
+ * @param array $form_values
  *   The values returned from the message sending form.
  *
  * @return array
@@ -779,7 +782,7 @@ function _mass_contact_prepare_header($form_values) {
 /**
  * Prepares the message's body.
  *
- * @param array form_values
+ * @param array $form_values
  *   The values returned from the message sending form.
  *
  * @return array
@@ -845,22 +848,19 @@ function _mass_contact_prepare_bodies($form_values) {
 /**
  * Prepares a message addon (prefix or suffix).
  *
- * @param add_on
- *   A string specifing the addon part to process. There are two possible
- *   values:
- *     'prefix'
- *     'suffix'
- * @param style
- *   A string indicating how to process the addon. There are three possible
- *   values:
- *     'plain text': Indicates that the returned addon should be in plain
- *       text format.
- *     'html': Indicates that the returned addon should be in HTML format.
- *     'converted': Indicates that the returned addon is HTML but should be
- *       converted into plain text format.
+ * @param string $addon
+ *   Specifies the addon part to process. There are two possible values:
+ *   'prefix' and 'suffix'.
+ * @param string $style
+ *   Indicates how to process the addon. There are three possible values:
+ *   - 'plain text': Indicates that the returned addon should be in plain text
+ *     format.
+ *   - 'html': Indicates that the returned addon should be in HTML format.
+ *   - 'converted': Indicates that the returned addon is HTML but should be
+ *     converted into plain text format.
  *
- * @return
- *   A string containing the prepared message addon.
+ * @return string
+ *   The prepared message addon.
  */
 function _mass_contact_prepare_message_addon($addon, $style) {
   $token_module_exists = module_exists('token');
@@ -875,6 +875,7 @@ function _mass_contact_prepare_message_addon($addon, $style) {
         $message_addon = variable_get('mass_contact_message_prefix', t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))));
       }
       break;
+
     case 'suffix':
       if ($token_module_exists) {
         $message_addon = variable_get('mass_contact_message_suffix', '');
@@ -935,17 +936,16 @@ function _mass_contact_prepare_message_addon($addon, $style) {
   }
 
   return $message;
-} // End of _mass_contact_prepare_message_addon().
+}
 
 
 /**
  * Processes attachments for use with Mime Mail.
  *
- * @param nodecc
- *   An boolean identifying whether a copy of the message will be saved as a
- *   node.
+ * @param boolean $nodecc
+ *   Identifies whether a copy of the message will be saved as a node.
  *
- * @return
+ * @return array
  *   The attachment information, as Mime Mail expects it.
  */
 function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
@@ -958,8 +958,8 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
       // If the message is to be saved as a node, we need to save the
       // attachment now so that it is not lost later.
       if ($nodecc) {
-         // The name in the global $_FILES array where the information about
-         // the attachment is stored.
+        // The name in the global $_FILES array where the information about the
+        // attachment is stored.
         $file_source = 'attachment_' . $i;
         $file_validators = array();
         // Get the directory where attachments are to be saved.
@@ -995,7 +995,7 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
         // The file was saved, so now the information needs to be added to the
         // database.
         else {
-          //Set the status of the uploaded file so it stays around for a while.
+          // Set the status of the uploaded file so it stays around for a while.
           $file->status = FILE_STATUS_PERMANENT;
 
           // Save the file object to the database.
@@ -1029,15 +1029,15 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
   }
 
   return $files;
-} // End of _mass_contact_process_mime_mail_attachments().
+}
 
 
 /**
  * Creates a list of recipients.
  *
- * @param object category
+ * @param object $category
  *   The category of users the message is to.
- * @param boolean respect_opt_outs
+ * @param boolean $respect_opt_outs
  *   The 'Respect user opt-outs' value from the message sending form.
  *
  * @return array
@@ -1131,7 +1131,6 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
  * @return string
  *   The contents of the To field. If $bcc is TRUE, this will be $from_email.
  *   If it is FALSE, it will be $recipients.
- *
  */
 function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email, $subject) {
   // If blind carbon copy (BCC) was selected, put the recipients in
@@ -1148,7 +1147,7 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
   $params['subject'] = $subject;
 
   return $to;
-} // End of _mass_contact_finalize_headers().
+}
 
 
 /**
@@ -1158,7 +1157,7 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
  *   A key to identify the email sent.
  * @param string $to
  *   To whom the message will be delivered.
- * @param array &$params
+ * @param array $params
  *   The message array.
  * @param string $from_email
  *   The message sender's email address.
@@ -1191,7 +1190,7 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
  *   The message array.
  * @param array $body
  *   The body of the message and node.
- * @param array $fomat
+ * @param array $format
  *   The text format the body is to use.
  * @param string $from
  *   The email address representing who the message is from.
@@ -1212,9 +1211,9 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
   // Prepare the node object for editing and fill in a few default values.
   node_object_prepare($node);
 
-  // Set the language code if Locale module is enabled.
-//  global $language;
-//  $node->language = ($language) ? $language->language : LANGUAGE_NONE;
+  // Set the language code, if the Locale module is enabled.
+  // global $language;
+  // $node->language = ($language) ? $language->language : LANGUAGE_NONE;
   // The node data is not completely saved if $node->language is not set to
   // LANGUAGE_NONE.
   // @TODO: Find out if this is a bug in Drupal or not.

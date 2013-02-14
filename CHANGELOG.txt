@@ -1,3 +1,9 @@
+2013-02-12 Jason Flatt drupal@oadaeh.net
+  * mass_contact.info, mass_contact.install, mass_contact.module,
+    mass_contact.admin.inc, mass_contact.page.inc, mass_contact_role.inc,
+    mass_contact_taxonomy.inc:
+    * Cleaned up based on Drupal coding standards.
+
 2013-01-30 Jason Flatt drupal@oadaeh.net
   * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc,
     mass_contact_role.inc, mass_contact_taxonomy.inc:

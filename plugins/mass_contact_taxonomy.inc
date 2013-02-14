@@ -63,7 +63,7 @@ function mass_contact_taxonomy_recipients($recipients) {
     if (isset($field['module']) && $field['module'] == 'taxonomy') {
       // Create a query to select users by taxonomy term.
       $query = new EntityFieldQuery();
-      $query->entityCondition('entity_type','user');
+      $query->entityCondition('entity_type', 'user');
       $query->fieldCondition($field['field_name'], 'tid', $recipients['mass_contact_taxonomy'], 'IN');
       $result = $query->execute();
       // Collect uids.
@@ -179,9 +179,12 @@ function mass_contact_taxonomy_admin_edit($recipients) {
  * Sets the form error and returns, whether selection is empty or not.
  *
  * @param array $form
+ *   A nested array of form elements that comprise the form.
  * @param array $form_state
+ *   A keyed array containing the current state of the form.
  *
  * @return bool
+ *   Indicates whether a validation error has occurred or not.
  */
 function mass_contact_taxonomy_admin_edit_validate($form, &$form_state) {
   if (!empty($form_state['values']['recipients']['mass_contact_taxonomy'])) {
@@ -203,7 +206,9 @@ function mass_contact_taxonomy_admin_edit_validate($form, &$form_state) {
  * recepients field.
  *
  * @param array $form
+ *   A nested array of form elements that comprise the form.
  * @param array $form_state
+ *   A keyed array containing the current state of the form.
  *
  * @return array
  *   An array of term IDs.

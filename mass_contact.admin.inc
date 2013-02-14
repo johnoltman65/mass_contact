@@ -7,7 +7,7 @@
 /**
  * Displays a list of all existing categories.
  *
- * @return
+ * @return array
  *   The themed page listing all current categories.
  */
 function mass_contact_admin_categories() {
@@ -37,7 +37,7 @@ function mass_contact_admin_categories() {
       implode('<br/>', array_filter($recipients)),
       ($category->selected ? t('Yes') : t('No')),
       l(t('edit'), 'admin/config/system/mass_contact/edit/' . $category->cid),
-      l(t('delete'), 'admin/config/system/mass_contact/delete/' . $category->cid)
+      l(t('delete'), 'admin/config/system/mass_contact/delete/' . $category->cid),
     );
   }
 
@@ -48,22 +48,22 @@ function mass_contact_admin_categories() {
     array(
       'data' => t('Operations'),
       'colspan' => 2,
-    )
+    ),
   );
 
   return theme('table', array('header' => $header, 'rows' => $rows));
-} // End of mass_contact_admin_categories().
+}
 
 
 /**
  * Displays a form to add or edit a category.
  *
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
- * @param cid
+ * @param integer $cid
  *   The id of the category to edit. If NULL, then add rather than edit.
  *
- * @return
+ * @return array
  *   An associative array that defines the form to be built.
  */
 function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
@@ -93,9 +93,7 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
     '#required' => TRUE,
   );
 
-  $form['recipients'] = array(
-    '#tree' => TRUE,
-  );
+  $form['recipients'] = array('#tree' => TRUE);
 
   // Add form elements provided by grouping_method plugins.
   ctools_include('plugins');
@@ -138,14 +136,14 @@ function mass_contact_admin_edit($form, $form_state, $cid = NULL) {
   );
 
   return $form;
-} // End of mass_contact_admin_edit().
+}
 
 /**
  * Validates the submission of the category add/edit page.
  *
- * @param form
+ * @param array $form
  *   An associative array containing the structure of the form.
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_admin_edit_validate($form, &$form_state) {
@@ -168,14 +166,14 @@ function mass_contact_admin_edit_validate($form, &$form_state) {
   if ($values_empty) {
     form_set_error('recipients', t('You must check one or more recipients.'));
   }
-} // End of mass_contact_admin_edit_validate().
+}
 
 /**
  * Processes the adding or editing of a category.
  *
- * @param form
+ * @param array $form
  *   An associative array containing the structure of the form.
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_admin_edit_submit($form, &$form_state) {
@@ -231,18 +229,18 @@ function mass_contact_admin_edit_submit($form, &$form_state) {
   }
 
   $form_state['redirect'] = 'admin/config/system/mass_contact';
-} // End of mass_contact_admin_edit_submit().
+}
 
 
 /**
  * Displays a form to select a category to delete.
  *
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
- * @param cid
+ * @param integer $cid
  *   The id of the category to delete.
  *
- * @return
+ * @return array
  *   A confirmation form for the user to acknowledge.
  */
 function mass_contact_admin_delete($form, $form_state, $cid = NULL) {
@@ -263,14 +261,14 @@ function mass_contact_admin_delete($form, $form_state, $cid = NULL) {
     drupal_set_message(t('Category not found.'), 'error');
     drupal_goto('admin/config/system/mass_contact');
   }
-} // End of mass_contact_admin_delete().
+}
 
 /**
  * Does the actual deleting of the category.
  *
- * @param form
+ * @param array $form
  *   An associative array containing the structure of the form.
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_admin_delete_submit($form, &$form_state) {
@@ -280,20 +278,19 @@ function mass_contact_admin_delete_submit($form, &$form_state) {
   drupal_set_message(t('Category %category has been deleted.', array('%category' => $form_state['values']['category'])));
   watchdog('mass_contact', 'Mass Contact form: category %category deleted.', array('%category' => $form_state['values']['category']));
   $form_state['redirect'] = 'admin/config/system/mass_contact';
-} // End of mass_contact_admin_delete_submit().
+}
 
 
 /**
  * Miscellaneous administration settings form.
  *
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  *
- * @return
+ * @return array
  *   An associative array that defines the form to be built.
  */
 function mass_contact_admin_settings_misc($form, $form_state) {
-  ////////////////////////////////////////////////////////////
   // Instructional text.
   $form['mass_contact_form_information'] = array(
     '#type' => 'textarea',
@@ -302,7 +299,6 @@ function mass_contact_admin_settings_misc($form, $form_state) {
     '#description' => t('Information to show on the <a href="@form">Mass Contact page</a>.', array('@form' => url('mass_contact'))),
   );
 
-  ////////////////////////////////////////////////////////////
   // The maximum number of users to send to at one time.
   $form['mass_contact_recipient_limit'] = array(
     '#type' => 'textfield',
@@ -313,7 +309,6 @@ function mass_contact_admin_settings_misc($form, $form_state) {
     '#required' => TRUE,
   );
 
-  ////////////////////////////////////////////////////////////
   // Opt out options.
   $form['mass_contact_optout_options'] = array(
     '#type' => 'fieldset',
@@ -338,7 +333,6 @@ function mass_contact_admin_settings_misc($form, $form_state) {
     '#description' => t('This is the message users will see in thier account settings page when they are presented with a list of categories to opt out of.'),
   );
 
-  ////////////////////////////////////////////////////////////
   // Node copy options.
   $form['mass_contact_nodecc_d'] = array(
     '#type' => 'checkbox',
@@ -346,7 +340,6 @@ function mass_contact_admin_settings_misc($form, $form_state) {
     '#default_value' => variable_get('mass_contact_nodecc_d', 1),
   );
 
-  ////////////////////////////////////////////////////////////
   // Flood control options.
   $form['mass_contact_hourly_threshold'] = array(
     '#type' => 'textfield',
@@ -357,20 +350,19 @@ function mass_contact_admin_settings_misc($form, $form_state) {
   );
 
   return system_settings_form($form);
-} // End of mass_contact_admin_settings_misc().
+}
 
 
 /**
  * Message header administration settings form.
  *
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  *
- * @return
+ * @return array
  *   An associative array that defines the form to be built.
  */
 function mass_contact_admin_settings_header($form, $form_state) {
-  ////////////////////////////////////////////////////////////
   // The default character set.
   $form['mass_contact_character_set'] = array(
     '#type' => 'textfield',
@@ -379,7 +371,6 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#description' => t('You may specify an alternate character set to use when sending emails. If left blank, the default of UTF-8 will be used. If you are unsure of what to put here, then leave it blank. Caution: setting this may not get you the results you desire. Other modules may come along and change that value after it has been set by this module.'),
   );
 
-  ////////////////////////////////////////////////////////////
   // The sender's name and email address.
   $form['mass_contact_default_sender'] = array(
     '#type' => 'fieldset',
@@ -403,7 +394,6 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#description' => t('The optional user email address to send email as. Replaces the "Your email address" value when sending mass emails.'),
   );
 
-  ////////////////////////////////////////////////////////////
   // Sender name options.
   $form['mass_contact_include_name'] = array(
     '#type' => 'fieldset',
@@ -422,7 +412,6 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#description' => t("The name used for the recipients will be their site login ID."),
   );
 
-  ////////////////////////////////////////////////////////////
   // BCC options.
   $form['mass_contact_bcc_d'] = array(
     '#type' => 'checkbox',
@@ -430,7 +419,6 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#default_value' => variable_get('mass_contact_bcc_d', 1),
   );
 
-  ////////////////////////////////////////////////////////////
   // Category options.
   $form['mass_contact_category_override'] = array(
     '#type' => 'checkbox',
@@ -442,14 +430,14 @@ function mass_contact_admin_settings_header($form, $form_state) {
   );
 
   return system_settings_form($form);
-} // End of mass_contact_admin_settings_header().
+}
 
 /**
  * Validates the message header administration settings form.
  *
- * @param form
+ * @param array $form
  *   An associative array containing the structure of the form.
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_admin_settings_header_validate($form, &$form_state) {
@@ -464,23 +452,22 @@ function mass_contact_admin_settings_header_validate($form, &$form_state) {
       form_set_error('mass_contact_default_sender_name', t('If you are going to specify default user settings, you must specify both a user name and a user email address.'));
     }
   }
-} // End of mass_contact_admin_settings_header_validate().
+}
 
 
 /**
  * Message body administration settings form.
  *
- * @param form_state
+ * @param array $form_state
  *   A keyed array containing the current state of the form.
  *
- * @return
+ * @return array
  *   An associative array that defines the form to be built.
  */
 function mass_contact_admin_settings_body($form, $form_state) {
   $mimemail = module_exists('mimemail');
   $token = module_exists('token');
 
-  ////////////////////////////////////////////////////////////
   // Supplemental texts that are prepended and/or appended to every message.
   $form['mass_contact_supplemental_texts'] = array(
     '#type' => 'fieldset',
@@ -553,8 +540,8 @@ function mass_contact_admin_settings_body($form, $form_state) {
   );
 
   if ($token) {
-    // Display the user documentation of placeholders supported by this
-    // module, as a description on the last pattern
+    // Display the user documentation of placeholders supported by this module,
+    // as a description on the last pattern.
     $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens'] = array(
       '#type' => 'fieldset',
       '#title' => t('Replacement patterns'),
@@ -568,7 +555,6 @@ function mass_contact_admin_settings_body($form, $form_state) {
     );
   }
 
-  ////////////////////////////////////////////////////////////
   // HTML options.
   $form['mass_contact_html_settings'] = array(
     '#type' => 'fieldset',
@@ -591,7 +577,6 @@ function mass_contact_admin_settings_body($form, $form_state) {
     );
   }
 
-  ////////////////////////////////////////////////////////////
   // Attachment options.
   $form['mass_contact_attachment_settings'] = array(
     '#type' => 'fieldset',
@@ -609,7 +594,7 @@ function mass_contact_admin_settings_body($form, $form_state) {
       '#type' => 'textfield',
       '#title' => t('Attachment location'),
       '#default_value' => variable_get('mass_contact_attachment_location', 'mass_contact_attachments'),
-      '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment(s) so it can be viewed later. If you specify anything here, it will be a subdirectory of your Public file system path, which is set on !file_conf_page. If you do not specify anything here, all attachments will be saved in the directory specified in the Public file system path.', array('!file_conf_page' => l('File system configuration page', '/admin/config/media/file-system'))),
+      '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment(s) so it can be viewed later. If you specify anything here, it will be a subdirectory of your Public file system path, which is set on !file_conf_page. If you do not specify anything here, all attachments will be saved in the directory specified in the Public file system path.', array('!file_conf_page' => l(t('File system configuration page'), '/admin/config/media/file-system'))),
     );
   }
   else {
@@ -620,4 +605,4 @@ function mass_contact_admin_settings_body($form, $form_state) {
   }
 
   return system_settings_form($form);
-} // End of mass_contact_admin_settings_body().
+}
