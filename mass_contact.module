@@ -322,9 +322,11 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
  */
 function mass_contact_user_presave(&$edit, $account, $category) {
   // Remove any previously saved category opt out data.
-  foreach ($edit['data'] as $key => $value) {
-    if (substr($key, 0, 20) == 'mass_contact_optout_') {
-      unset($key);
+  if (!empty($edit['data'])) {
+    foreach ($edit['data'] as $key => $value) {
+      if (substr($key, 0, 20) == 'mass_contact_optout_') {
+        unset($key);
+      }
     }
   }
 
