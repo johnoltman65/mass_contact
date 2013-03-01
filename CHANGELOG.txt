@@ -1,3 +1,8 @@
+2013-02-28 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module:
+    * Check for empty data value before iterating on it.
+      http://drupal.org/node/1919818
+
 2013-02-12 Jason Flatt drupal@oadaeh.net
   * mass_contact.info, mass_contact.install, mass_contact.module,
     mass_contact.admin.inc, mass_contact.page.inc, mass_contact_role.inc,
