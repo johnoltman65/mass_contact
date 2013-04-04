@@ -1,3 +1,10 @@
+2013-03-29 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Make use of the $format variable where it was intended to be used.
+    * Remove the now unnecessary $node_message variable.
+    * Save the message body directly into params, rather than an intermediate
+      variable.
+
 2013-02-28 Jason Flatt drupal@oadaeh.net
   * mass_contact.module:
     * Check for empty data value before iterating on it.

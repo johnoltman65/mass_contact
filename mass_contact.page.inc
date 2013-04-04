@@ -411,8 +411,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   // Set the input filter format.
   $format = _mass_contact_compute_default_filter_format();
   if (user_access('mass contact override text format')) {
-    // Allow the form data to determine the message format if our user
-    // has the appropriate permissions.
+    // Allow the form data to determine the message format, if the user has the
+    // appropriate permissions.
     if (is_array($form_state['values']['message'])) {
       $format = $form_state['values']['message']['format'];
     }
@@ -422,7 +422,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   }
 
   // Process some parts of the message header (more will be processed later).
-  $params = _mass_contact_prepare_header($form_state['values']);
+  $params = _mass_contact_prepare_header($form_state['values'], $format);
 
   // Get the admin specified default sender's name.
   $from_name = variable_get('mass_contact_default_sender_name');
@@ -451,14 +451,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   }
 
   // Process the message body.
-  // Prepare the message body part(s).
-  $message = _mass_contact_prepare_bodies($form_state['values']);
-
-  // For the node copy, we want to handle attachments differently, so we'll
-  // save the message as it currently stands.
-  if (variable_get('mass_contact_nodecc_d', 1) || ($nodecc == 1)) {
-    $node_message = $message;
-  }
+  $params['body'] = _mass_contact_prepare_bodies($form_state['values'], $format);
 
   // If there are attachments, and the user is allowed, add them.
   if (user_access('mass contact include attachments')) {
@@ -471,10 +464,6 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       }
     }
   }
-
-  // Add the message to the main variable.
-  $params['body'] = $message;
-
 
   // Process the recipients (some more of the message header).
   // Get the IDs of the chosen categories.
@@ -644,7 +633,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
         // Archive the message as a node.
         if ($nodecc) {
-          _mass_contact_save_node($params, $node_message, $format, $from_address, $category, $to, !$send_error);
+          _mass_contact_save_node($params, $format, $from_address, $category, $to, !$send_error);
         }
       }
     }
@@ -761,10 +750,11 @@ function _mass_contact_compute_default_filter_format() {
  * @return array
  *   The prepared header.
  */
-function _mass_contact_prepare_header($form_values) {
+function _mass_contact_prepare_header($form_values, $format) {
   $params = array();
 
-  if (!empty($form_values['message']['format']) && $form_values['message']['format'] == 'plain_text') {
+//  if (!empty($form_values['message']['format']) && $form_values['message']['format'] == 'plain_text') {
+  if (!empty($format) && $format == 'plain_text') {
     $params['headers']['Content-Type'] = 'text/plain; charset=' . variable_get('mass_contact_character_set', 'UTF-8') . '; format=flowed';
   }
   elseif (module_exists('mimemail')) {
@@ -784,14 +774,16 @@ function _mass_contact_prepare_header($form_values) {
  *
  * @param array $form_values
  *   The values returned from the message sending form.
+ * @param string $format
+ *   The input text format the message was created with.
  *
  * @return array
  *   The prepared body, including any possible addons.
  */
-function _mass_contact_prepare_bodies($form_values) {
+function _mass_contact_prepare_bodies($form_values, $format) {
   $body = array();
 
-  if (!empty($form_values['message']['format']) && $form_values['message']['format'] == 'plain_text') {
+  if (!empty($format) && $format == 'plain_text') {
     // Start with the message prefix.
     $body[] = _mass_contact_prepare_message_addon('prefix', 'plain text');
 
@@ -814,7 +806,7 @@ function _mass_contact_prepare_bodies($form_values) {
 
     // Add in the actual message.
     if (is_array($form_values['message'])) {
-      $body[] = check_markup($form_values['message']['value'], $form_values['message']['format'], ($language) ? $language->language : LANGUAGE_NONE);
+      $body[] = check_markup($form_values['message']['value'], $format, ($language) ? $language->language : LANGUAGE_NONE);
     }
     else {
       $body[] = check_markup($form_values['message'], $form_values['body_filter_format']->format, ($language) ? $language->language : LANGUAGE_NONE);
@@ -1201,7 +1193,7 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
  * @param boolean $result
  *   The result of sending the message.
  */
-function _mass_contact_save_node($params, $body, $format, $from, $category, $recipients, $result) {
+function _mass_contact_save_node($params, $format, $from, $category, $recipients, $result) {
   // Create a new node object.
   $node = new stdClass();
 
@@ -1223,7 +1215,7 @@ function _mass_contact_save_node($params, $body, $format, $from, $category, $rec
   $node->title = $params['subject'];
 
   // Convert the body from an array to a string.
-  $body = implode("\n\n", $body);
+  $body = implode("\n\n", $params['body']);
   // Set the body of the node to the body of the message.
   $node->body[$node->language][0]['value'] = $body;
   // Set the teaser or summary of the body.
