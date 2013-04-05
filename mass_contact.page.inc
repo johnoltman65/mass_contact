@@ -725,8 +725,9 @@ function _mass_contact_compute_default_filter_format() {
     $filter_formats = filter_formats($user);
     // Cycle through the list of possible text formats.
     foreach ($filter_formats as $filter_format) {
-      // If the current filter format matches the admin specified one...
-      if ($filter_format->format == $specified_filter_format['format'] || $filter_format->format == $specified_filter_format) {
+      // If the current filter format matches the admin specified one, use it.
+      if ((!empty($specified_filter_format['format']) && $filter_format->format == $specified_filter_format['format']) ||
+        (!empty($specified_filter_format) && $filter_format->format == $specified_filter_format)) {
         return $filter_format->format;
       }
     }

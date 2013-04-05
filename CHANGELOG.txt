@@ -1,3 +1,8 @@
+2013-04-05 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Check for empty variables before using them. Fix for
+      http://drupal.org/node/1962410.
+
 2013-03-29 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Make use of the $format variable where it was intended to be used.
