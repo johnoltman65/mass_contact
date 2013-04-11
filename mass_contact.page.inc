@@ -443,8 +443,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   }
 
   // Format the sender name and email address.
-  if (variable_get('mass_contact_include_from_name', 1) == 1 && !empty($from_name)) {
-    $from_address = $from_name . ' <' . $from_email . '>';
+  if (variable_get('mass_contact_include_from_name', 0) == 1 && !empty($from_name)) {
+    $from_address = '"' . $from_name . '" <' . $from_email . '>';
   }
   else {
     $from_address = $from_email;
@@ -561,9 +561,9 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           $current_recipients = array();
 
           foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
-            if (variable_get('mass_contact_include_to_name', 1) == 1) {
-              $current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
-              $partial_list[] = $recipient_name . " <" . $recipient_address . ">";
+            if (variable_get('mass_contact_include_to_name', 0) == 1) {
+              $current_recipients[] = '"' . $recipient_name . '" <' . $recipient_address . '>';
+              $partial_list[] = '"' . $recipient_name . '" <' . $recipient_address . '>';
             }
             else {
               $current_recipients[] = $recipient_address;
@@ -611,8 +611,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
           $current_recipients = array();
 
           foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
-            if (variable_get('mass_contact_include_to_name', 1) == 1) {
-              $current_recipients[] = $recipient_name . " <" . $recipient_address . ">";
+            if (variable_get('mass_contact_include_to_name', 0) == 1) {
+              $current_recipients[] = '"' . $recipient_name . '" <' . $recipient_address . '>';
             }
             else {
               $current_recipients[] = $recipient_address;

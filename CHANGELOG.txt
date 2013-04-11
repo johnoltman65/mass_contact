@@ -1,3 +1,9 @@
+2013-04-11 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc:
+    * Potential fixes for http://drupal.org/node/1908260:
+      Change the email addresses to have quotes around the name.
+      Defaulted the option to include names to no (0).
+
 2013-04-05 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
     * Check for empty variables before using them. Fix for
