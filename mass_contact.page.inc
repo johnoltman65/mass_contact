@@ -492,7 +492,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       // Set the recipients.
       'recipients' => _mass_contact_create_recipient_list($category, $form_state['values']['optout']),
       // Set the subject.
-      'subject' => t('[@category] @subject', array('@category' => $category->category, '@subject' => $form_state['values']['subject'])),
+      'subject' => t('[@category] !subject', array('@category' => $category->category, '!subject' => filter_xss($form_state['values']['subject']))),
     );
   }
 
@@ -537,7 +537,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
       }
 
       // Add the subject.
-      $new_recipient_list['All categories combined']['subject'] = t('@subject', array('@subject' => $form_state['values']['subject']));
+      $new_recipient_list['All categories combined']['subject'] = filter_xss($form_state['values']['subject'], array());
 
       // Set the original list to the new combined, unduplicated list.
       $new_recipient_list['All categories combined']['recipients'] = array_unique($new_recipient_list['All categories combined']['recipients']);

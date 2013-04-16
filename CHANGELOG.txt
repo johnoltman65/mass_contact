@@ -2,6 +2,9 @@
   * mass_contact.module:
     * Allow for opting in and out of all categories, per stomachfoot on
       http://drupal.org/node/1969754.
+  * mass_contact.page.inc:
+    * Fix how the subject is sanitized, so it does not become unreadable, per
+      Shadowdare on http://drupal.org/node/1971386.
 
 2013-04-11 Jason Flatt drupal@oadaeh.net
   * mass_contact.page.inc:
