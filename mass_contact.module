@@ -324,7 +324,7 @@ function mass_contact_user_presave(&$edit, $account, $category) {
   // Remove any previously saved category opt out data.
   if (!empty($edit['data'])) {
     foreach ($edit['data'] as $key => $value) {
-      if (substr($key, 0, 20) == 'mass_contact_optout_') {
+      if (substr($key, 0, 19) == 'mass_contact_optout') {
         unset($key);
       }
     }
@@ -348,6 +348,19 @@ function mass_contact_user_presave(&$edit, $account, $category) {
       $edit['data']['mass_contact_optout_' . $category->cid] = $edit['mass_contact_optout_' . $category->cid];
     }
   }
+
+  // Do the same for the global setting to opt out.
+  // If the item is either 0 or 1, then save its setting. This will allow
+  // users to opt back in, after opting out.
+  if (isset($edit['mass_contact_optout']) && $edit['mass_contact_optout'] == 0) {
+    // Set the new values, which will unset any that were opted back in.
+    unset($edit['data']['mass_contact_optout']);
+  }
+  elseif (isset($edit['mass_contact_optout']) && $edit['mass_contact_optout'] == 1) {
+    // Set the new values, which will unset any that were opted back in.
+    $edit['data']['mass_contact_optout'] = $edit['mass_contact_optout'];
+  }
+
 }
 
 
