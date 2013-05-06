@@ -1,3 +1,7 @@
+2013-05-06 Jason Flatt drupal@oadaeh.net
+  * mass_contact.page.inc: Fix incorrect variable usage in three places, per
+    denisgre on http://drupal.org/node/1987434.
+
 2013-04-16 Jason Flatt drupal@oadaeh.net
   * mass_contact.module:
     * Allow for opting in and out of all categories, per stomachfoot on

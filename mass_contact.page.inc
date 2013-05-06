@@ -223,7 +223,7 @@ function mass_contact_mail_page($form, $form_state) {
         $form['body']['message'] = array(
           '#type' => 'text_format',
           '#title' => t('Message'),
-          '#format' => !empty($default_filter_format->format) ? $default_filter_format->format : NULL,
+          '#format' => !empty($default_filter_format) ? $default_filter_format : NULL,
           '#rows' => 12,
           '#required' => TRUE,
         );
@@ -246,7 +246,7 @@ function mass_contact_mail_page($form, $form_state) {
         // Display text format information to the user.
         $form['body_filter_format_info'] = array(
           '#type' => 'item',
-          '#description' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent using the %filter text format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('%filter' => $default_filter_format->name, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
+          '#description' => '<p>' . (variable_get('mass_contact_html_d', 1) ? t('The message will be sent using the %filter text format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('%filter' => $default_filter_format, '@formats_descriptions' => url('filter/tips'))) : t('The message will be sent as plain text.')) . '</p>',
         );
       }
 
@@ -804,13 +804,12 @@ function _mass_contact_prepare_bodies($form_values, $format) {
     $body[] = _mass_contact_prepare_message_addon('prefix', 'html');
 
     global $language;
-
     // Add in the actual message.
     if (is_array($form_values['message'])) {
       $body[] = check_markup($form_values['message']['value'], $format, ($language) ? $language->language : LANGUAGE_NONE);
     }
     else {
-      $body[] = check_markup($form_values['message'], $form_values['body_filter_format']->format, ($language) ? $language->language : LANGUAGE_NONE);
+      $body[] = check_markup($form_values['message'], $format, ($language) ? $language->language : LANGUAGE_NONE);
     }
 
     // End with the message suffix.
