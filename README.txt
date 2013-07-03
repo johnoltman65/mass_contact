@@ -53,6 +53,16 @@ is enabled, the email messages may be sent as HTML and may include one or more
 binary file attachments (if permitted by admin).
 
 
+UPGRADING FROM 6.x:
+When upgradign from the Drupal 6 version, the path for the attachment directory
+should be verified, and most likely changed. Check the Attachment location
+setting on the Message body settings page, here:
+admin/config/system/mass_contact/settings/body. If it is the default of
+site/default/files/mass_contact_attachments, change it to just
+mass_contact_attachments. In other words, remove the site/default/files/ part of
+the path, since Drupal handles that part now.
+
+
 MORE INFORMATION:
 This module works by sending a single email to your mail server with the
 recipients' email addresses in either the 'To:' or 'Bcc:' field. The mail
@@ -128,7 +138,7 @@ As an example, I've moved the module's configuration settings to where most
 people expect to find them: the Configuration page. I also now have the main
 menu item enabled by default.
 
-I'm also changing the way I develop modules, such that they willinteract with
+I'm also changing the way I develop modules, such that they will interact with
 other modules more and take advantage thier features. In the past, I chose to
 do everything myself, rather than depend on others for bits of functionality.
 Instead, I'm going to try creating more modular code and playing nice with
@@ -176,3 +186,15 @@ TROUBLESHOOTING:
    installation (like HTML Mail, Mime Mail, PHPMailer, SMTP Authentication
    Support, etc.), be sure to check the issue queues for those modules for
    solutions, as well.
+* When you upload a file, you get the following error in red:
+
+    File upload error. Could not move uploaded file.
+    There was an error uploading the "<name of file here>" attachment.
+
+  This is caused by the attachment directory being incorrect. Most likely, due
+  to an upgrade from Drupal 6.  Check the Attachment location setting on the
+  Message body settings page, here:
+  admin/config/system/mass_contact/settings/body. If it is the default of
+  site/default/files/mass_contact_attachments, change it to just
+  mass_contact_attachments. In other words, remove the site/default/files/ part
+  of the path, since Drupal handles that part now.
