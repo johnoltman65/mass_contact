@@ -96,16 +96,7 @@ function mass_contact_install() {
 
   // Add the body field to the node type.
   node_add_body_field($mass_contact_node_type, $t('Message body'));
-  /*
-  // Set the published state to unpublished by default.
-  $mass_contact_node_type->status = 0;
-  // Set the promoted state to demoted by default.
-  $mass_contact_node_type->promote = 0;
-  // Set the sticky state to unsticky by default.
-  $mass_contact_node_type->sticky = 0;
-  // Set the comment state to no comments allowed by default.
-  $mass_contact_node_type->comment = 0;
-  */
+
   // Save the node type.
   node_type_save($mass_contact_node_type);
 
@@ -320,6 +311,26 @@ function mass_contact_uninstall() {
   field_purge_batch(1000);
 }
 
+
+/**
+ * Update the Attachment location setting, when upgrading from 6.x.
+ */
+function mass_contact_update_7000(&$sandbox) {
+  $attachment_location = variable_get('mass_contact_attachment_location');
+  // If the setting was set to the 6.x default, update it to the 7.x default.
+  if (!empty($attachment_location) && $attachment_location == 'sites/default/files/mass_contact_attachments') {
+    variable_set('mass_contact_attachment_location', 'mass_contact_attachments');
+  }
+  // Otherwise, leave it alone, but print a warning.
+  else {
+    drupal_set_message('The path to the Mass Contact attachments was not set to
+      the default setting. Since Drupal 7 changed the way it handles paths from
+      Drupal 6, please check the <a href="' .
+      url('admin/config/system/mass_contact/settings/body') . '">Attachment
+      location</a> setting and change it to something that will work with Drupal
+      7.', 'warning');
+  }
+}
 
 /**
  * Remove variables that were converted into permissions.

@@ -1,10 +1,15 @@
 2013-07-02 Jason Flatt drupal@oadaeh.net
-  * README.txt: Added information about the Attachment location for when
-    upgrading from 6.x, per kruser on https://drupal.org/node/1863640.
+  * README.txt:
+    * Added information about the Attachment location for when upgrading from
+      6.x, per kruser on https://drupal.org/node/1863640.
+  * mass_contact.install:
+    * Added a check and conversion of the Attachment location setting for when
+      upgrading from 6.x
 
 2013-05-06 Jason Flatt drupal@oadaeh.net
-  * mass_contact.page.inc: Fix incorrect variable usage in three places, per
-    denisgre on http://drupal.org/node/1987434.
+  * mass_contact.page.inc:
+    * Fix incorrect variable usage in three places, per denisgre on
+      http://drupal.org/node/1987434.
 
 2013-04-16 Jason Flatt drupal@oadaeh.net
   * mass_contact.module:
