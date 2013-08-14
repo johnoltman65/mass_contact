@@ -299,14 +299,27 @@ function mass_contact_admin_settings_misc($form, $form_state) {
     '#description' => t('Information to show on the <a href="@form">Mass Contact page</a>.', array('@form' => url('mass_contact'))),
   );
 
+  // Rate limiting options.
+  $form['mass_contact_rate_limiting_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Rate limiting options'),
+    '#description' => t('By combining the two options below, messages sent through this module will be queued to be sent drung cron runs. Keep in mind that if you set your number of recipients to be the same as your limit, messages from this or other modules may be blocked by your hosting provider.'),
+  );
   // The maximum number of users to send to at one time.
-  $form['mass_contact_recipient_limit'] = array(
+  $form['mass_contact_rate_limiting_options']['mass_contact_recipient_limit'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum number of recipients before splitting up the email'),
     '#size' => 10,
     '#default_value' => variable_get('mass_contact_recipient_limit', 0),
-    '#description' => t('This is a workaround for server-side limits on the number of recipients in a single mail message. Once this limit is reached, the recipient list will be broken up and multiple copies of the message will be sent out until all recipients receive the mail. Setting this to "0" will turn off this feature.'),
+    '#description' => t('This is a workaround for server-side limits on the number of recipients in a single mail message. Once this limit is reached, the recipient list will be broken up and multiple copies of the message will be sent out until all recipients receive the mail. Setting this to 0 (zero) will turn this feature off.'),
     '#required' => TRUE,
+  );
+  // The maximum number of users to send to at one time.
+  $form['mass_contact_rate_limiting_options']['mass_contact_send_with_cron'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Send messages with Cron'),
+    '#default_value' => variable_get('mass_contact_send_with_cron', 0),
+    '#description' => t('This is another workaround for server-side limits. Check this box to delay sending until the next Cron run(s).'),
   );
 
   // Opt out options.
