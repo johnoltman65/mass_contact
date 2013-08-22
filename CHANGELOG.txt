@@ -1,3 +1,9 @@
+2013-08-21 Jason Flatt drupal@oadaeh.net
+  * mass_contact.admin.inc, mass_contact.page.inc:
+    * Give the admin the choice of using either check boxes or select lists when
+      displaying the category list to the message sender. Fixes
+      https://drupal.org/node/1061120.
+
 2013-08-13 Jason Flatt drupal@oadaeh.net
   * mass_contact.module, mass_contact.admin.inc, mass_contact.page.inc:
     * Add a mechanism for queuing the messages to be sent during Cron runs.

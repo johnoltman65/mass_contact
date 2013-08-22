@@ -129,8 +129,9 @@ function mass_contact_mail_page($form, $form_state) {
     // Add the field for specifying the category(ies).
     if ((count($categories) > 1) || !isset($default_category)) {
       // Display a choice when one is needed.
+      $field_type = variable_get('mass_contact_category_display', 'select');
       $form['cid'] = array(
-        '#type' => 'select',
+        '#type' => $field_type,
         '#title' => t('Category'),
         '#default_value' => $default_category,
         '#options' => $categories,
