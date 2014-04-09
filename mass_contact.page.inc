@@ -455,13 +455,15 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   $params['body'] = _mass_contact_prepare_bodies($form_state['values'], $format);
 
   // If there are attachments, and the user is allowed, add them.
-  if (user_access('mass contact include attachments')) {
-    if (module_exists('mimemail')) {
-      for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
-        if (!empty($_FILES['files']['size']['attachment_' . $i])) {
-          $params['attachments'] = _mass_contact_process_mime_mail_attachments($nodecc);
-          break;
+  if (user_access('mass contact include attachments') && module_exists('mimemail')) {
+    for ($i = 1; $i <= variable_get('mass_contact_number_of_attachments', '3'); $i++) {
+      if (!empty($_FILES['files']['size']['attachment_' . $i])) {
+        $files_array = _mass_contact_process_mime_mail_attachments($nodecc);
+        $params['attachments'] = $files_array['files'];
+        if (!empty($files_array['node_files'])) {
+          $params['node_attachments'] = $files_array['node_files'];
         }
+        break;
       }
     }
   }
@@ -584,7 +586,8 @@ function mass_contact_mail_page_submit($form, &$form_state) {
               $to = _mass_contact_finalize_headers($bcc, implode(', ', $partial_list), $params, $from_address, $recipient_list['subject']);
 
               if (empty($send_with_cron)) {
-                // Send the message. Save the inverse of the result for tallying.
+                // Send the message. Save the inverse of the result for
+                // tallying.
                 $send_error += !(_mass_contact_send_message('mail_page_' . $batch, $to, $params, $from_address, '[Success] Sent batch #' . $batch . '.'));
               }
               else {
@@ -1061,11 +1064,19 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
           }
           else {
             // Add the file object to the files collection array.
-            $files[] = $file;
+            $node_files[] = $file;
+
+            // Save the file information for the message.
+            $files[] = array(
+              'filepath' => drupal_realpath($file->uri),
+              'uri' => drupal_realpath($file->uri),
+              'filename' => $_FILES['files']['name']['attachment_' . $i],
+              'filemime' => $_FILES['files']['type']['attachment_' . $i],
+            );
           }
         }
       }
-      // Save the files in a temporary location.
+      // Save the file information for the message.
       else {
         $files[] = array(
           'filepath' => $_FILES['files']['tmp_name']['attachment_' . $i],
@@ -1077,7 +1088,11 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
     }
   }
 
-  return $files;
+  $files_array['files'] = $files;
+  if (!empty($node_files)) {
+    $files_array['node_files'] = $node_files;
+  }
+  return $files_array;
 }
 
 
@@ -1292,8 +1307,8 @@ function _mass_contact_save_node($params, $format, $from, $category, $recipients
   $node->field_mass_contact_result[$node->language][0]['format'] = 'plain_text';
 
   // If any attachments exist, add them.
-  if (!empty($params['attachments'])) {
-    foreach ($params['attachments'] as $attachment) {
+  if (!empty($params['node_attachments'])) {
+    foreach ($params['node_attachments'] as $attachment) {
       // Attach the attachment to the node.
       $node->field_mass_contact_attachments[$node->language][] = array(
         'fid' => $attachment->fid,
