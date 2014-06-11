@@ -53,6 +53,20 @@ By default, the email messages are sent as plain text. If the MIME Mail module
 is enabled, the email messages may be sent as HTML and may include one or more
 binary file attachments (if permitted by admin).
 
+To use taxonomy for categories, follow these steps:
+  1) Navigate to Administration >> Structure >> Taxonomy
+     (admin/structure/taxonomy) and create one or more vocabularies and terms
+     to be used by Mass Contact.
+  2) Navigate to Administration >> Configuration >> People >> Account settings
+     (admin/config/people/accounts/fields) to add the vocabulary(ies) as one or
+     more fields to the user account (one field per vocabulary).
+  3) Navigate to Administration >> Configuration >> System >> Mass Contact
+     (admin/config/system/mass_contact) to add your Mass Contact categories
+     using those terms.
+  4) Set the various permisssions as desired for both Taxonomy and Mass
+     Contact.
+  5) Modify the user accounts, as desired, to have the various terms selected.
+
 
 UPGRADING FROM 6.x:
 When upgradign from the Drupal 6 version, the path for the attachment directory

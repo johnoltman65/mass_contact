@@ -1,3 +1,7 @@
+2014-06-11 Jason Flatt drupal@oadaeh.net
+  * README.txt:
+    * Added documentation on how to add Taxonomy categories.
+
 2013-08-21 Jason Flatt drupal@oadaeh.net
   * mass_contact.admin.inc, mass_contact.page.inc:
     * Give the admin the choice of using either check boxes or select lists when
