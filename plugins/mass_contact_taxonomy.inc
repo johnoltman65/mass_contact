@@ -290,7 +290,7 @@ function mass_contact_taxonomy_user_edit($user) {
     foreach ($recipients['mass_contact_taxonomy'] as $term_id) {
       // If the category's term is one the user has selected, show the category.
       if (in_array($term_id, $users_terms)) {
-        $included_categories[$category->cid] = $category->category;
+        $included_categories[$category->cid] = check_plain($category->category);
       }
     }
   }

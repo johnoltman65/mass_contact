@@ -47,7 +47,7 @@ function mass_contact_mail_page($form, $form_state) {
     ->execute();
   foreach ($result as $category) {
     if (user_access('mass contact send to users in the ' . $category->category . ' category')) {
-      $categories[$category->cid] = $category->category;
+      $categories[$category->cid] = check_plain($category->category);
 
       if ($category->selected) {
         $default_category[] = $category->cid;
@@ -148,7 +148,7 @@ function mass_contact_mail_page($form, $form_state) {
       $form['cid-info'] = array(
         '#type' => 'item',
         '#title' => t('Category'),
-        '#markup' => '<p>This message will be sent to all users in the ' . $default_category_name . ' category.</p>',
+        '#markup' => '<p>This message will be sent to all users in the ' . check_plain($default_category_name) . ' category.</p>',
       );
     }
 

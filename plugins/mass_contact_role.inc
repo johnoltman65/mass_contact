@@ -236,7 +236,7 @@ function mass_contact_role_user_edit($user) {
     foreach ($recipients['mass_contact_role'] as $role_id) {
       // If the category's role is one the user is in, include the category.
       if (in_array($role_id, $users_roles)) {
-        $included_categories[$category->cid] = $category->category;
+        $included_categories[$category->cid] = check_plain($category->category);
       }
     }
   }
