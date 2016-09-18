@@ -76,8 +76,8 @@ function mass_contact_help($path, $arg) {
       ) . '</p>';
       break;
 
-    return $output;
   }
+  return $output;
 }
 
 

@@ -1,3 +1,13 @@
+2016-09-18 Jason Flatt drupal@oadaeh.net
+  * mass_contact.module: Fix dispalying of help text, per Arkener on
+    http://drupal.org/node/2555323
+
+2015-06-24 Jason Flatt drupal@oadaeh.net
+  * mass_contact.admin.inc, mass_contact.page.inc, mass_contact_role.inc,
+    mass_contact_taxonomy.inc: Run category names through check_plain() before
+    displaying, per daniel_j.
+    The related security advisory is here: http://drupal.org/node/2561951
+
 2014-06-11 Jason Flatt drupal@oadaeh.net
   * README.txt:
     * Added documentation on how to add Taxonomy categories.
