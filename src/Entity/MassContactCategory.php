@@ -18,7 +18,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *       "delete" = "Drupal\mass_contact\Form\CategoryDeleteForm"
  *     }
  *   },
- *   config_prefix = "mass_contact_category",
+ *   config_prefix = "category",
  *   admin_permission = "mass contact administer",
  *   entity_keys = {
  *     "id" = "id",

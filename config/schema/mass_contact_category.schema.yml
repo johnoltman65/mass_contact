@@ -1,4 +1,4 @@
-mass_contact.mass_contact_category.*:
+mass_contact.category.*:
   type: config_entity
   label: 'Mass contact category config'
   mapping:

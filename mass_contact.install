@@ -12,6 +12,7 @@
  * Implements hook_install().
  */
 function mass_contact_install() {
+  return;
   // Use get_t() to get the name of the localization function for translation
   // during install. For use when t() is not available.
   $t = 't';
@@ -243,6 +244,7 @@ function _mass_contact_field_instances() {
  * Implements hook_uninstall().
  */
 function mass_contact_uninstall() {
+  return;
   // Delete all of the variables defined by this module.
   // @FIXME
 // db_delete('variable')
