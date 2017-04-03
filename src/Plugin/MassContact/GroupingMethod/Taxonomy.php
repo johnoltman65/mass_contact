@@ -102,7 +102,7 @@ function mass_contact_taxonomy_categories($recipients) {
   if (empty($terms)) {
     return;
   }
-
+``
   $term_names = array();
   foreach ($terms as $term) {
     // For each term object, add the name to an array.

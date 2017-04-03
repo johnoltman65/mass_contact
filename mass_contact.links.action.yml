@@ -1,0 +1,6 @@
+entity.mass_contact_category.add_form:
+  route_name: 'entity.mass_contact_category.add_form'
+  title: 'Add Mass contact category'
+  appears_on:
+    - entity.mass_contact_category.collection
+

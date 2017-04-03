@@ -1,0 +1,31 @@
+mass_contact.mass_contact_category.*:
+  type: config_entity
+  label: 'Mass contact category config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+      label: 'UUID'
+    recipients:
+      type: sequence
+      label: 'Recipient groupings'
+      sequence:
+        type: mapping
+        mapping:
+          grouping:
+            type: string
+            label: 'Grouping plugin ID'
+          categories:
+            type: sequence
+            label: 'Categories'
+            sequence:
+              type: string
+              label: 'Category ID'
+    selected:
+      type: boolean
+      label: 'Selected by default'
