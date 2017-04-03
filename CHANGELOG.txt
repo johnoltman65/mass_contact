@@ -586,7 +586,7 @@
 
 2008-04-18 Jason Flatt drupal@oadaeh.net
   * mass_contact.module: Changed variable name from mass_contact_HTML_d to
-    mass_contact_html_d.
+    html_d.
     Changed how an HTML and plain text message are formed, taking into
     account the Mime Mail module.
     Added information about the formatting of HTML messages as descriptions

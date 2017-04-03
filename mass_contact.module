@@ -285,7 +285,7 @@ function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_i
     $account = $form['#user'];
 
     // The admin allows a blanket opt out of all mass mailings.
-    if (\Drupal::config('mass_contact.settings')->get('mass_contact_optout_d') == 1) {
+    if (\Drupal::config('mass_contact.settings')->get('optout_d') == 1) {
       $form['mass_contact'] = array(
         '#type' => 'fieldset',
         '#title' => t('Mass contact settings'),
@@ -305,7 +305,7 @@ $form['mass_contact']['mass_contact_optout'] = array(
     }
     // The admin allows a selective opt out of individual categories of mass
     // mailings.
-    elseif (\Drupal::config('mass_contact.settings')->get('mass_contact_optout_d') == 2) {
+    elseif (\Drupal::config('mass_contact.settings')->get('optout_d') == 2) {
       // @FIXME
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
@@ -505,8 +505,8 @@ function _mass_contact_send_message($message_key, $to, &$params, $from_email, $s
   $success = drupal_mail('mass_contact', $message_key, $to, language_default(), $params, $from_email);
 
   // Capture the rate limiting information.
-  $recipient_limit = \Drupal::config('mass_contact.settings')->get('mass_contact_recipient_limit');
-  $wait_time = \Drupal::config('mass_contact.settings')->get('mass_contact_wait_time');
+  $recipient_limit = \Drupal::config('mass_contact.settings')->get('recipient_limit');
+  $wait_time = \Drupal::config('mass_contact.settings')->get('wait_time');
 
   if ($success['result']) {
     if (empty($recipient_limit) && empty($wait_time)) {

@@ -2,39 +2,42 @@ mass_contact.settings:
   type: mapping
   label: Settings
   mapping:
-    mass_contact_recipient_limit:
-      type: integer
-    mass_contact_send_with_cron:
-      type: integer
-    mass_contact_optout_d:
-      type: integer
-    mass_contact_nodecc_d:
-      type: integer
-    mass_contact_hourly_threshold:
-      type: integer
-    mass_contact_character_set:
+    form_information:
       type: string
-    mass_contact_default_sender_name:
-      type: string
-    mass_contact_default_sender_email:
-      type: string
-    mass_contact_category_display:
-      type: string
-    mass_contact_include_from_name:
+      label: 'Additional form help text'
+    recipient_limit:
       type: integer
-    mass_contact_include_to_name:
+    send_with_cron:
+      type: bool
+    optout_d:
       type: integer
-    mass_contact_bcc_d:
+    nodecc_d:
       type: integer
-    mass_contact_category_override:
+    hourly_threshold:
       type: integer
-    mass_contact_number_of_attachments:
+    character_set:
       type: string
-    mass_contact_attachment_location:
+    default_sender_name:
       type: string
-    mass_contact_html_d:
+    default_sender_email:
+      type: string
+    category_display:
+      type: string
+    include_from_name:
       type: integer
-    mass_contact_message_suffix:
+    include_to_name:
+      type: integer
+    bcc_d:
+      type: integer
+    category_override:
+      type: integer
+    number_of_attachments:
       type: string
-    mass_contact_wait_time:
+    attachment_location:
+      type: string
+    html_d:
+      type: integer
+    message_suffix:
+      type: string
+    wait_time:
       type: integer

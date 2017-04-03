@@ -1,0 +1,29 @@
+mass_contact.admin_overview:
+  path: '/admin/config/mass-contact'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Mass contact'
+  requirements:
+    _permission: 'mass contact administer'
+
+mass_contact.settings:
+  path: '/admin/config/mass-contact/settings'
+  defaults:
+    _title: 'Mass Contact settings'
+    _form: '\Drupal\mass_contact\Form\AdminSettingsForm'
+  requirements:
+    _permission: 'mass contact administer'
+
+entity.mass_contact_category.collection:
+  path: '/admin/config/mass-contact/category'
+  defaults:
+    _entity_list: 'mass_contact_category'
+    _title: 'Categories'
+  requirements:
+    _permission: 'mass contact administer'
+
+mass_contact:
+  path: '/mass-contact'
+  defaults:
+    _controller: '\Drupal\mass_contact\Controller\MassContact'
+    

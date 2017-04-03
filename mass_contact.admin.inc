@@ -329,83 +329,6 @@ function mass_contact_admin_delete_submit($form, &$form_state) {
  *   An associative array that defines the form to be built.
  */
 function mass_contact_admin_settings_misc($form, $form_state) {
-  // Instructional text.
-  // @FIXME
-// url() expects a route name or an external URI.
-// $form['mass_contact_form_information'] = array(
-//     '#type' => 'textarea',
-//     '#title' => t('Additional information for Mass Contact form'),
-//     '#default_value' => variable_get('mass_contact_form_information', t('Send email messages using the following form.')),
-//     '#description' => t('Information to show on the <a href="@form">Mass Contact page</a>.', array('@form' => url('mass_contact'))),
-//   );
-
-
-  // Rate limiting options.
-  $form['mass_contact_rate_limiting_options'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Rate limiting options'),
-    '#description' => t('By combining the two options below, messages sent through this module will be queued to be sent drung cron runs. Keep in mind that if you set your number of recipients to be the same as your limit, messages from this or other modules may be blocked by your hosting provider.'),
-  );
-  // The maximum number of users to send to at one time.
-  $form['mass_contact_rate_limiting_options']['mass_contact_recipient_limit'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Maximum number of recipients before splitting up the email'),
-    '#size' => 10,
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_recipient_limit'),
-    '#description' => t('This is a workaround for server-side limits on the number of recipients in a single mail message. Once this limit is reached, the recipient list will be broken up and multiple copies of the message will be sent out until all recipients receive the mail. Setting this to 0 (zero) will turn this feature off.'),
-    '#required' => TRUE,
-  );
-  // The maximum number of users to send to at one time.
-  $form['mass_contact_rate_limiting_options']['mass_contact_send_with_cron'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Send messages with Cron'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_send_with_cron'),
-    '#description' => t('This is another workaround for server-side limits. Check this box to delay sending until the next Cron run(s).'),
-  );
-
-  // Opt out options.
-  $form['mass_contact_optout_options'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Opt-out options'),
-  );
-  $form['mass_contact_optout_options']['mass_contact_optout_d'] = array(
-    '#type' => 'radios',
-    '#title' => t('Allow users to opt-out of mass email messages'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_optout_d'),
-    '#options' => array(
-      0 => 'No',
-      1 => 'Yes',
-      2 => 'Selected categories',
-    ),
-    '#description' => t("Allow users to opt-out of receiving mass email messages. If 'No' is chosen, then the site's users will not be able to opt-out of receiving mass email messages. If 'Yes' is chosen, then the site's users will be able to opt-out of receiving mass email messages, and they will not receive any from any category. If 'Selected categories' is chosen, then the site's users will be able to opt-out of receiving mass email messages from which ever categories they choose."),
-  );
-
-  // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$form['mass_contact_optout_options']['mass_contact_optout_message'] = array(
-    '#type' => 'textarea',
-    '#title' => t('The message to display to users when giving them the option to opt out'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_optout_message'),
-    '#description' => t('This is the message users will see in thier account settings page when they are presented with a list of categories to opt out of.'),
-  );
-
-  // Node copy options.
-  $form['mass_contact_nodecc_d'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Archive messages by saving a copy as a node'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_nodecc_d'),
-  );
-
-  // Flood control options.
-  $form['mass_contact_hourly_threshold'] = array(
-    '#type' => 'textfield',
-    '#size' => 10,
-    '#title' => t('Hourly threshold'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_hourly_threshold'),
-    '#description' => t('The maximum number of Mass Contact form submissions a user can perform per hour.'),
-  );
 
   return system_settings_form($form);
 }
@@ -422,10 +345,10 @@ $form['mass_contact_optout_options']['mass_contact_optout_message'] = array(
  */
 function mass_contact_admin_settings_header($form, $form_state) {
   // The default character set.
-  $form['mass_contact_character_set'] = array(
+  $form['character_set'] = array(
     '#type' => 'textfield',
     '#title' => t('Character set'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_character_set'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('character_set'),
     '#description' => t('You may specify an alternate character set to use when sending emails. If left blank, the default of UTF-8 will be used. If you are unsure of what to put here, then leave it blank. Caution: setting this may not get you the results you desire. Other modules may come along and change that value after it has been set by this module.'),
   );
 
@@ -435,28 +358,28 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#title' => t('Default sender information'),
     '#description' => t('If anything is specified in here, it is used in place of the "Your name" and "Your email address" fields when sending the mass email. Otherwise, the sender\'s name and email address will be the default values. You must fill in both values, if you want to specify a default.'),
   );
-  $form['mass_contact_default_sender']['mass_contact_default_sender_name'] = array(
+  $form['mass_contact_default_sender']['default_sender_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Default sender name'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_default_sender_name'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('default_sender_name'),
     '#size' => 60,
     '#maxlength' => 128,
     '#description' => t('The optional user name to send email as. Replaces the "Your name" value when sending mass emails.'),
   );
-  $form['mass_contact_default_sender']['mass_contact_default_sender_email'] = array(
+  $form['mass_contact_default_sender']['default_sender_email'] = array(
     '#type' => 'textfield',
     '#title' => t('Default sender email address'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_default_sender_email'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('default_sender_email'),
     '#size' => 60,
     '#maxlength' => 128,
     '#description' => t('The optional user email address to send email as. Replaces the "Your email address" value when sending mass emails.'),
   );
 
   // Category options.
-  $form['mass_contact_category_display'] = array(
+  $form['category_display'] = array(
     '#type' => 'radios',
     '#title' => t('Field to use to display the categories'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_category_display'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('category_display'),
     '#options' => array(
       'select' => 'Select list',
       'checkboxes' => 'Check boxes',
@@ -470,30 +393,30 @@ function mass_contact_admin_settings_header($form, $form_state) {
     '#title' => t('Include names with email addresses'),
     '#description' => t("Checking either of the boxes below will include the name along with the email address, in the form of '%address'. If you have problems with sending mail, especially when your site is on a Windows server, try unchecking both checkboxes.", array('%address' => 'User name <email.address@example.com>')),
   );
-  $form['mass_contact_include_name']['mass_contact_include_from_name'] = array(
+  $form['mass_contact_include_name']['include_from_name'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include the name for the sender'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_include_from_name'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('include_from_name'),
   );
-  $form['mass_contact_include_name']['mass_contact_include_to_name'] = array(
+  $form['mass_contact_include_name']['include_to_name'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include the names for the recipients'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_include_to_name'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('include_to_name'),
     '#description' => t("The name used for the recipients will be their site login ID."),
   );
 
   // BCC options.
-  $form['mass_contact_bcc_d'] = array(
+  $form['bcc_d'] = array(
     '#type' => 'checkbox',
     '#title' => t('Send as BCC (hide recipients) by default'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_bcc_d'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('bcc_d'),
   );
 
   // More category options.
-  $form['mass_contact_category_override'] = array(
+  $form['category_override'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include category in subject line'),
-    '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_category_override'),
+    '#default_value' => \Drupal::config('mass_contact.settings')->get('category_override'),
     '#description' => t("If you choose this option, the category name will be printed in square brackets preceeding the message sender's subject.
                         If the message sender has multiple categories selected with this option choosen, each category will be processed separately.
                         If you do not choose this option and the message sender has multiple categories selected, all users will be grouped together and the message will be sent to everyone as one group, thus reducing the likelihood of sending duplicates."),
@@ -511,15 +434,15 @@ function mass_contact_admin_settings_header($form, $form_state) {
  *   A keyed array containing the current state of the form.
  */
 function mass_contact_admin_settings_header_validate($form, &$form_state) {
-  if (!empty($form_state['values']['mass_contact_default_sender_name'])) {
-    if (empty($form_state['values']['mass_contact_default_sender_email'])) {
-      form_set_error('mass_contact_default_sender_email', t('If you are going to specify default user settings, you must specify both a user name and a user email address.'));
+  if (!empty($form_state['values']['default_sender_name'])) {
+    if (empty($form_state['values']['default_sender_email'])) {
+      form_set_error('default_sender_email', t('If you are going to specify default user settings, you must specify both a user name and a user email address.'));
     }
   }
 
-  if (!empty($form_state['values']['mass_contact_default_sender_email'])) {
-    if (empty($form_state['values']['mass_contact_default_sender_name'])) {
-      form_set_error('mass_contact_default_sender_name', t('If you are going to specify default user settings, you must specify both a user name and a user email address.'));
+  if (!empty($form_state['values']['default_sender_email'])) {
+    if (empty($form_state['values']['default_sender_name'])) {
+      form_set_error('default_sender_name', t('If you are going to specify default user settings, you must specify both a user name and a user email address.'));
     }
   }
 }
@@ -554,41 +477,41 @@ $mass_contact_message_prefix = \Drupal::config('mass_contact.settings')->get('ma
 // Could not extract the default value because it is either indeterminate, or
 // not scalar. You'll need to provide a default value in
 // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$mass_contact_message_suffix = \Drupal::config('mass_contact.settings')->get('mass_contact_message_suffix');
+$message_suffix = \Drupal::config('mass_contact.settings')->get('message_suffix');
 
   if ($mimemail) {
     $field_type = 'text_format';
 
     if (is_array($mass_contact_message_prefix)) {
       $prefix_format = !empty($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL;
-      $suffix_format = !empty($mass_contact_message_suffix['format']) ? $mass_contact_message_suffix['format'] : NULL;
+      $suffix_format = !empty($message_suffix['format']) ? $message_suffix['format'] : NULL;
 
       if ($token) {
         $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[current-user:name] has sent you a group email from [site:name].');
-        $suffix_default_value = isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+        $suffix_default_value = isset($message_suffix['value']) ? $message_suffix['value'] : '';
       }
       else {
         // @FIXME
 // url() expects a route name or an external URI.
 // $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
 
-        $suffix_default_value = isset($mass_contact_message_suffix['value']) ? $mass_contact_message_suffix['value'] : '';
+        $suffix_default_value = isset($message_suffix['value']) ? $message_suffix['value'] : '';
       }
     }
     else {
       $prefix_format = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : NULL;
-      $suffix_format = !empty($mass_contact_message_suffix) ? $mass_contact_message_suffix : NULL;
+      $suffix_format = !empty($message_suffix) ? $message_suffix : NULL;
 
       if ($token) {
         $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group email from [site:name].');
-        $suffix_default_value = isset($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+        $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
       }
       else {
         // @FIXME
 // url() expects a route name or an external URI.
 // $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
 
-        $suffix_default_value = isset($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+        $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
       }
     }
   }
@@ -599,14 +522,14 @@ $mass_contact_message_suffix = \Drupal::config('mass_contact.settings')->get('ma
 
     if ($token) {
       $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group email from [site:name].');
-      $suffix_default_value = isset($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+      $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
     }
     else {
       // @FIXME
 // url() expects a route name or an external URI.
 // $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
 
-      $suffix_default_value = isset($mass_contact_message_suffix) ? $mass_contact_message_suffix : '';
+      $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
     }
   }
 
@@ -618,7 +541,7 @@ $mass_contact_message_suffix = \Drupal::config('mass_contact.settings')->get('ma
     '#description' => t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed before the message text entered in by the sender.'),
   );
 
-  $form['mass_contact_supplemental_texts']['mass_contact_message_suffix'] = array(
+  $form['mass_contact_supplemental_texts']['message_suffix'] = array(
     '#type' => $field_type,
     '#title' => t('Text to be appended to all messages'),
     '#default_value' => $suffix_default_value,
@@ -674,17 +597,17 @@ $mass_contact_html_format = \Drupal::config('mass_contact.settings')->get('mass_
     '#title' => t('Attachment Settings'),
   );
   if ($mimemail) {
-    $form['mass_contact_attachment_settings']['mass_contact_number_of_attachments'] = array(
+    $form['mass_contact_attachment_settings']['number_of_attachments'] = array(
       '#type' => 'textfield',
       '#title' => t('Number of attachments'),
-      '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_number_of_attachments'),
+      '#default_value' => \Drupal::config('mass_contact.settings')->get('number_of_attachments'),
       '#size' => 10,
       '#description' => t("The number of attachments to allow on the contact form. The maximum number of allowed uploads may be limited by PHP. If necessary, check your system's PHP php.ini file for a max_file_uploads directive to change."),
     );
-    $form['mass_contact_attachment_settings']['mass_contact_attachment_location'] = array(
+    $form['mass_contact_attachment_settings']['attachment_location'] = array(
       '#type' => 'textfield',
       '#title' => t('Attachment location'),
-      '#default_value' => \Drupal::config('mass_contact.settings')->get('mass_contact_attachment_location'),
+      '#default_value' => \Drupal::config('mass_contact.settings')->get('attachment_location'),
       '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment(s) so it can be viewed later. If you specify anything here, it will be a subdirectory of your Public file system path, which is set on !file_conf_page. If you do not specify anything here, all attachments will be saved in the directory specified in the Public file system path.', array('!file_conf_page' => \Drupal::l(t('File system configuration page'), \Drupal\Core\Url::fromRoute('system.file_system_settings')))),
     );
   }
