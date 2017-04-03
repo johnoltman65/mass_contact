@@ -98,7 +98,7 @@ function mass_contact_taxonomy_categories($recipients) {
   }
 
   // Get the list of term objects for the specified term IDs.
-  $terms = taxonomy_term_load_multiple($recipients['mass_contact_taxonomy']);
+  $terms = \Drupal::entityManager()->getStorage('taxonomy_term')->loadMultiple($recipients['mass_contact_taxonomy']);
   if (empty($terms)) {
     return;
   }
@@ -148,11 +148,11 @@ function mass_contact_taxonomy_admin_edit($recipients) {
   foreach ($taxonomy_fields as $field_name => $vocabulary_name) {
     $vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name);
     if (!empty($vocabulary)) {
-      $terms = taxonomy_get_tree($vocabulary->vid);
+      $terms = \Drupal::entityManager()->getStorage("taxonomy_term")->loadTree($vocabulary->vid);
       if (!empty($terms)) {
         $options = array();
         foreach ($terms as $term) {
-          $options[$term->tid] = check_plain($term->name);
+          $options[$term->tid] = \Drupal\Component\Utility\Html::escape($term->name);
         }
         $default_value = array();
         if (isset($recipients['mass_contact_taxonomy'])) {
@@ -264,7 +264,7 @@ function mass_contact_taxonomy_user_edit($user) {
     foreach ($user as $key => $value) {
       if ($key == $field_id) {
         if (!empty($value)) {
-          foreach ($value[LANGUAGE_NONE] as $term_id) {
+          foreach ($value[\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED] as $term_id) {
             // Save term.
             $users_terms[] = $term_id['tid'];
           }
@@ -290,7 +290,7 @@ function mass_contact_taxonomy_user_edit($user) {
     foreach ($recipients['mass_contact_taxonomy'] as $term_id) {
       // If the category's term is one the user has selected, show the category.
       if (in_array($term_id, $users_terms)) {
-        $included_categories[$category->cid] = check_plain($category->category);
+        $included_categories[$category->cid] = \Drupal\Component\Utility\Html::escape($category->category);
       }
     }
   }

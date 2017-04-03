@@ -73,7 +73,7 @@ function mass_contact_schema() {
 function mass_contact_install() {
   // Use get_t() to get the name of the localization function for translation
   // during install. For use when t() is not available.
-  $t = get_t();
+  $t = 't';
 
   // Define the node type.
   $node_type_definition = array(
@@ -104,18 +104,32 @@ function mass_contact_install() {
   $body_instance = field_info_instance('node', 'body', 'mass_contact');
 
   // Save the changes to the body field instance.
-  field_update_instance($body_instance);
+  $body_instance->save();
 
   // Create all the fields that are being adding to the node type.
   foreach (_mass_contact_fields() as $field) {
-    field_create_field($field);
+    // @FIXME
+// Fields and field instances are now exportable configuration entities, and
+// the Field Info API has been removed.
+// 
+// 
+// @see https://www.drupal.org/node/2012896
+// field_create_field($field);
+
   }
 
   // Create all the instances for the fields.
   foreach (_mass_contact_field_instances() as $instance) {
     $instance['entity_type'] = 'node';
     $instance['bundle'] = $node_type_definition['type'];
-    field_create_instance($instance);
+    // @FIXME
+// Fields and field instances are now exportable configuration entities, and
+// the Field Info API has been removed.
+// 
+// 
+// @see https://www.drupal.org/node/2012896
+// field_create_instance($instance);
+
   }
 }
 
@@ -164,7 +178,7 @@ function _mass_contact_fields() {
  * Returns a structured array, defining the instances for this node type.
  */
 function _mass_contact_field_instances() {
-  $t = get_t();
+  $t = 't';
   return array(
     'field_mass_contact_from' => array(
       'field_name' => 'field_mass_contact_from',
@@ -289,19 +303,35 @@ function _mass_contact_field_instances() {
  */
 function mass_contact_uninstall() {
   // Delete all of the variables defined by this module.
-  db_delete('variable')
-    ->condition('name', 'mass_contact_%', 'LIKE')
-    ->execute();
+  // @FIXME
+// db_delete('variable')
+//     ->condition('name', 'mass_contact_%', 'LIKE')
+//     ->execute();
+
 
   // Delete all of the fields defined by this module.
   foreach (array_keys(_mass_contact_fields()) as $field) {
-    field_delete_field($field);
+    // @FIXME
+// Fields and field instances are now exportable configuration entities, and
+// the Field Info API has been removed.
+// 
+// 
+// @see https://www.drupal.org/node/2012896
+// field_delete_field($field);
+
   }
 
   // Delete all the field instances attached to the mass_contact node type.
   $instances = field_info_instances('node', 'mass_contact');
   foreach ($instances as $instance_name => $instance) {
-    field_delete_instance($instance);
+    // @FIXME
+// Fields and field instances are now exportable configuration entities, and
+// the Field Info API has been removed.
+// 
+// 
+// @see https://www.drupal.org/node/2012896
+// field_delete_instance($instance);
+
   }
 
   // Delete the node type.
@@ -316,19 +346,26 @@ function mass_contact_uninstall() {
  * Update the Attachment location setting, when upgrading from 6.x.
  */
 function mass_contact_update_7000(&$sandbox) {
-  $attachment_location = variable_get('mass_contact_attachment_location');
+  // @FIXME
+// Could not extract the default value because it is either indeterminate, or
+// not scalar. You'll need to provide a default value in
+// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
+$attachment_location = \Drupal::config('mass_contact.settings')->get('mass_contact_attachment_location');
   // If the setting was set to the 6.x default, update it to the 7.x default.
   if (!empty($attachment_location) && $attachment_location == 'sites/default/files/mass_contact_attachments') {
-    variable_set('mass_contact_attachment_location', 'mass_contact_attachments');
+    \Drupal::configFactory()->getEditable('mass_contact.settings')->set('mass_contact_attachment_location', 'mass_contact_attachments')->save();
   }
   // Otherwise, leave it alone, but print a warning.
   else {
-    drupal_set_message('The path to the Mass Contact attachments was not set to
-      the default setting. Since Drupal 7 changed the way it handles paths from
-      Drupal 6, please check the <a href="' .
-      url('admin/config/system/mass_contact/settings/body') . '">Attachment
-      location</a> setting and change it to something that will work with Drupal
-      7.', 'warning');
+    // @FIXME
+// url() expects a route name or an external URI.
+// drupal_set_message('The path to the Mass Contact attachments was not set to
+//       the default setting. Since Drupal 7 changed the way it handles paths from
+//       Drupal 6, please check the <a href="' .
+//       url('admin/config/system/mass_contact/settings/body') . '">Attachment
+//       location</a> setting and change it to something that will work with Drupal
+//       7.', 'warning');
+
   }
 }
 
@@ -338,10 +375,10 @@ function mass_contact_update_7000(&$sandbox) {
  * Read CHANGELOG.txt before continuing.
  */
 function mass_contact_update_7100(&$sandbox) {
-  variable_del('mass_contact_bcc_d_override');
-  variable_del('mass_contact_default_sender_changable');
-  variable_del('mass_contact_html_format_override');
-  variable_del('mass_contact_nodecc_d_override');
+  \Drupal::config('mass_contact.settings')->clear('mass_contact_bcc_d_override')->save();
+  \Drupal::config('mass_contact.settings')->clear('mass_contact_default_sender_changable')->save();
+  \Drupal::config('mass_contact.settings')->clear('mass_contact_html_format_override')->save();
+  \Drupal::config('mass_contact.settings')->clear('mass_contact_nodecc_d_override')->save();
 }
 
 /**
