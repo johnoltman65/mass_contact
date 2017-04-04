@@ -1,18 +1,22 @@
 mass_contact.settings:
-  type: mapping
-  label: Settings
+  type: config_object
+  label: 'Mass Contact ettings'
   mapping:
     form_information:
       type: string
       label: 'Additional form help text'
     recipient_limit:
       type: integer
+      label: 'Recipient limit'
     send_with_cron:
-      type: bool
+      type: boolean
+      label: 'Send with cron/job queue'
     optout_d:
       type: integer
+      label: 'Allow users to opt-out of emails'
     nodecc_d:
-      type: integer
+      type: boolean
+      label: 'Create and archive copy of the email'
     hourly_threshold:
       type: integer
     character_set:
@@ -28,11 +32,11 @@ mass_contact.settings:
     include_to_name:
       type: integer
     bcc_d:
-      type: integer
+      type: boolean
     category_override:
       type: integer
     number_of_attachments:
-      type: string
+      type: integer
     attachment_location:
       type: string
     html_d:

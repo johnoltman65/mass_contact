@@ -10,9 +10,9 @@ default_sender_email: ''
 category_display: select
 include_from_name: 0
 include_to_name: 0
-bcc_d: 1
+bcc_d: true
 category_override: 1
-number_of_attachments: '3'
+number_of_attachments: 3
 attachment_location: mass_contact_attachments
 html_d: 1
 message_suffix: ''

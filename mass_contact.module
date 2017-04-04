@@ -385,6 +385,8 @@ $form['mass_contact'] = array(
 
 
 function mass_contact_user_presave(\Drupal\user\UserInterface $edit = NULL, \Drupal\user\UserInterface $account = NULL, \Drupal\user\UserInterface $category = NULL) {
+  // @todo Revisit when opt-out functionality is built in.
+  return;
   // Remove any previously saved category opt out data.
   if (!empty($edit['data'])) {
     foreach ($edit['data'] as $key => $value) {

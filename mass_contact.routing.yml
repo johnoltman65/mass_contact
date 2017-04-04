@@ -25,5 +25,7 @@ entity.mass_contact_category.collection:
 mass_contact:
   path: '/mass-contact'
   defaults:
-    _controller: '\Drupal\mass_contact\Controller\MassContact'
-    
+    _title: 'Mass Contact'
+    _form: '\Drupal\mass_contact\Form\MassContactForm'
+  requirements:
+    _permission: 'mass contact send messages'

@@ -19,7 +19,7 @@ mass_contact.category.*:
         mapping:
           grouping:
             type: string
-            label: 'Grouping plugin ID'
+            label: 'GroupingInterface plugin ID'
           categories:
             type: sequence
             label: 'Categories'

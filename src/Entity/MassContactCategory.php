@@ -3,6 +3,7 @@
 namespace Drupal\mass_contact\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\mass_contact\Plugin\MassContact\GroupingMethod\GroupingInterface;
 
 /**
  * Defines the Mass contact category entity.
@@ -16,6 +17,9 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *       "add" = "Drupal\mass_contact\Form\CategoryForm",
  *       "edit" = "Drupal\mass_contact\Form\CategoryForm",
  *       "delete" = "Drupal\mass_contact\Form\CategoryDeleteForm"
+ *     },
+ *     "route_provider" = {
+ *       "html" = "Drupal\Core\Entity\Routing\AdminHtmlRouteProvider"
  *     }
  *   },
  *   config_prefix = "category",
@@ -103,6 +107,17 @@ class MassContactCategory extends ConfigEntityBase implements MassContactCategor
    */
   public function setSelected($selected) {
     $this->selected = $selected;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupingCategories($grouping_id) {
+    $groupings = $this->getGroupings();
+    if (isset($groupings[$grouping_id])) {
+      return $groupings[$grouping_id];
+    }
+    return [];
   }
 
 }

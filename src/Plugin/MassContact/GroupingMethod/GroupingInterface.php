@@ -2,13 +2,17 @@
 
 namespace Drupal\mass_contact\Plugin\MassContact\GroupingMethod;
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
+use Drupal\Component\Plugin\Definition\PluginDefinitionInterface;
+use Drupal\Component\Plugin\DerivativeInspectionInterface;
+use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\mass_contact\Entity\MassContactCategoryInterface;
 
 /**
  * Defineds a grouping method interface.
  */
-interface Grouping  {
+interface GroupingInterface extends PluginInspectionInterface, DerivativeInspectionInterface, ConfigurablePluginInterface {
 
   /**
    * Retrieve the list of users by category.

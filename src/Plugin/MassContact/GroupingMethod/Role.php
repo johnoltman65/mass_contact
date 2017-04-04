@@ -2,10 +2,12 @@
 
 namespace Drupal\mass_contact\Plugin\MassContact\GroupingMethod;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\mass_contact\Entity\MassContactCategoryInterface;
 use Drupal\user\RoleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   description = @Translation("Select recipients by role")
  * )
  */
-class Role extends PluginBase implements Grouping, ContainerFactoryPluginInterface {
+class Role extends PluginBase implements GroupingInterface, ContainerFactoryPluginInterface {
 
   /**
    * The entity type manager service.
@@ -42,7 +44,44 @@ class Role extends PluginBase implements Grouping, ContainerFactoryPluginInterfa
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->configuration += $this->defaultConfiguration();
     $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function getConfiguration() {
+    return $this->configuration;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function setConfiguration(array $configuration) {
+    $this->configuration = NestedArray::mergeDeep($this->defaultConfiguration(), $configuration);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function defaultConfiguration() {
+    return [
+      'categories' => [],
+    ];
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function calculateDependencies() {
+    $configurations = [];
+    foreach ($this->configuration['categories'] as $role_id) {
+      $configurations[] = 'user.role.' . $role_id;
+    }
+    return [
+      'config' => $configurations,
+    ];
   }
 
   /**

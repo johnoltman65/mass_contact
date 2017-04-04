@@ -2,8 +2,8 @@ services:
   plugin.manager.mass_contact.grouping_method:
     class: Drupal\Core\Plugin\DefaultPluginManager
     arguments:
-      - Plugin/mass_contact/grouping_method
+      - Plugin/MassContact/GroupingMethod
       - '@container.namespaces'
       - '@module_handler'
-      - Drupal\Component\Plugin\PluginBase
-      - Drupal\Component\Annotation\Plugin
+      - Drupal\mass_contact\Plugin\MassContact\GroupingMethod\GroupingInterface
+      - Drupal\mass_contact\Annotation\GroupingMethod

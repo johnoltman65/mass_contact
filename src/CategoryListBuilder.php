@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityInterface;
 /**
  * Provides a listing of Mass contact category entities.
  */
-class MassContactCategoryListBuilder extends ConfigEntityListBuilder {
+class CategoryListBuilder extends ConfigEntityListBuilder {
   /**
    * {@inheritdoc}
    */
