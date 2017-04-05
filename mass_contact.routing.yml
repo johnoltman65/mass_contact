@@ -14,6 +14,22 @@ mass_contact.settings:
   requirements:
     _permission: 'mass contact administer'
 
+mass_contact.settings_email_header:
+  path: '/admin/config/mass-contact/settings/header'
+  defaults:
+    _title: 'Email header settings'
+    _form: '\Drupal\mass_contact\Form\EmailHeaderForm'
+  requirements:
+    _permission: 'mass contact administer'
+
+mass_contact.settings_email_body:
+  path: '/admin/config/mass-contact/settings/body'
+  defaults:
+    _title: 'Email body settings'
+    _form: '\Drupal\mass_contact\Form\EmailBodyForm'
+  requirements:
+    _permission: 'mass contact administer'
+
 entity.mass_contact_category.collection:
   path: '/admin/config/mass-contact/category'
   defaults:

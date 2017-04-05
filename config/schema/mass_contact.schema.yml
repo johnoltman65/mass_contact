@@ -28,13 +28,13 @@ mass_contact.settings:
     category_display:
       type: string
     include_from_name:
-      type: integer
+      type: boolean
     include_to_name:
-      type: integer
+      type: boolean
     bcc_d:
       type: boolean
     category_override:
-      type: integer
+      type: boolean
     number_of_attachments:
       type: integer
     attachment_location:
