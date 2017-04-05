@@ -12,7 +12,7 @@ mass_contact.settings:
       type: boolean
       label: 'Send with cron/job queue'
     optout_d:
-      type: integer
+      type: string
       label: 'Allow users to opt-out of emails'
     nodecc_d:
       type: boolean
@@ -39,7 +39,7 @@ mass_contact.settings:
       type: integer
     attachment_location:
       type: string
-    html_d:
+    message_format:
       type: string
       label: 'Message format to use'
     message_suffix:

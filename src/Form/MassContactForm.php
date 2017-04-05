@@ -253,7 +253,7 @@ class MassContactForm extends FormBase {
       // Add the field for specifying the body and text format of the message.
       // Get the HTML input format setting and the corresponding name.
       // Get the admin specified default text format.
-      $default_filter_format = $this->config->get('html_d');
+      $default_filter_format = $this->config->get('message_format');
 
       // Check if the user is allowed to override the text format.
       $form['body']['message'] = [

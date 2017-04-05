@@ -3,6 +3,7 @@
 namespace Drupal\mass_contact\Tests\Form;
 
 use Drupal\mass_contact\Form\AdminSettingsForm;
+use Drupal\mass_contact\MassContactInterface;
 use Drupal\system\Tests\System\SystemConfigFormTestBase;
 
 /**
@@ -30,7 +31,7 @@ class AdminSettingsFormTest extends SystemConfigFormTestBase {
       'form_information' => $this->randomString(),
       'recipient_limit' => 42,
       'send_with_cron' => TRUE,
-      'optout_d' => 1,
+      'optout_d' => MassContactInterface::OPT_OUT_GLOBAL,
       'nodecc_d' => NULL,
       'hourly_threshold' => 33,
       'category_display' => 'checkboxes',

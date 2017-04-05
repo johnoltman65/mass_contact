@@ -1,7 +1,7 @@
 form_information: 'Send email messages using the following form.'
 recipient_limit: 0
 send_with_cron: false
-optout_d: 0
+optout_d: disabled
 nodecc_d: true
 hourly_threshold: 3
 character_set: UTF-8
@@ -14,6 +14,6 @@ bcc_d: true
 category_override: true
 number_of_attachments: 3
 attachment_location: mass_contact_attachments
-html_d: 'plain_text'
+message_format: 'plain_text'
 message_suffix: ''
 wait_time: 0

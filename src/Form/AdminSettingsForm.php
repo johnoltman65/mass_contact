@@ -4,6 +4,8 @@ namespace Drupal\mass_contact\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\mass_contact\Entity\MassContactCategory;
+use Drupal\mass_contact\MassContactInterface;
 
 /**
  * Admin settings form for Mass Contact.
@@ -81,9 +83,9 @@ class AdminSettingsForm extends SettingsFormBase {
       '#title' => $this->t('Allow users to opt-out of mass email messages'),
       '#default_value' => $config->get('optout_d'),
       '#options' => [
-        0 => $this->t('No'),
-        1 => $this->t('Yes'),
-        2 => $this->t('Selected categories'),
+        MassContactInterface::OPT_OUT_DISABLED => $this->t('No'),
+        MassContactInterface::OPT_OUT_GLOBAL => $this->t('Yes'),
+        MassContactInterface::OPT_OUT_CATEGORY => $this->t('Selected categories'),
       ],
       '#description' => $this->t("Allow users to opt-out of receiving mass email messages. If 'No' is chosen, then the site's users will not be able to opt-out of receiving mass email messages. If 'Yes' is chosen, then the site's users will be able to opt-out of receiving mass email messages, and they will not receive any from any category. If 'Selected categories' is chosen, then the site's users will be able to opt-out of receiving mass email messages from which ever categories they choose."),
     ];

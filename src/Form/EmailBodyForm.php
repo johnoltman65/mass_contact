@@ -6,6 +6,8 @@ use Drupal\Core\Url;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\filter\FilterFormatInterface;
+use Drupal\mass_contact\MassContactInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -14,11 +16,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class EmailBodyForm extends SettingsFormBase {
 
   /**
-   * The module handler service.
+   * The Mass Contact helper service.
    *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   * @var \Drupal\mass_contact\MassContactInterface
    */
-  protected $moduleHandler;
+  protected $massContact;
 
   /**
    * Constructs the email body form.
@@ -27,9 +29,12 @@ class EmailBodyForm extends SettingsFormBase {
    *   The config factory service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler service.
+   * @param \Drupal\mass_contact\MassContactInterface $mass_contact
+   *   The mass contact helper service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, MassContactInterface $mass_contact) {
     parent::__construct($config_factory);
+    $this->massContact = $mass_contact;
   }
 
   /**
@@ -38,7 +43,8 @@ class EmailBodyForm extends SettingsFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('mass_contact')
     );
   }
 
@@ -54,7 +60,7 @@ class EmailBodyForm extends SettingsFormBase {
    */
   protected function getConfigKeys() {
     return [
-      // @todo
+      'message_format',
     ];
   }
 
@@ -64,13 +70,39 @@ class EmailBodyForm extends SettingsFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
-    // @todo Port this functionality.
-    // @see https://www.drupal.org/node/2867166
-    return $form;
     $config = $this->config('mass_contact.settings');
 
-    $mimemail = \Drupal::moduleHandler()->moduleExists('mimemail');
-    $token = \Drupal::moduleHandler()->moduleExists('token');
+    // HTML options.
+    $form['html_settings'] = [
+      '#type' => 'details',
+      '#open' => $this->massContact->htmlSupported(),
+      '#title' => t('HTML Settings'),
+    ];
+    if ($this->massContact->htmlSupported()) {
+      $format = $config->get('message_format');
+      $options = array_map(function (FilterFormatInterface $filter_format) {
+        return $filter_format->label();
+      }, filter_formats());
+      $form['html_settings']['message_format'] = [
+        '#type' => 'select',
+        '#title' => t('The default text format'),
+        '#default_value' => $format,
+        '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not allow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
+        '#options' => $options,
+      ];
+    }
+    else {
+      $form['html_settings']['message_format'] = [
+        '#type' => 'hidden',
+        '#value' => 'plain_text',
+      ];
+      $form['html_settings']['no_mimemail'] = [
+        '#type' => 'item',
+        '#description' => $this->t('To use HTML email for mass contact messages, the <a href="@mime">Mime Mail</a> module or <a href="@swift">Swiftmailer</a> module is required', ['@mime' => Url::fromUri('https://www.drupal.org/project/mimemail')->toString(), '@swift' => Url::fromUri('https://www.drupal.org/project/swiftmailer')->toString()]),
+      ];
+    }
+
+    return $form;
 
     // Supplemental texts that are prepended and/or appended to every message.
     $form['mass_contact_supplemental_texts'] = [
@@ -91,7 +123,9 @@ class EmailBodyForm extends SettingsFormBase {
     // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
     $message_suffix = \Drupal::config('mass_contact.settings')->get('message_suffix');
 
-    if ($mimemail) {
+    // @todo Port this functionality.
+    // @see https://www.drupal.org/node/2867166
+    if ($this->massContact->htmlSupported() && FALSE) {
       $field_type = 'text_format';
 
       if (is_array($mass_contact_message_prefix)) {
@@ -125,7 +159,9 @@ class EmailBodyForm extends SettingsFormBase {
         }
       }
     }
-    else {
+    // @todo Port this functionality.
+    // @see https://www.drupal.org/node/2867166
+    elseif (FALSE) {
       $field_type = 'textarea';
       $prefix_format = NULL;
       $suffix_format = NULL;
@@ -141,7 +177,7 @@ class EmailBodyForm extends SettingsFormBase {
         $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
       }
     }
-
+/*
     $form['mass_contact_supplemental_texts']['mass_contact_message_prefix'] = [
       '#type' => $field_type,
       '#title' => $this->t('Text to be prepended to all messages'),
@@ -173,33 +209,7 @@ class EmailBodyForm extends SettingsFormBase {
         '#token_types' => ['global'],
       ];
     }
-
-    // HTML options.
-    $form['mass_contact_html_settings'] = [
-      '#type' => 'fieldset',
-      '#title' => t('HTML Settings'),
-    ];
-    if ($mimemail) {
-      // @FIXME
-      // Could not extract the default value because it is either indeterminate, or
-      // not scalar. You'll need to provide a default value in
-      // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-      $mass_contact_html_format = \Drupal::config('mass_contact.settings')->get('mass_contact_html_format');
-      $form['mass_contact_html_settings']['mass_contact_html_format'] = [
-        '#type' => 'text_format',
-        '#title' => t('The default text format'),
-        '#default_value' => t('This text of this field is not saved or used anywhere.'),
-        '#format' => !empty($mass_contact_html_format['format']) ? $mass_contact_html_format['format'] : NULL,
-        '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not aloow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
-      ];
-    }
-    else {
-      $form['mass_contact_html_settings']['mass_contact_no_mimemail'] = [
-        '#type' => 'item',
-        '#description' => t('This module no longer supports HTML email without the Mime Mail module, which can be found here: http://drupal.org/project/mimemail.'),
-      ];
-    }
-
+*/
     // Attachment options.
     $form['mass_contact_attachment_settings'] = [
       '#type' => 'fieldset',
