@@ -23,5 +23,5 @@ mass contact send messages:
   title: 'Send messages with Mass Contact'
   description: 'Allows the user to send messages with the Mass Contact.'
 
-permissions_callback:
+permission_callback:
   - \Drupal\mass_contact\Permissions::categoryPermissions
