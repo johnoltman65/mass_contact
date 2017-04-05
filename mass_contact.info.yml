@@ -3,6 +3,8 @@ description: "Send email messages to multiple users.\n               (This modul
 core: 8.x
 package: Mail
 dependencies:
-  - filter
-  - user
+  - drupal:filter
+  - drupal:user
+test_dependencies:
+  - swiftmailer:swiftmailer
 type: module
