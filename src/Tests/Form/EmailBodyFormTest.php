@@ -2,9 +2,7 @@
 
 namespace Drupal\mass_contact\Tests\Form;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\mass_contact\Form\EmailBodyForm;
-use Drupal\mass_contact\Form\EmailHeaderForm;
 use Drupal\system\Tests\System\SystemConfigFormTestBase;
 
 /**

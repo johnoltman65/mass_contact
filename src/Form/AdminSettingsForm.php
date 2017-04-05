@@ -3,7 +3,6 @@
 namespace Drupal\mass_contact\Form;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 
 /**
@@ -41,10 +40,10 @@ class AdminSettingsForm extends SettingsFormBase {
 
     $config = $this->config('mass_contact.settings');
     $form['form_information'] = [
-     '#type' => 'textarea',
-     '#title' => t('Additional information for Mass Contact form'),
-     '#default_value' => $config->get('form_information'),
-     '#description' => $this->t('Information to show on the <a href=":url">Mass Contact page</a>.', [':url' => Url::fromRoute('mass_contact')->toString()]),
+      '#type' => 'textarea',
+      '#title' => t('Additional information for Mass Contact form'),
+      '#default_value' => $config->get('form_information'),
+      '#description' => $this->t('Information to show on the <a href=":url">Mass Contact page</a>.', [':url' => Url::fromRoute('mass_contact')->toString()]),
     ];
 
     // Rate limiting options.

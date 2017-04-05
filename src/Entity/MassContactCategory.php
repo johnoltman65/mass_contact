@@ -3,7 +3,6 @@
 namespace Drupal\mass_contact\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
-use Drupal\mass_contact\Plugin\MassContact\GroupingMethod\GroupingInterface;
 
 /**
  * Defines the Mass contact category entity.

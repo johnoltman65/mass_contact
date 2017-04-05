@@ -1,13 +1,11 @@
 <?php
 
 namespace Drupal\mass_contact\Plugin\MassContact\GroupingMethod;
+
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
-use Drupal\Component\Plugin\Definition\PluginDefinitionInterface;
 use Drupal\Component\Plugin\DerivativeInspectionInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\PluginFormInterface;
-use Drupal\mass_contact\Entity\MassContactCategoryInterface;
 
 /**
  * Defineds a grouping method interface.
@@ -53,13 +51,13 @@ interface GroupingInterface extends PluginInspectionInterface, DerivativeInspect
   /* @todo The rest
   // The next three callbacks are used to maintain the form for adding/editing
   // categories.
-'mass_contact_admin_edit' => 'mass_contact_taxonomy_admin_edit',
-'mass_contact_admin_edit_validate' => 'mass_contact_taxonomy_admin_edit_validate',
-'mass_contact_admin_edit_submit' => 'mass_contact_taxonomy_admin_edit_submit',
+  'mass_contact_admin_edit' => 'mass_contact_taxonomy_admin_edit',
+  'mass_contact_admin_edit_validate' => 'mass_contact_taxonomy_admin_edit_validate',
+  'mass_contact_admin_edit_submit' => 'mass_contact_taxonomy_admin_edit_submit',
 
   // This callback is used to maintain the form for opting in or out of
   // categories.
-'mass_contact_user_edit' => 'mass_contact_taxonomy_user_edit',
-);
-*/
+  'mass_contact_user_edit' => 'mass_contact_taxonomy_user_edit',
+  );
+   */
 }

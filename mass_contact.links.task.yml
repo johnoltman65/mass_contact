@@ -12,4 +12,3 @@ mass_contact.settings_email_body:
   route_name: mass_contact.settings_email_body
   base_route: mass_contact.settings
   title: 'Email body settings'
-

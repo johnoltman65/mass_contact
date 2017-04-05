@@ -1,9 +1,14 @@
 <?php
+
 /**
  * @file
  * The main form for creating and sending the messages.
  */
 
+use Drupal\Core\Language\Language;
+use Drupal\Core\Url;
+use Drupal\Component\Utility\Xss;
+use Drupal\Component\Utility\Html;
 /**
  * The mail page.
  *
@@ -13,7 +18,7 @@
  */
 function mass_contact_site_page() {
   if (!\Drupal::currentUser()->hasPermission('mass contact administer') && !flood_is_allowed('mass_contact', \Drupal::config('mass_contact.settings')->get('hourly_threshold'))) {
-    $output = t("You cannot send more than %number messages per hour. Please try again later.", array('%number' => \Drupal::config('mass_contact.settings')->get('hourly_threshold')));
+    $output = t("You cannot send more than %number messages per hour. Please try again later.", ['%number' => \Drupal::config('mass_contact.settings')->get('hourly_threshold')]);
   }
   else {
     $output = \Drupal::formBuilder()->getForm('mass_contact_mail_page');
@@ -21,7 +26,6 @@ function mass_contact_site_page() {
 
   return $output;
 }
-
 
 /**
  * Generates the main Mass Contact mail form.
@@ -35,19 +39,19 @@ function mass_contact_site_page() {
 function mass_contact_mail_page($form, $form_state) {
   $user = \Drupal::currentUser();
 
-  $form = array();
-  $categories = array();
-  $default_category = array();
+  $form = [];
+  $categories = [];
+  $default_category = [];
   $default_category_name = '';
 
   $result = db_select('mass_contact', 'mc')
-    ->fields('mc', array('cid', 'category', 'selected'))
+    ->fields('mc', ['cid', 'category', 'selected'])
     ->orderBy('weight', 'ASC')
     ->orderBy('category', 'ASC')
     ->execute();
   foreach ($result as $category) {
     if (\Drupal::currentUser()->hasPermission('mass contact send to users in the ' . $category->category . ' category')) {
-      $categories[$category->cid] = \Drupal\Component\Utility\Html::escape($category->category);
+      $categories[$category->cid] = Html::escape($category->category);
 
       if ($category->selected) {
         $default_category[] = $category->cid;
@@ -63,97 +67,97 @@ function mass_contact_mail_page($form, $form_state) {
 
   if (count($categories) > 0) {
     // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$form['contact_information'] = array(
-      '#markup' => \Drupal\Component\Utility\Xss::filterAdmin(\Drupal::config('mass_contact.settings')->get('mass_contact_form_information')),
-    );
+    // Could not extract the default value because it is either indeterminate, or
+    // not scalar. You'll need to provide a default value in
+    // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
+    $form['contact_information'] = [
+      '#markup' => Xss::filterAdmin(\Drupal::config('mass_contact.settings')->get('mass_contact_form_information')),
+    ];
 
     // Add the field for specifying the sender's name.
     $default_sender_name = \Drupal::config('mass_contact.settings')->get('default_sender_name');
     if ($default_sender_name) {
       if (\Drupal::currentUser()->hasPermission('mass contact change default sender information')) {
-        $form['name'] = array(
+        $form['name'] = [
           '#type' => 'textfield',
           '#title' => t('Your name'),
           '#maxlength' => 255,
           '#default_value' => $default_sender_name,
           '#required' => TRUE,
-        );
+        ];
       }
       else {
-        $form['name'] = array(
+        $form['name'] = [
           '#type' => 'item',
           '#title' => t('Your name'),
           '#markup' => $default_sender_name,
-        );
+        ];
       }
     }
     else {
-      $form['name'] = array(
+      $form['name'] = [
         '#type' => 'textfield',
         '#title' => t('Your name'),
         '#maxlength' => 255,
-        '#default_value' => $user->uid ? \Drupal\Component\Utility\Html::escape(format_username($user)) : '',
+        '#default_value' => $user->uid ? Html::escape(format_username($user)) : '',
         '#required' => TRUE,
-      );
+      ];
     }
 
     // Add the field for specifying the sender's email address.
     $default_sender_email = \Drupal::config('mass_contact.settings')->get('default_sender_email');
     if ($default_sender_email) {
       if (\Drupal::currentUser()->hasPermission('mass contact change default sender information')) {
-        $form['mail'] = array(
+        $form['mail'] = [
           '#type' => 'textfield',
           '#title' => t('Your email address'),
           '#maxlength' => 255,
           '#default_value' => $default_sender_email,
           '#required' => TRUE,
-        );
+        ];
       }
       else {
-        $form['mail'] = array(
+        $form['mail'] = [
           '#type' => 'item',
           '#title' => t('Your email address'),
           '#markup' => $default_sender_email,
-        );
+        ];
       }
     }
     else {
-      $form['mail'] = array(
+      $form['mail'] = [
         '#type' => 'textfield',
         '#title' => t('Your email address'),
         '#maxlength' => 255,
         '#default_value' => $user->uid ? $user->mail : '',
         '#required' => TRUE,
-      );
+      ];
     }
 
     // Add the field for specifying the category(ies).
     if ((count($categories) > 1) || !isset($default_category)) {
       // Display a choice when one is needed.
       $field_type = \Drupal::config('mass_contact.settings')->get('category_display');
-      $form['cid'] = array(
+      $form['cid'] = [
         '#type' => $field_type,
         '#title' => t('Category'),
         '#default_value' => $default_category,
         '#options' => $categories,
         '#required' => TRUE,
         '#multiple' => TRUE,
-      );
+      ];
     }
     else {
       // Otherwise, just use the default category.
-      $form['cid'] = array(
+      $form['cid'] = [
         '#type' => 'value',
         '#value' => $default_category,
-      );
-      $form['cid-info'] = array(
+      ];
+      $form['cid-info'] = [
         '#type' => 'item',
         '#title' => t('Category'),
-        '#markup' => '<p>This message will be sent to all users in the ' . \Drupal\Component\Utility\Html::escape($default_category_name) . ' category.</p>',
-      );
+        '#markup' => '<p>This message will be sent to all users in the ' . Html::escape($default_category_name) . ' category.</p>',
+      ];
     }
 
     // Add the field for specifying whether opt-outs are respected or not.
@@ -164,56 +168,56 @@ $form['contact_information'] = array(
     if ($optout_setting == 1 || $optout_setting == 2) {
       // Allow to override or respect opt-outs if admin, otherwise use default.
       if (\Drupal::currentUser()->hasPermission('mass contact administer')) {
-        $form['optout'] = array(
+        $form['optout'] = [
           '#type' => 'checkbox',
           '#title' => t('Respect user opt-outs.'),
           '#default_value' => 1,
-        );
+        ];
       }
       else {
-        $form['optout'] = array(
+        $form['optout'] = [
           '#type' => 'hidden',
           '#default_value' => 1,
-        );
+        ];
       }
     }
     else {
-      $form['optout'] = array(
+      $form['optout'] = [
         '#type' => 'hidden',
         '#default_value' => 0,
-      );
+      ];
     }
 
     // Add the field for specifying whether the recipients are in the To or
     // BCC field of the message.
     // Check if the user is allowed to override the BCC setting.
     if (\Drupal::currentUser()->hasPermission('mass contact override bcc')) {
-      $form['bcc'] = array(
+      $form['bcc'] = [
         '#type' => 'checkbox',
         '#title' => t('Send as BCC (hide recipients)'),
         '#default_value' => \Drupal::config('mass_contact.settings')->get('bcc_d'),
-      );
+      ];
     }
     // If not, then just display the BCC info.
     else {
-      $form['bcc'] = array(
+      $form['bcc'] = [
         '#type' => 'value',
         '#value' => \Drupal::config('mass_contact.settings')->get('bcc_d'),
-      );
-      $form['bcc-info'] = array(
+      ];
+      $form['bcc-info'] = [
         '#type' => 'item',
         '#title' => t('Send as BCC (hide recipients)'),
         '#markup' => '<p>' . (\Drupal::config('mass_contact.settings')->get('bcc_d') ? t('Recipients will be hidden from each other.') : t('Recipients will NOT be hidden from each other.')) . '</p>',
-      );
+      ];
     }
 
     // Add the field for specifying the subject of the message.
-    $form['subject'] = array(
+    $form['subject'] = [
       '#type' => 'textfield',
       '#title' => t('Subject'),
       '#maxlength' => 255,
       '#required' => TRUE,
-    );
+    ];
 
     // Add the field for specifying the body and text format of the message.
     // Get the HTML input format setting and the corresponding name.
@@ -225,43 +229,43 @@ $form['contact_information'] = array(
       if (\Drupal::currentUser()->hasPermission('mass contact override text format')) {
         // The user is allowed to override the text format, so display a
         // textarea that has the text format selection field attached.
-        $form['body']['message'] = array(
+        $form['body']['message'] = [
           '#type' => 'text_format',
           '#title' => t('Message'),
           '#format' => !empty($default_filter_format) ? $default_filter_format : NULL,
           '#rows' => 12,
           '#required' => TRUE,
-        );
+        ];
       }
       else {
         // The user is not allowed to override the text format, so display a
         // textarea that does not have the text format selection field
         // attached.
-        $form['body']['message'] = array(
+        $form['body']['message'] = [
           '#type' => 'textarea',
           '#title' => t('Message'),
           '#rows' => 12,
           '#required' => TRUE,
-        );
+        ];
         // Save the text format information for later use.
-        $form['body_filter_format'] = array(
+        $form['body_filter_format'] = [
           '#type' => 'value',
           '#value' => $default_filter_format,
-        );
+        ];
         // Display text format information to the user.
-        $form['body_filter_format_info'] = array(
+        $form['body_filter_format_info'] = [
           '#type' => 'item',
-          '#description' => '<p>' . (\Drupal::config('mass_contact.settings')->get('html_d') ? t('The message will be sent using the %filter text format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', array('%filter' => $default_filter_format, '@formats_descriptions' => \Drupal\Core\Url::fromRoute('filter.tips_all'))) : t('The message will be sent as plain text.')) . '</p>',
-        );
+          '#description' => '<p>' . (\Drupal::config('mass_contact.settings')->get('html_d') ? t('The message will be sent using the %filter text format. More information about what is available is on the <a href="@formats_descriptions">Compose tips</a> page.', ['%filter' => $default_filter_format, '@formats_descriptions' => Url::fromRoute('filter.tips_all')]) : t('The message will be sent as plain text.')) . '</p>',
+        ];
       }
 
       // If the user has access, add the field for specifying the attachment.
       if (\Drupal::currentUser()->hasPermission('mass contact include attachments')) {
         for ($i = 1; $i <= \Drupal::config('mass_contact.settings')->get('number_of_attachments'); $i++) {
-          $form['attachment_' . $i] = array(
+          $form['attachment_' . $i] = [
             '#type' => 'file',
-            '#title' => t('Attachment #!number', array('!number' => $i)),
-          );
+            '#title' => t('Attachment #!number', ['!number' => $i]),
+          ];
         }
       }
     }
@@ -269,31 +273,31 @@ $form['contact_information'] = array(
       // Mime Mail is not installed, so display a textarea that does not have
       // the text format selection field attached, as this message will only
       // be sent as plain text.
-      $form['body']['message'] = array(
+      $form['body']['message'] = [
         '#type' => 'textarea',
         '#title' => t('Message'),
         '#rows' => 12,
         '#required' => TRUE,
-      );
+      ];
       // Save the text format information for later use.
-      $form['body_filter_format'] = array(
+      $form['body_filter_format'] = [
         '#type' => 'value',
         '#value' => filter_format_load('plain_text'),
-      );
+      ];
       // Display text format information to the user.
-      $form['body_filter_format_info'] = array(
+      $form['body_filter_format_info'] = [
         '#type' => 'item',
         '#description' => '<p>' . t('The message will be sent as plain text.') . '</p>',
-      );
+      ];
     }
 
     // We do not allow anonymous users to send themselves a copy because it
     // can be abused to spam people.
     if ($user->uid) {
-      $form['copy'] = array(
+      $form['copy'] = [
         '#type' => 'checkbox',
         '#title' => t('Send yourself a copy.'),
-      );
+      ];
     }
 
     // Add the field for specifying whether to save the message as a node or
@@ -301,74 +305,72 @@ $form['contact_information'] = array(
     if (\Drupal::currentUser()->hasPermission('mass contact archive messages')) {
       // Check if the user is allowed to override the node copy setting.
       if (\Drupal::currentUser()->hasPermission('mass contact override archiving')) {
-        $form['nodecc'] = array(
+        $form['nodecc'] = [
           '#type' => 'checkbox',
           '#title' => t('Archive a copy of this message on this website'),
           '#default_value' => \Drupal::config('mass_contact.settings')->get('nodecc_d'),
-        );
+        ];
       }
       // If not, then do it or not based on the administrative setting.
       else {
-        $form['nodecc'] = array(
+        $form['nodecc'] = [
           '#type' => 'hidden',
           '#default_value' => \Drupal::config('mass_contact.settings')->get('nodecc_d'),
-        );
-        $form['nodecc_notice'] = array(
+        ];
+        $form['nodecc_notice'] = [
           '#type' => 'item',
           '#title' => t('Archive a copy of this message on this website'),
-          '#markup' => t('A copy of this message will !not be archived on this website.', array('!not' => \Drupal::config('mass_contact.settings')->get('nodecc_d') ? '' : 'not')),
-        );
+          '#markup' => t('A copy of this message will !not be archived on this website.', ['!not' => \Drupal::config('mass_contact.settings')->get('nodecc_d') ? '' : 'not']),
+        ];
       }
     }
     // If not, then do it or not based on the administrative setting.
     else {
-      $form['nodecc'] = array(
+      $form['nodecc'] = [
         '#type' => 'hidden',
         '#default_value' => \Drupal::config('mass_contact.settings')->get('nodecc_d'),
-      );
-      $form['nodecc_notice'] = array(
+      ];
+      $form['nodecc_notice'] = [
         '#type' => 'item',
         '#title' => t('Archive a copy of this message on this website'),
-        '#markup' => t('A copy of this message will !not be archived on this website.', array('!not' => \Drupal::config('mass_contact.settings')->get('nodecc_d') ? '' : 'not')),
-      );
+        '#markup' => t('A copy of this message will !not be archived on this website.', ['!not' => \Drupal::config('mass_contact.settings')->get('nodecc_d') ? '' : 'not']),
+      ];
     }
 
     // Add the submit button.
-    $form['submit'] = array(
+    $form['submit'] = [
       '#type' => 'submit',
       '#value' => t('Send email'),
-    );
+    ];
   }
   else {
-    $form['error'] = array(
+    $form['error'] = [
       '#markup' => '<p><b>' . t('Either you have not created any categories, or you are not allowed to send to any of the existing categories.') . '<br /><br />' . t('Either create at least one category of users to send to, or contact your system administer for access to the existing categories.') . '</b>',
-    );
+    ];
   }
 
   if (\Drupal::currentUser()->hasPermission('mass contact administer')) {
-    $form['tasklist'] = array(
+    $form['tasklist'] = [
       '#type' => 'fieldset',
       '#title' => t('Related tasks'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
       '#prefix' => '<p>',
-    );
+    ];
     // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $form['tasklist']['list'] = array(
-//       '#markup' => '<p><ol>' .
-//       '<li>' . \Drupal::l(t('Set Permissions'), \Drupal\Core\Url::fromRoute('user.admin_permissions')) . '</li>' .
-//       '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
-//       '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
-//       '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
-//       '<li>' . l(t('Help'), 'admin/help/mass_contact') . '</li></ol>',
-//     );
-
+    // l() expects a Url object, created from a route name or external URI.
+    // $form['tasklist']['list'] = array(
+    //       '#markup' => '<p><ol>' .
+    //       '<li>' . \Drupal::l(t('Set Permissions'), \Drupal\Core\Url::fromRoute('user.admin_permissions')) . '</li>' .
+    //       '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
+    //       '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
+    //       '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
+    //       '<li>' . l(t('Help'), 'admin/help/mass_contact') . '</li></ol>',
+    //     );
   }
 
   return $form;
 }
-
 
 /**
  * Validates the main Mass Contact mail form.
@@ -388,7 +390,6 @@ function mass_contact_mail_page_validate($form, &$form_state) {
   }
 }
 
-
 /**
  * Processes the main Mass Contact mail form.
  *
@@ -399,7 +400,7 @@ function mass_contact_mail_page_validate($form, &$form_state) {
  */
 function mass_contact_mail_page_submit($form, &$form_state) {
   $send_error = 0;
-  $recipient_lists = array();
+  $recipient_lists = [];
   $empty_lists = 0;
 
   // Set wether the recipients will be BCC or not.
@@ -434,16 +435,16 @@ function mass_contact_mail_page_submit($form, &$form_state) {
 
   // Get the admin specified default sender's name.
   // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$from_name = \Drupal::config('mass_contact.settings')->get('default_sender_name');
+  // Could not extract the default value because it is either indeterminate, or
+  // not scalar. You'll need to provide a default value in
+  // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
+  $from_name = \Drupal::config('mass_contact.settings')->get('default_sender_name');
   // Get the admin specified default sender's email address.
   // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$from_email = \Drupal::config('mass_contact.settings')->get('default_sender_email');
+  // Could not extract the default value because it is either indeterminate, or
+  // not scalar. You'll need to provide a default value in
+  // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
+  $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_email');
 
   // Set the sender name and email address.
   if (empty($from_name) || empty($from_email) || \Drupal::currentUser()->hasPermission('mass contact change default sender information')) {
@@ -485,16 +486,16 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
 
   // Process the recipients (some more of the message header).
   // Get the IDs of the chosen categories.
-  $cids = array();
+  $cids = [];
   foreach ($form_state['values']['cid'] as $cid) {
     $cids[] = $cid;
   }
 
   // Get the category objects, based on the IDs, and save them into an array
   // for later use.
-  $results = db_query("SELECT * FROM {mass_contact} WHERE cid IN(:cids)", array(':cids' => $cids));
+  $results = db_query("SELECT * FROM {mass_contact} WHERE cid IN(:cids)", [':cids' => $cids]);
   foreach ($results as $category) {
-    $permission  = 'mass contact send to users in the ';
+    $permission = 'mass contact send to users in the ';
     $permission .= $category->category;
     $permission .= ' category';
     if (\Drupal::currentUser()->hasPermission($permission)) {
@@ -506,12 +507,12 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
   // Create the recipient lists, based on category.
   foreach ($categories as $category) {
     // Create the recipient lists, per category.
-    $recipient_lists[$category->category] = array(
+    $recipient_lists[$category->category] = [
       // Set the recipients.
       'recipients' => _mass_contact_create_recipient_list($category, $form_state['values']['optout']),
       // Set the subject.
-      'subject' => t('[@category] !subject', array('@category' => $category->category, '!subject' => \Drupal\Component\Utility\Xss::filter($form_state['values']['subject']))),
-    );
+      'subject' => t('[@category] !subject', ['@category' => $category->category, '!subject' => Xss::filter($form_state['values']['subject'])]),
+    ];
   }
 
   // Iterate through each recipient list to verify there are recipients
@@ -536,12 +537,12 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
     // The count of all email addresses the message is sent to.
     $total_recipients = 0;
     // An array of all categories and email addresses thie message is sent to.
-    $all_recipients = array();
+    $all_recipients = [];
 
     // If the module is configured to not include the category in the subject,
     // combine all users in all categories into a single listing of recpients.
     if (!\Drupal::config('mass_contact.settings')->get('category_override')) {
-      $new_recipient_list = array('All categories combined' => array());
+      $new_recipient_list = ['All categories combined' => []];
 
       // Cycle through all the categories adding all the recipients to the one
       // list.
@@ -555,7 +556,7 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
       }
 
       // Add the subject.
-      $new_recipient_list['All categories combined']['subject'] = \Drupal\Component\Utility\Xss::filter($form_state['values']['subject'], array());
+      $new_recipient_list['All categories combined']['subject'] = Xss::filter($form_state['values']['subject'], []);
 
       // Set the original list to the new combined, unduplicated list.
       $new_recipient_list['All categories combined']['recipients'] = array_unique($new_recipient_list['All categories combined']['recipients']);
@@ -578,7 +579,7 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
           $batch = 0;
           // An array of the current grouping of categories and email addresses
           // the message is sent to.
-          $current_recipients = array();
+          $current_recipients = [];
 
           foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
             if (\Drupal::config('mass_contact.settings')->get('include_to_name') == 1) {
@@ -610,20 +611,20 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
                 $queue = new SystemQueue('mass_contact');
 
                 // Create the queue item.
-                $message = array(
+                $message = [
                   'message_key' => 'mail_page_' . $batch,
                   'to' => $to,
                   'params' => $params,
                   'from_email' => $from_address,
                   'success_message' => '[Success] Sent batch #' . $batch . '.',
-                );
+                ];
 
                 // Add the item to the queue.
                 $queue->createItem($message);
               }
 
               // Reset the variables.
-              $partial_list = array();
+              $partial_list = [];
               $recipient_count = 0;
             }
           }
@@ -643,13 +644,13 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
               $queue = new SystemQueue('mass_contact');
 
               // Create the queue item.
-              $message = array(
+              $message = [
                 'message_key' => 'mail_page_last',
                 'to' => $to,
                 'params' => $params,
                 'from_email' => $from_address,
                 'success_message' => '[Success] Sent the remainder.',
-              );
+              ];
 
               // Add the item to the queue.
               $queue->createItem($message);
@@ -665,7 +666,7 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
         else {
           // An array of the current grouping of categories and email addresses
           // the message is being sent to.
-          $current_recipients = array();
+          $current_recipients = [];
 
           foreach ($recipient_list['recipients'] as $recipient_name => $recipient_address) {
             if (\Drupal::config('mass_contact.settings')->get('include_to_name') == 1) {
@@ -703,7 +704,7 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
           if (!_mass_contact_send_message('user-copy', $from_address, $params, $from_address, 'A copy was sent to you.')) {
             // There was an error, so inform the user.
             if (!\Drupal::moduleHandler()->moduleExists('help')) {
-              drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's !help page or README.txt.", array('!help' => \Drupal::l(t('help'), \Drupal\Core\Url::fromRoute('help.page')))));
+              drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's !help page or README.txt.", ['!help' => \Drupal::l(t('help'), Url::fromRoute('help.page'))]));
             }
             else {
               drupal_set_message(t("A copy could not be sent to you. Check the logs for error messages. For more information, see the Troubleshooting secion of Mass Contact's README.txt."));
@@ -715,13 +716,13 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
           $queue = new SystemQueue('mass_contact');
 
           // Create the queue item.
-          $message = array(
+          $message = [
             'message_key' => 'user-copy',
             'to' => $from_address,
             'params' => $params,
             'from_email' => $from_address,
             'success_message' => 'A copy was sent to you.',
-          );
+          ];
 
           // Add the item to the queue.
           $queue->createItem($message);
@@ -732,11 +733,11 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
       flood_register_event('mass_contact');
 
       // Log the operation.
-      \Drupal::logger('mass_contact')->notice('%name-from sent a message to the %category group, which included these recipients: @emails.', array(
-          '%name-from' => $from_address,
-          '%category' => $category,
-          '@emails' => $listed_recipients,
-        ));
+      \Drupal::logger('mass_contact')->notice('%name-from sent a message to the %category group, which included these recipients: @emails.', [
+        '%name-from' => $from_address,
+        '%category' => $category,
+        '@emails' => $listed_recipients,
+      ]);
 
       // Prepare some variables for the printing of the final results.
       $total_recipients = count($all_recipients);
@@ -745,14 +746,14 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
 
       // Print out the final results of the complete operation.
       if ($total_recipients == $unique_addresses_count) {
-        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses.', array('@total' => $total_recipients)));
+        drupal_set_message(t('Your message was successfully sent to a total of @total email addresses.', ['@total' => $total_recipients]));
       }
       else {
         drupal_set_message(t('Your message was successfully sent to a total of @total email addresses, of which, there may have been !dups duplicates.',
-          array(
+          [
             '@total' => $total_recipients,
             '!dups' => $total_recipients - $unique_addresses_count,
-          )
+          ]
         ));
       }
     }
@@ -760,14 +761,14 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
       // Otherwise, inform the user that there were error(s).
       if (\Drupal::moduleHandler()->moduleExists('help')) {
         drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's !help page or README.txt.",
-          array(
+          [
             '@errors' => $send_error,
-            '!help' => \Drupal::l(t('help'), \Drupal\Core\Url::fromRoute('help.page')),
-          )
+            '!help' => \Drupal::l(t('help'), Url::fromRoute('help.page')),
+          ]
         ));
       }
       else {
-        drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's README.txt.", array('@errors' => $send_error)));
+        drupal_set_message(t("@errors error(s) were encountered sending the message. Check the logs for error messages. For more information, see the Troubleshooting section of Mass Contact's README.txt.", ['@errors' => $send_error]));
       }
     }
   }
@@ -776,7 +777,6 @@ $from_email = \Drupal::config('mass_contact.settings')->get('default_sender_emai
   // contradictory messages if flood control has been activated.
   $form_state['redirect'] = '/';
 }
-
 
 /**
  * Figures out the default filter format for the current user.
@@ -790,10 +790,10 @@ function _mass_contact_compute_default_filter_format() {
 
   $user_default = filter_default_format($user);
   // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$specified_filter_format = \Drupal::config('mass_contact.settings')->get('mass_contact_html_format');
+  // Could not extract the default value because it is either indeterminate, or
+  // not scalar. You'll need to provide a default value in
+  // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
+  $specified_filter_format = \Drupal::config('mass_contact.settings')->get('mass_contact_html_format');
 
   // The admin has not specified one, there wouldn't be a match for the
   // default.
@@ -815,7 +815,6 @@ $specified_filter_format = \Drupal::config('mass_contact.settings')->get('mass_c
   return filter_fallback_format();
 }
 
-
 /**
  * Prepares the message's header.
  *
@@ -829,9 +828,9 @@ $specified_filter_format = \Drupal::config('mass_contact.settings')->get('mass_c
  *   The prepared header.
  */
 function _mass_contact_prepare_header($form_values, $format) {
-  $params = array();
+  $params = [];
 
-//  if (!empty($form_values['message']['format']) && $form_values['message']['format'] == 'plain_text') {
+  // If (!empty($form_values['message']['format']) && $form_values['message']['format'] == 'plain_text') {.
   if (!empty($format) && $format == 'plain_text') {
     $params['headers']['Content-Type'] = 'text/plain; charset=' . \Drupal::config('mass_contact.settings')->get('character_set') . '; format=flowed';
   }
@@ -846,7 +845,6 @@ function _mass_contact_prepare_header($form_values, $format) {
   return $params;
 }
 
-
 /**
  * Prepares the message's body.
  *
@@ -859,7 +857,7 @@ function _mass_contact_prepare_header($form_values, $format) {
  *   The prepared body, including any possible addons.
  */
 function _mass_contact_prepare_bodies($form_values, $format) {
-  $body = array();
+  $body = [];
 
   if (!empty($format) && $format == 'plain_text') {
     // Start with the message prefix.
@@ -867,10 +865,10 @@ function _mass_contact_prepare_bodies($form_values, $format) {
 
     // Add in the actual message.
     if (is_array($form_values['message'])) {
-      $body[] = wordwrap(\Drupal\Component\Utility\Html::escape($form_values['message']['value']));
+      $body[] = wordwrap(Html::escape($form_values['message']['value']));
     }
     else {
-      $body[] = wordwrap(\Drupal\Component\Utility\Html::escape($form_values['message']));
+      $body[] = wordwrap(Html::escape($form_values['message']));
     }
 
     // End with the message suffix.
@@ -883,10 +881,10 @@ function _mass_contact_prepare_bodies($form_values, $format) {
     $language = \Drupal::languageManager()->getCurrentLanguage();
     // Add in the actual message.
     if (is_array($form_values['message'])) {
-      $body[] = check_markup($form_values['message']['value'], $format, ($language) ? $language->language : \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED);
+      $body[] = check_markup($form_values['message']['value'], $format, ($language) ? $language->language : Language::LANGCODE_NOT_SPECIFIED);
     }
     else {
-      $body[] = check_markup($form_values['message'], $format, ($language) ? $language->language : \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED);
+      $body[] = check_markup($form_values['message'], $format, ($language) ? $language->language : Language::LANGCODE_NOT_SPECIFIED);
     }
 
     // End with the message suffix.
@@ -900,10 +898,10 @@ function _mass_contact_prepare_bodies($form_values, $format) {
 
     // Add in the actual message.
     if (is_array($form_values['message'])) {
-      $body[] = wordwrap(\Drupal\Component\Utility\Html::escape($form_values['message']['value']));
+      $body[] = wordwrap(Html::escape($form_values['message']['value']));
     }
     else {
-      $body[] = wordwrap(\Drupal\Component\Utility\Html::escape($form_values['message']));
+      $body[] = wordwrap(Html::escape($form_values['message']));
     }
 
     // End with the message suffix.
@@ -912,7 +910,6 @@ function _mass_contact_prepare_bodies($form_values, $format) {
 
   return $body;
 }
-
 
 /**
  * Prepares a message addon (prefix or suffix).
@@ -939,16 +936,15 @@ function _mass_contact_prepare_message_addon($addon, $style) {
     case 'prefix':
       if ($token_module_exists) {
         // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$message_addon = \Drupal::config('mass_contact.settings')->get('mass_contact_message_prefix');
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
+        $message_addon = \Drupal::config('mass_contact.settings')->get('mass_contact_message_prefix');
       }
       else {
         // @FIXME
-// url() expects a route name or an external URI.
-// $message_addon = variable_get('mass_contact_message_prefix', t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))));
-
+        // url() expects a route name or an external URI.
+        // $message_addon = variable_get('mass_contact_message_prefix', t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE)))));
       }
       break;
 
@@ -973,10 +969,10 @@ $message_addon = \Drupal::config('mass_contact.settings')->get('mass_contact_mes
     switch ($style) {
       case 'plain text':
         if ($token_module_exists) {
-          $message .= wordwrap(\Drupal\Component\Utility\Html::escape(\Drupal::token()->replace($message_addon_text)));
+          $message .= wordwrap(Html::escape(\Drupal::token()->replace($message_addon_text)));
         }
         else {
-          $message .= wordwrap(\Drupal\Component\Utility\Html::escape($message_addon_text));
+          $message .= wordwrap(Html::escape($message_addon_text));
         }
         break;
 
@@ -984,18 +980,18 @@ $message_addon = \Drupal::config('mass_contact.settings')->get('mass_contact_mes
         $language = \Drupal::languageManager()->getCurrentLanguage();
         if (is_array($message_addon)) {
           if ($token_module_exists) {
-            $message .= check_markup(\Drupal::token()->replace($message_addon_text), $message_addon['format'], ($language) ? $language->language : \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED);
+            $message .= check_markup(\Drupal::token()->replace($message_addon_text), $message_addon['format'], ($language) ? $language->language : Language::LANGCODE_NOT_SPECIFIED);
           }
           else {
-            $message .= check_markup($message_addon_text, $message_addon['format'], ($language) ? $language->language : \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED);
+            $message .= check_markup($message_addon_text, $message_addon['format'], ($language) ? $language->language : Language::LANGCODE_NOT_SPECIFIED);
           }
         }
         else {
           if ($token_module_exists) {
-            $message .= check_markup(\Drupal::token()->replace($message_addon_text), filter_fallback_format(), ($language) ? $language->language : \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED);
+            $message .= check_markup(\Drupal::token()->replace($message_addon_text), filter_fallback_format(), ($language) ? $language->language : Language::LANGCODE_NOT_SPECIFIED);
           }
           else {
-            $message .= check_markup($message_addon_text, filter_fallback_format(), ($language) ? $language->language : \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED);
+            $message .= check_markup($message_addon_text, filter_fallback_format(), ($language) ? $language->language : Language::LANGCODE_NOT_SPECIFIED);
           }
         }
         break;
@@ -1014,18 +1010,17 @@ $message_addon = \Drupal::config('mass_contact.settings')->get('mass_contact_mes
   return $message;
 }
 
-
 /**
  * Processes attachments for use with Mime Mail.
  *
- * @param boolean $nodecc
+ * @param bool $nodecc
  *   Identifies whether a copy of the message will be saved as a node.
  *
  * @return array
  *   The attachment information, as Mime Mail expects it.
  */
 function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
-  $files = array();
+  $files = [];
 
   // Loop through each possible attachment.
   for ($i = 1; $i <= \Drupal::config('mass_contact.settings')->get('number_of_attachments'); $i++) {
@@ -1037,13 +1032,13 @@ function _mass_contact_process_mime_mail_attachments($nodecc = FALSE) {
         // The name in the global $_FILES array where the information about the
         // attachment is stored.
         $file_source = 'attachment_' . $i;
-        $file_validators = array();
+        $file_validators = [];
         // Get the directory where attachments are to be saved.
         // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$file_destination = 'public://' . \Drupal::config('mass_contact.settings')->get('attachment_location');
+        // Could not extract the default value because it is either indeterminate, or
+        // not scalar. You'll need to provide a default value in
+        // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
+        $file_destination = 'public://' . \Drupal::config('mass_contact.settings')->get('attachment_location');
         $file_replace = FILE_EXISTS_RENAME;
 
         // Check to see that the directory exists.
@@ -1059,7 +1054,7 @@ $file_destination = 'public://' . \Drupal::config('mass_contact.settings')->get(
         if ($file === FALSE) {
           // There was an error, so report it.
           $message = 'There was an error uploading the "!attachment" attachment.';
-          $variables = array('!attachment' => $_FILES['files']['name']['attachment_' . $i]);
+          $variables = ['!attachment' => $_FILES['files']['name']['attachment_' . $i]];
 
           drupal_set_message(t($message, $variables), 'error');
           \Drupal::logger('mass_contact')->error($message, []);
@@ -1067,7 +1062,7 @@ $file_destination = 'public://' . \Drupal::config('mass_contact.settings')->get(
         elseif ($file === NULL) {
           // Nothing happened, so say so.
           $message = 'The "!attachment" attachment was not uploaded.';
-          $variables = array('!attachment' => $_FILES['files']['name']['attachment_' . $i]);
+          $variables = ['!attachment' => $_FILES['files']['name']['attachment_' . $i]];
 
           drupal_set_message(t($message, $variables), 'error');
           \Drupal::logger('mass_contact')->error($message, []);
@@ -1085,7 +1080,7 @@ $file_destination = 'public://' . \Drupal::config('mass_contact.settings')->get(
           if (!$file) {
             // If there was an error, report it.
             $message = 'There was an error saving the file object for "!attachment" to the database.';
-            $variables = array('!attachment' => $_FILES['files']['name']['attachment_' . $i]);
+            $variables = ['!attachment' => $_FILES['files']['name']['attachment_' . $i]];
 
             drupal_set_message(t($message, $variables), 'error');
             \Drupal::logger('mass_contact')->error($message, []);
@@ -1095,23 +1090,23 @@ $file_destination = 'public://' . \Drupal::config('mass_contact.settings')->get(
             $node_files[] = $file;
 
             // Save the file information for the message.
-            $files[] = array(
+            $files[] = [
               'filepath' => \Drupal::service("file_system")->realpath($file->uri),
               'uri' => \Drupal::service("file_system")->realpath($file->uri),
               'filename' => $_FILES['files']['name']['attachment_' . $i],
               'filemime' => $_FILES['files']['type']['attachment_' . $i],
-            );
+            ];
           }
         }
       }
       // Save the file information for the message.
       else {
-        $files[] = array(
+        $files[] = [
           'filepath' => $_FILES['files']['tmp_name']['attachment_' . $i],
           'uri' => $_FILES['files']['tmp_name']['attachment_' . $i],
           'filename' => $_FILES['files']['name']['attachment_' . $i],
           'filemime' => $_FILES['files']['type']['attachment_' . $i],
-        );
+        ];
       }
     }
   }
@@ -1123,33 +1118,31 @@ $file_destination = 'public://' . \Drupal::config('mass_contact.settings')->get(
   return $files_array;
 }
 
-
 /**
  * Creates a list of recipients.
  *
  * @param object $category
  *   The category of users the message is to.
- * @param boolean $respect_opt_outs
+ * @param bool $respect_opt_outs
  *   The 'Respect user opt-outs' value from the message sending form.
  *
  * @return array
  *   Users' email addresses, keyed by their user name.
  */
 function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
-  $recipient_list = array();
+  $recipient_list = [];
   $opt_out_setting = \Drupal::config('mass_contact.settings')->get('optout_d');
 
   // Create the recipient list.
   // @FIXME
-// Most CTools APIs have been moved into core.
-// 
-// @see https://www.drupal.org/node/2164623
-// ctools_include('plugins');
-
+  // Most CTools APIs have been moved into core.
+  //
+  // @see https://www.drupal.org/node/2164623
+  // ctools_include('plugins');
   // Get the information about all plugins that implemnent this type of plugin.
   $plugins = \Drupal::service('plugin.manager.mass_contact.grouping_method')->getDefinitions();
-  $user_ids = array();
-  $all_user_ids = array();
+  $user_ids = [];
+  $all_user_ids = [];
   foreach ($plugins as $plugin) {
     // Get the recipient list function name for this particular implementation.
     $function = ctools_plugin_get_function($plugin, 'mass_contact_recipients');
@@ -1164,7 +1157,7 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
   }
 
   if (empty($all_user_ids)) {
-    return array();
+    return [];
   }
 
   // Eliminate duplicates.
@@ -1173,7 +1166,7 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
   $user = \Drupal::currentUser();
 
   $query = "SELECT u.name, u.mail, u.data FROM {users} u WHERE uid IN (:uids) AND u.status <> 0";
-  $results = db_query($query, array(':uids' => $uids));
+  $results = db_query($query, [':uids' => $uids]);
   foreach ($results as $account) {
     $account_data = unserialize($account->data);
 
@@ -1209,11 +1202,10 @@ function _mass_contact_create_recipient_list($category, $respect_opt_outs) {
   return $recipient_list;
 }
 
-
 /**
  * Finalizes the headers, by setting the To, Subject, and possibly, Bcc fields.
  *
- * @param boolean $bcc
+ * @param bool $bcc
  *   Indicates whether the recipients are to be put into the To or Bcc field.
  *   TRUE indicates the Bcc field, and FALSE indicates the To field.
  * @param string $recipients
@@ -1246,7 +1238,6 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
   return $to;
 }
 
-
 /**
  * Archive a copy of the sent message as a node.
  *
@@ -1262,7 +1253,7 @@ function _mass_contact_finalize_headers($bcc, $recipients, &$params, $from_email
  *   The categories of users sent to.
  * @param string $recipients
  *   The users who received the message.
- * @param boolean $result
+ * @param bool $result
  *   The result of sending the message.
  */
 function _mass_contact_save_node($params, $format, $from, $category, $recipients, $result) {
@@ -1281,7 +1272,7 @@ function _mass_contact_save_node($params, $format, $from, $category, $recipients
   // The node data is not completely saved if $node->language is not set to
   // \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED.
   // @TODO: Find out if this is a bug in Drupal or not.
-  $node->language = \Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED;
+  $node->language = Language::LANGCODE_NOT_SPECIFIED;
 
   // Set the title of the node to the subject of the message.
   $node->title = $params['subject'];
@@ -1343,7 +1334,7 @@ function _mass_contact_save_node($params, $format, $from, $category, $recipients
   if (!empty($params['node_attachments'])) {
     foreach ($params['node_attachments'] as $attachment) {
       // Attach the attachment to the node.
-      $node->field_mass_contact_attachments[$node->language][] = array(
+      $node->field_mass_contact_attachments[$node->language][] = [
         'fid' => $attachment->fid,
         'display' => 1,
         'dscription' => '',
@@ -1354,8 +1345,8 @@ function _mass_contact_save_node($params, $format, $from, $category, $recipients
         'filesize' => $attachment->filesize,
         'status' => $attachment->status,
         'timestamp' => $attachment->timestamp,
-        'rdf_mapping' => array(),
-      );
+        'rdf_mapping' => [],
+      ];
     }
   }
 
@@ -1364,10 +1355,8 @@ function _mass_contact_save_node($params, $format, $from, $category, $recipients
 
   // Log the node creation.
   // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// watchdog('content', 'Mass Contact content added "%title".', array('%title' => $params['subject']), WATCHDOG_NOTICE, l(t('View'), 'node/' . $node->nid));
-
-
+  // l() expects a Url object, created from a route name or external URI.
+  // watchdog('content', 'Mass Contact content added "%title".', array('%title' => $params['subject']), WATCHDOG_NOTICE, l(t('View'), 'node/' . $node->nid));
   // Inform the user.
   drupal_set_message(t('A copy has been created as a node.'));
 }

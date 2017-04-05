@@ -47,23 +47,23 @@ class CategoryForm extends EntityForm {
 
     /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface $mass_contact_category */
     $mass_contact_category = $this->entity;
-    $form['label'] = array(
+    $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Category'),
       '#maxlength' => 255,
       '#default_value' => $mass_contact_category->label(),
       '#description' => $this->t('The category name to display on the Mass Contact form.'),
       '#required' => TRUE,
-    );
+    ];
 
-    $form['id'] = array(
+    $form['id'] = [
       '#type' => 'machine_name',
       '#default_value' => $mass_contact_category->id(),
-      '#machine_name' => array(
+      '#machine_name' => [
         'exists' => '\Drupal\mass_contact\Entity\MassContactCategory::load',
-      ),
+      ],
       '#disabled' => !$mass_contact_category->isNew(),
-    );
+    ];
 
     $form['recipients'] = [
       '#type' => 'details',
@@ -82,12 +82,12 @@ class CategoryForm extends EntityForm {
       $form['recipients'][$plugin->getPluginId()] = $plugin->adminForm($form, $form_state);
     }
 
-    $form['selected'] = array(
+    $form['selected'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Selected by default'),
       '#default_value' => $mass_contact_category->getSelected(),
       '#description' => t('This category will be selected by default on the <a href="@url">Mass Contact form</a>.', ['@url' => Url::fromRoute('mass_contact')->toString()]),
-    );
+    ];
 
     return $form;
   }

@@ -1,12 +1,16 @@
 <?php
+
 /**
  * @file
- * mass_contact plugin type grouping_method.
+ * Mass_contact plugin type grouping_method.
  *
  * Select users by taxonomy terms.
  */
 
-$plugin = array(
+use Drupal\Core\Language\Language;
+use Drupal\Component\Utility\Html;
+
+$plugin = [
   // Retrieve the list of users by category.
   'mass_contact_recipients' => 'mass_contact_taxonomy_recipients',
 
@@ -23,8 +27,7 @@ $plugin = array(
   // This callback is used to maintain the form for opting in or out of
   // categories.
   'mass_contact_user_edit' => 'mass_contact_taxonomy_user_edit',
-);
-
+];
 
 /**
  * Retrieves a list of users by taxonomy terms.
@@ -52,7 +55,7 @@ function mass_contact_taxonomy_recipients($recipients) {
     return;
   }
 
-  $uids = array();
+  $uids = [];
   // Iterate through all the fields attached to the user entity.
   foreach ($user_fields['user'] as $user_field_instance) {
     // Get the field's information.
@@ -76,7 +79,6 @@ function mass_contact_taxonomy_recipients($recipients) {
 
   return $uids;
 }
-
 
 /**
  * Prepares a list of categories for the Category List page.
@@ -102,17 +104,16 @@ function mass_contact_taxonomy_categories($recipients) {
   if (empty($terms)) {
     return;
   }
-``
-  $term_names = array();
+  ``
+  $term_names = [];
   foreach ($terms as $term) {
     // For each term object, add the name to an array.
     $term_names[] = $term->name;
   }
 
   // Return the list of terms included in this category.
-  return t('Taxonomy terms: %terms', array('%terms' => implode(', ', $term_names)));
+  return t('Taxonomy terms: %terms', ['%terms' => implode(', ', $term_names)]);
 }
-
 
 /**
  * Creates a form element for Category add/edit page.
@@ -131,7 +132,7 @@ function mass_contact_taxonomy_admin_edit($recipients) {
     return;
   }
 
-  $taxonomy_fields = array();
+  $taxonomy_fields = [];
   // Iterate through all the fields attached to the user entity.
   foreach ($user_fields['user'] as $user_field_instance) {
     // Get the field's information.
@@ -143,29 +144,29 @@ function mass_contact_taxonomy_admin_edit($recipients) {
     }
   }
 
-  $form_element = array();
+  $form_element = [];
   // Iterate through the array of fields.
   foreach ($taxonomy_fields as $field_name => $vocabulary_name) {
     $vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name);
     if (!empty($vocabulary)) {
       $terms = \Drupal::entityManager()->getStorage("taxonomy_term")->loadTree($vocabulary->vid);
       if (!empty($terms)) {
-        $options = array();
+        $options = [];
         foreach ($terms as $term) {
-          $options[$term->tid] = \Drupal\Component\Utility\Html::escape($term->name);
+          $options[$term->tid] = Html::escape($term->name);
         }
-        $default_value = array();
+        $default_value = [];
         if (isset($recipients['mass_contact_taxonomy'])) {
           $default_value = $recipients['mass_contact_taxonomy'];
         }
 
         // Create a set of checkboxes, including each possible term.
-        $form_element[$field_name] = array(
+        $form_element[$field_name] = [
           '#type' => 'checkboxes',
-          '#title' => t('Taxonomy vocabulary: %vocabulary', array('%vocabulary' => $vocabulary->name)),
+          '#title' => t('Taxonomy vocabulary: %vocabulary', ['%vocabulary' => $vocabulary->name]),
           '#options' => $options,
           '#default_value' => $default_value,
-        );
+        ];
       }
     }
   }
@@ -214,7 +215,7 @@ function mass_contact_taxonomy_admin_edit_validate($form, &$form_state) {
  *   An array of term IDs.
  */
 function mass_contact_taxonomy_admin_edit_submit($form, &$form_state) {
-  $terms = array();
+  $terms = [];
   if (!empty($form_state['values']['recipients']['mass_contact_taxonomy'])) {
     foreach ($form_state['values']['recipients']['mass_contact_taxonomy'] as $term_values) {
       $terms += array_filter($term_values);
@@ -223,7 +224,6 @@ function mass_contact_taxonomy_admin_edit_submit($form, &$form_state) {
 
   return $terms;
 }
-
 
 /**
  * Creates a list of categories the user is part of.
@@ -243,7 +243,7 @@ function mass_contact_taxonomy_user_edit($user) {
   }
 
   // Get a list of all taxonomy fields.
-  $taxonomy_fields = array();
+  $taxonomy_fields = [];
   // Iterate through all the fields attached to the user entity.
   foreach ($user_fields['user'] as $user_field_instance) {
     // Get the field's information.
@@ -256,7 +256,7 @@ function mass_contact_taxonomy_user_edit($user) {
   }
 
   // Put the term IDs into an array for later use.
-  $users_terms = array();
+  $users_terms = [];
   // Iterate through all the taxonomy fields.
   foreach ($taxonomy_fields as $field_id => $field_name) {
     // Iterate through each property in the user oblect to locate the taxonomy
@@ -264,7 +264,7 @@ function mass_contact_taxonomy_user_edit($user) {
     foreach ($user as $key => $value) {
       if ($key == $field_id) {
         if (!empty($value)) {
-          foreach ($value[\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED] as $term_id) {
+          foreach ($value[Language::LANGCODE_NOT_SPECIFIED] as $term_id) {
             // Save term.
             $users_terms[] = $term_id['tid'];
           }
@@ -278,11 +278,11 @@ function mass_contact_taxonomy_user_edit($user) {
 
   // Get all the Mass Contact categories.
   $categories = db_select('mass_contact', 'mc')
-    ->fields('mc', array('cid', 'category', 'recipients'))
+    ->fields('mc', ['cid', 'category', 'recipients'])
     ->execute();
 
   // Collect all the categories which contain terms the user has selected.
-  $included_categories = array();
+  $included_categories = [];
   // Iterate through each category.
   foreach ($categories as $category) {
     // Pull out the roles that are a part of this category.
@@ -290,7 +290,7 @@ function mass_contact_taxonomy_user_edit($user) {
     foreach ($recipients['mass_contact_taxonomy'] as $term_id) {
       // If the category's term is one the user has selected, show the category.
       if (in_array($term_id, $users_terms)) {
-        $included_categories[$category->cid] = \Drupal\Component\Utility\Html::escape($category->category);
+        $included_categories[$category->cid] = Html::escape($category->category);
       }
     }
   }

@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\mass_contact\Entity\MassContactCategoryInterface;
 use Drupal\user\RoleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -28,7 +27,6 @@ class Role extends PluginBase implements GroupingInterface, ContainerFactoryPlug
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
-
 
   /**
    * Constructs the role grouping plugin.
@@ -136,13 +134,13 @@ class Role extends PluginBase implements GroupingInterface, ContainerFactoryPlug
     }, $roles);
 
     // Create a set of checkboxes, including each role.
-    $form_element = array(
+    $form_element = [
       '#type' => 'checkboxes',
       '#title' => t('User roles to include'),
       '#options' => $options,
       '#default_value' => $this->configuration['categories'],
       '#description' => t('These roles will be added to the mailing list. Note: if you check "authenticated user", other roles will not be added, as they will receive the email anyway.'),
-    );
+    ];
 
     return $form_element;
 
