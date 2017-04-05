@@ -14,6 +14,6 @@ bcc_d: true
 category_override: true
 number_of_attachments: 3
 attachment_location: mass_contact_attachments
-html_d: 1
+html_d: 'plain_text'
 message_suffix: ''
 wait_time: 0

@@ -40,7 +40,8 @@ mass_contact.settings:
     attachment_location:
       type: string
     html_d:
-      type: integer
+      type: string
+      label: 'Message format to use'
     message_suffix:
       type: string
     wait_time:
