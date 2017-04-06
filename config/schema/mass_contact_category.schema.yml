@@ -26,6 +26,9 @@ mass_contact.category.*:
             sequence:
               type: string
               label: 'Category ID'
+          conjunction:
+            type: string
+            label: 'Conjunction for finding recipients'
     selected:
       type: boolean
       label: 'Selected by default'

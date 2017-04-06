@@ -177,39 +177,39 @@ class EmailBodyForm extends SettingsFormBase {
         $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
       }
     }
-/*
+    /*
     $form['mass_contact_supplemental_texts']['mass_contact_message_prefix'] = [
-      '#type' => $field_type,
-      '#title' => $this->t('Text to be prepended to all messages'),
-      '#default_value' => $prefix_default_value,
-      '#format' => $prefix_format,
-      '#description' => $this->t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed before the message text entered in by the sender.'),
+    '#type' => $field_type,
+    '#title' => $this->t('Text to be prepended to all messages'),
+    '#default_value' => $prefix_default_value,
+    '#format' => $prefix_format,
+    '#description' => $this->t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed before the message text entered in by the sender.'),
     ];
 
     $form['mass_contact_supplemental_texts']['message_suffix'] = [
-      '#type' => $field_type,
-      '#title' => t('Text to be appended to all messages'),
-      '#default_value' => $suffix_default_value,
-      '#format' => $suffix_format,
-      '#description' => t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed after the message text entered in by the sender.'),
+    '#type' => $field_type,
+    '#title' => t('Text to be appended to all messages'),
+    '#default_value' => $suffix_default_value,
+    '#format' => $suffix_format,
+    '#description' => t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed after the message text entered in by the sender.'),
     ];
 
     if ($token) {
-      // Display the user documentation of placeholders supported by this module,
-      // as a description on the last pattern.
-      $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens'] = [
-        '#type' => 'fieldset',
-        '#title' => t('Replacement patterns'),
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#description' => t('You may use any of the following replacements tokens for use in the prefix and/or suffix texts above.'),
-      ];
-      $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens']['token_help'] = [
-        '#theme' => 'token_tree',
-        '#token_types' => ['global'],
-      ];
+    // Display the user documentation of placeholders supported by this module,
+    // as a description on the last pattern.
+    $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens'] = [
+    '#type' => 'fieldset',
+    '#title' => t('Replacement patterns'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t('You may use any of the following replacements tokens for use in the prefix and/or suffix texts above.'),
+    ];
+    $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens']['token_help'] = [
+    '#theme' => 'token_tree',
+    '#token_types' => ['global'],
+    ];
     }
-*/
+     */
     // Attachment options.
     $form['mass_contact_attachment_settings'] = [
       '#type' => 'fieldset',

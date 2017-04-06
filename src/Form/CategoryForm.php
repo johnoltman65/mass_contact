@@ -74,12 +74,11 @@ class CategoryForm extends EntityForm {
 
     // Attach plugin forms.
     foreach ($this->groupingMethodManager->getDefinitions() as $definition) {
-      /** @var \Drupal\mass_contact\Plugin\MassContact\GroupingMethod\GroupingInterface $plugin */
-      $configuration = [
-        'categories' => $mass_contact_category->getGroupingCategories($definition['id']),
-      ];
-      $plugin = $this->groupingMethodManager->createInstance($definition['id'], $configuration);
-      $form['recipients'][$plugin->getPluginId()] = $plugin->adminForm($form, $form_state);
+      if (!$plugin = $mass_contact_category->getGroupingCategories($definition['id'])) {
+        $plugin = $this->groupingMethodManager->createInstance($definition['id'], []);
+      }
+      $form['recipients'][$plugin->getPluginId()] = [];
+      $plugin->adminForm($form['recipients'][$plugin->getPluginId()], $form_state);
     }
 
     $form['selected'] = [
@@ -98,11 +97,11 @@ class CategoryForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface $mass_contact_category */
     $mass_contact_category = $this->entity;
-    $groupings = $mass_contact_category->getGroupings();
-    foreach ($groupings as $plugin_id => $grouping) {
-      $groupings[$plugin_id] = array_values(array_filter($grouping));
+    $recipients = $mass_contact_category->getRecipients();
+    foreach ($recipients as $plugin_id => $definition) {
+      $recipients[$plugin_id]['categories'] = array_values(array_filter($definition['categories']));
     }
-    $mass_contact_category->setGroupings($groupings);
+    $mass_contact_category->setRecipients($recipients);
     $status = $mass_contact_category->save();
 
     switch ($status) {

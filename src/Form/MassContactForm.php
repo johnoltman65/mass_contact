@@ -3,7 +3,6 @@
 namespace Drupal\mass_contact\Form;
 
 use Drupal\Component\Utility\Xss;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
@@ -237,8 +236,8 @@ class MassContactForm extends FormBase {
           '#type' => 'item',
           '#title' => t('Send as BCC (hide recipients)'),
           '#markup' => $this->config->get('bcc_d')
-            ? $this->t('Recipients will be hidden from each other.')
-            : $this->t('Recipients will NOT be hidden from each other.'),
+          ? $this->t('Recipients will be hidden from each other.')
+          : $this->t('Recipients will NOT be hidden from each other.'),
         ];
       }
 
@@ -275,7 +274,7 @@ class MassContactForm extends FormBase {
         $form['body']['message']['#format'] = 'plain_text';
       }
 
-        // If the user has access, add the field for specifying the attachment.
+      // If the user has access, add the field for specifying the attachment.
       if ($this->moduleHandler->moduleExists('mimemail') || $this->moduleHandler->moduleExists('swiftmailer')) {
         // @todo Port message body prefix/suffix.
         // @see https://www.drupal.org/node/2867166

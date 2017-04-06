@@ -4,7 +4,6 @@ namespace Drupal\mass_contact\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\mass_contact\Entity\MassContactCategory;
 use Drupal\mass_contact\MassContactInterface;
 
 /**

@@ -2,11 +2,10 @@
 
 namespace Drupal\mass_contact\Plugin\MassContact\GroupingMethod;
 
-use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Plugin\PluginBase;
 use Drupal\user\RoleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -19,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   description = @Translation("Select recipients by role")
  * )
  */
-class Role extends PluginBase implements GroupingInterface, ContainerFactoryPluginInterface {
+class Role extends GroupingBase implements ContainerFactoryPluginInterface {
 
   /**
    * The entity type manager service.
@@ -47,30 +46,7 @@ class Role extends PluginBase implements GroupingInterface, ContainerFactoryPlug
   }
 
   /**
-   * @inheritDoc
-   */
-  public function getConfiguration() {
-    return $this->configuration;
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public function setConfiguration(array $configuration) {
-    $this->configuration = NestedArray::mergeDeep($this->defaultConfiguration(), $configuration);
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public function defaultConfiguration() {
-    return [
-      'categories' => [],
-    ];
-  }
-
-  /**
-   * @inheritDoc
+   * {@inheritdoc}
    */
   public function calculateDependencies() {
     $configurations = [];
@@ -104,7 +80,10 @@ class Role extends PluginBase implements GroupingInterface, ContainerFactoryPlug
     foreach ($roles as $role) {
       $labels[] = $role->label();
     }
-    return $this->t('Roles: %roles', ['%roles' => implode(',', $labels)]);
+    if (!empty($labels)) {
+      return new FormattableMarkup($this->t('Roles: %roles', ['%roles' => implode(', ', $labels)]), []);
+    }
+    return '';
   }
 
   /**
@@ -126,7 +105,7 @@ class Role extends PluginBase implements GroupingInterface, ContainerFactoryPlug
   /**
    * {@inheritdoc}
    */
-  public function adminForm(array $form, FormStateInterface $form_state) {
+  public function adminForm(array &$form, FormStateInterface $form_state) {
     $roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
     unset($roles[RoleInterface::ANONYMOUS_ID]);
     $options = array_map(function (RoleInterface $role) {
@@ -134,16 +113,23 @@ class Role extends PluginBase implements GroupingInterface, ContainerFactoryPlug
     }, $roles);
 
     // Create a set of checkboxes, including each role.
-    $form_element = [
+    $form['categories'] = [
       '#type' => 'checkboxes',
-      '#title' => t('User roles to include'),
+      '#title' => $this->t('User roles to include'),
       '#options' => $options,
       '#default_value' => $this->configuration['categories'],
       '#description' => t('These roles will be added to the mailing list. Note: if you check "authenticated user", other roles will not be added, as they will receive the email anyway.'),
     ];
-
-    return $form_element;
-
+    $form['conjunction'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Selection criteria'),
+      '#options' => [
+        'OR' => $this->t('Any'),
+        'AND' => $this->t('All'),
+      ],
+      '#description' => $this->t('Choose <em>any</em> to return recipients with any of the categories, choose <em>all</em> to return recipients matching all of the categories.'),
+      '#default_value' => $this->configuration['conjunction'],
+    ];
   }
 
   /**

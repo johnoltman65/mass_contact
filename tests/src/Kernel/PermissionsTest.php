@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\Tests\mass_contact\Kernel;
+
 use Drupal\mass_contact\Permissions;
 
 /**

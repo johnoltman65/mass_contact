@@ -42,16 +42,18 @@ interface GroupingInterface extends PluginInspectionInterface, DerivativeInspect
    *   The form definition array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state object.
+   */
+  public function adminForm(array &$form, FormStateInterface $form_state);
+
+  /**
+   * Retrieves a list of category IDs.
    *
    * @return array
-   *   The form element.
+   *   An array of category IDs (role IDs, term IDs, etc).
    */
-  public function adminForm(array $form, FormStateInterface $form_state);
+  public function getCategories();
 
   /* @todo The rest
-  // The next three callbacks are used to maintain the form for adding/editing
-  // categories.
-  'mass_contact_admin_edit' => 'mass_contact_taxonomy_admin_edit',
   'mass_contact_admin_edit_validate' => 'mass_contact_taxonomy_admin_edit_validate',
   'mass_contact_admin_edit_submit' => 'mass_contact_taxonomy_admin_edit_submit',
 

@@ -40,8 +40,9 @@ class CategoryFormTest extends MassContactTestBase {
       'id' => Unicode::strtolower($this->randomMachineName()),
       'label' => $this->randomString(),
       'selected' => TRUE,
-      'recipients[role][' . $this->roles[3]->id() . ']' => TRUE,
-      'recipients[role][' . $this->roles[5]->id() . ']' => TRUE,
+      'recipients[role][categories][' . $this->roles[3]->id() . ']' => TRUE,
+      'recipients[role][categories][' . $this->roles[5]->id() . ']' => TRUE,
+      'recipients[role][conjunction]' => 'AND',
     ];
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
@@ -50,16 +51,20 @@ class CategoryFormTest extends MassContactTestBase {
     $this->assertEquals($edit['label'], $category->label());
     $this->assertTrue($category->getSelected());
     $expected = [
-      $this->roles[3]->id(),
-      $this->roles[5]->id(),
+      'categories' => [
+        $this->roles[3]->id(),
+        $this->roles[5]->id(),
+      ],
+      'conjunction' => 'AND',
     ];
-    $this->assertEquals($expected, $category->getGroupingCategories('role'));
+    $this->assertEquals($expected, $category->getRecipients()['role']);
 
     // Test edit form.
     $this->drupalGet($category->toUrl('edit-form'));
     $edit['selected'] = FALSE;
     $edit['label'] = $this->randomString();
-    $edit['recipients[role][' . $this->roles[4]->id() . ']'] = TRUE;
+    $edit['recipients[role][categories][' . $this->roles[4]->id() . ']'] = TRUE;
+    $edit['recipients[role][conjunction]'] = 'OR';
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
     \Drupal::entityTypeManager()->getStorage('mass_contact_category')->resetCache();
@@ -68,11 +73,14 @@ class CategoryFormTest extends MassContactTestBase {
     $this->assertEquals($edit['label'], $category->label());
     $this->assertFalse($category->getSelected());
     $expected = [
-      $this->roles[3]->id(),
-      $this->roles[4]->id(),
-      $this->roles[5]->id(),
+      'categories' => [
+        $this->roles[3]->id(),
+        $this->roles[4]->id(),
+        $this->roles[5]->id(),
+      ],
+      'conjunction' => 'OR',
     ];
-    $this->assertEquals($expected, $category->getGroupingCategories('role'));
+    $this->assertEquals($expected, $category->getRecipients()['role']);
   }
 
 }
