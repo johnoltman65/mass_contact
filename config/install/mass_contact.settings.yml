@@ -15,5 +15,10 @@ category_override: true
 number_of_attachments: 3
 attachment_location: mass_contact_attachments
 message_format: 'plain_text'
-message_suffix: ''
+message_prefix:
+  value: ''
+  format: 'plain_text'
+message_suffix:
+  value: ''
+  format: 'plain_text'
 wait_time: 0

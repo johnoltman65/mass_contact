@@ -42,7 +42,11 @@ mass_contact.settings:
     message_format:
       type: string
       label: 'Message format to use'
+    message_prefix:
+      type: text_format
+      label: 'Text to prepend to all messages'
     message_suffix:
-      type: string
+      type: text_format
+      label: 'Text to append to all messages'
     wait_time:
       type: integer

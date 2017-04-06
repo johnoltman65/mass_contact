@@ -23,6 +23,13 @@ class EmailBodyForm extends SettingsFormBase {
   protected $massContact;
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * Constructs the email body form.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -35,6 +42,7 @@ class EmailBodyForm extends SettingsFormBase {
   public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, MassContactInterface $mass_contact) {
     parent::__construct($config_factory);
     $this->massContact = $mass_contact;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -61,6 +69,8 @@ class EmailBodyForm extends SettingsFormBase {
   protected function getConfigKeys() {
     return [
       'message_format',
+      'message_prefix',
+      'message_suffix',
     ];
   }
 
@@ -102,115 +112,45 @@ class EmailBodyForm extends SettingsFormBase {
       ];
     }
 
-    return $form;
-
     // Supplemental texts that are prepended and/or appended to every message.
-    $form['mass_contact_supplemental_texts'] = [
+    $form['supplemental_texts'] = [
       '#type' => 'details',
-      '#open' => TRUE,
+      '#open' => $config->get('message_prefix.value') || $config->get('message_suffix.value'),
       '#title' => $this->t('Supplemental message body texts'),
       '#description' => $this->t('You may specify additional text to insert before and/or after the message text of every mass email that is sent.'),
     ];
 
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-    $mass_contact_message_prefix = \Drupal::config('mass_contact.settings')->get('mass_contact_message_prefix');
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-    $message_suffix = \Drupal::config('mass_contact.settings')->get('message_suffix');
+    $form['supplemental_texts']['message_prefix'] = [
+      '#type' => 'text_format',
+      '#title' => $this->t('Text to be prepended to all messages'),
+      '#default_value' => $config->get('message_prefix.value'),
+      '#format' => $config->get('message_prefix.format'),
+      '#description' => $this->t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed before the message text entered in by the sender.'),
+    ];
 
-    // @todo Port this functionality.
-    // @see https://www.drupal.org/node/2867166
-    if ($this->massContact->htmlSupported() && FALSE) {
-      $field_type = 'text_format';
-
-      if (is_array($mass_contact_message_prefix)) {
-        $prefix_format = !empty($mass_contact_message_prefix['format']) ? $mass_contact_message_prefix['format'] : NULL;
-        $suffix_format = !empty($message_suffix['format']) ? $message_suffix['format'] : NULL;
-
-        if ($token) {
-          $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('[current-user:name] has sent you a group email from [site:name].');
-          $suffix_default_value = isset($message_suffix['value']) ? $message_suffix['value'] : '';
-        }
-        else {
-          // @FIXME
-          // url() expects a route name or an external URI.
-          // $prefix_default_value = isset($mass_contact_message_prefix['value']) ? $mass_contact_message_prefix['value'] : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
-          $suffix_default_value = isset($message_suffix['value']) ? $message_suffix['value'] : '';
-        }
-      }
-      else {
-        $prefix_format = !empty($mass_contact_message_prefix) ? $mass_contact_message_prefix : NULL;
-        $suffix_format = !empty($message_suffix) ? $message_suffix : NULL;
-
-        if ($token) {
-          $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group email from [site:name].');
-          $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
-        }
-        else {
-          // @FIXME
-          // url() expects a route name or an external URI.
-          // $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
-          $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
-        }
-      }
+    $form['supplemental_texts']['message_suffix'] = [
+      '#type' => 'text_format',
+      '#title' => $this->t('Text to be appended to all messages'),
+      '#default_value' => $config->get('message_suffix.value'),
+      '#format' => $config->get('message_suffix.format'),
+      '#description' => $this->t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed after the message text entered in by the sender.'),
+    ];
+    if (!$this->massContact->htmlSupported()) {
+      $form['supplemental_texts']['message_prefix']['#allowed_formats'] = ['plain_text'];
+      $form['supplemental_texts']['message_suffix']['#allowed_formats'] = ['plain_text'];
     }
-    // @todo Port this functionality.
-    // @see https://www.drupal.org/node/2867166
-    elseif (FALSE) {
-      $field_type = 'textarea';
-      $prefix_format = NULL;
-      $suffix_format = NULL;
-
-      if ($token) {
-        $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('[current-user:name] has sent you a group email from [site:name].');
-        $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
-      }
-      else {
-        // @FIXME
-        // url() expects a route name or an external URI.
-        // $prefix_default_value = isset($mass_contact_message_prefix) ? $mass_contact_message_prefix : t('You were sent a group email from @site.', array('@site' => url(NULL, array('absolute' => TRUE))));
-        $suffix_default_value = isset($message_suffix) ? $message_suffix : '';
-      }
+    if ($this->moduleHandler->moduleExists('token')) {
+      $form['supplemental_texts']['token_tree'] = [
+        '#theme' => 'token_tree_link',
+        '#token_types' => ['global'],
+        '#theme_wrappers' => ['form_element'],
+      ];
     }
-    /*
-    $form['mass_contact_supplemental_texts']['mass_contact_message_prefix'] = [
-    '#type' => $field_type,
-    '#title' => $this->t('Text to be prepended to all messages'),
-    '#default_value' => $prefix_default_value,
-    '#format' => $prefix_format,
-    '#description' => $this->t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed before the message text entered in by the sender.'),
-    ];
 
-    $form['mass_contact_supplemental_texts']['message_suffix'] = [
-    '#type' => $field_type,
-    '#title' => t('Text to be appended to all messages'),
-    '#default_value' => $suffix_default_value,
-    '#format' => $suffix_format,
-    '#description' => t('The text you specify in this field will be added to all Mass Contact messages sent out and will be placed after the message text entered in by the sender.'),
-    ];
+    return $form;
 
-    if ($token) {
-    // Display the user documentation of placeholders supported by this module,
-    // as a description on the last pattern.
-    $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens'] = [
-    '#type' => 'fieldset',
-    '#title' => t('Replacement patterns'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#description' => t('You may use any of the following replacements tokens for use in the prefix and/or suffix texts above.'),
-    ];
-    $form['mass_contact_supplemental_texts']['mass_contact_replacement_tokens']['token_help'] = [
-    '#theme' => 'token_tree',
-    '#token_types' => ['global'],
-    ];
-    }
-     */
     // Attachment options.
+    // @todo https://www.drupal.org/node/2867544
     $form['mass_contact_attachment_settings'] = [
       '#type' => 'fieldset',
       '#title' => t('Attachment Settings'),

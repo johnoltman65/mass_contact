@@ -275,9 +275,9 @@ class MassContactForm extends FormBase {
       }
 
       // If the user has access, add the field for specifying the attachment.
-      if ($this->moduleHandler->moduleExists('mimemail') || $this->moduleHandler->moduleExists('swiftmailer')) {
-        // @todo Port message body prefix/suffix.
-        // @see https://www.drupal.org/node/2867166
+      if (FALSE && ($this->moduleHandler->moduleExists('mimemail') || $this->moduleHandler->moduleExists('swiftmailer'))) {
+        // @todo Port email attachments.
+        // @see https://www.drupal.org/node/2867544
         if ($this->currentUser()->hasPermission('mass contact include attachments')) {
           for ($i = 1; $i <= \Drupal::config('mass_contact.settings')->get('number_of_attachments'); $i++) {
             $form['attachment_' . $i] = [
