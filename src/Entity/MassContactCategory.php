@@ -70,14 +70,14 @@ class MassContactCategory extends ConfigEntityBase implements MassContactCategor
   /**
    * The recipient categories, keyed by plugin ID.
    *
+   * @var array
+   *
    * The structure of each item is, for instance:
    * @code
    *   categories:
    *     - role_1
    *     - role_2
    * @endcode
-   *
-   * @var array
    */
   protected $recipients = [];
 

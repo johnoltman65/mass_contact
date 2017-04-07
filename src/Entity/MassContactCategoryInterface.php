@@ -20,7 +20,7 @@ interface MassContactCategoryInterface extends ConfigEntityInterface {
   /**
    * Sets grouping definitions.
    *
-   * @param \Drupal\mass_contact\Plugin\MassContact\GroupingMethod\GroupingInterface[]
+   * @param \Drupal\mass_contact\Plugin\MassContact\GroupingMethod\GroupingInterface[] $groupings
    *   The grouping configurations, keyed by plugin ID.
    */
   public function setGroupings(array $groupings);

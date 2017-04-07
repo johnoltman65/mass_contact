@@ -30,4 +30,21 @@ interface MassContactInterface {
    */
   public function htmlSupported();
 
+  /**
+   * Main entry point for queuing mass contact emails.
+   *
+   * @param array $categories
+   *   An array of category IDs to send to.
+   * @param string $subject
+   *   The message subject.
+   * @param string $body
+   *   The message body.
+   * @param string $format
+   *   The filter format to use for the body.
+   * @param array $configuration
+   *   An array of configuration. Default values are provided by the mass
+   *   contact settings.
+   */
+  public function processMassContactMessage(array $categories, $subject, $body, $format, array $configuration = []);
+
 }

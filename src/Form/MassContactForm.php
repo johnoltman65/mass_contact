@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\mass_contact\MassContactInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -38,18 +39,27 @@ class MassContactForm extends FormBase {
   protected $moduleHandler;
 
   /**
+   * The mass contact service.
+   *
+   * @var \Drupal\mass_contact\MassContactInterface
+   */
+  protected $massContact;
+
+  /**
    * Constructs the Mass Contact form.
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
+   * @param \Drupal\mass_contact\MassContactInterface $mass_contact
+   *   The mass contact service.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, MassContactInterface $mass_contact) {
     $this->config = $this->configFactory()->get('mass_contact.settings');
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
-
+    $this->massContact = $mass_contact;
   }
 
   /**
@@ -58,7 +68,8 @@ class MassContactForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('module_handler'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('mass_contact')
     );
   }
 
@@ -164,9 +175,8 @@ class MassContactForm extends FormBase {
       // Add the field for specifying the category(ies).
       if ((count($categories) > 1) || !isset($default_category)) {
         // Display a choice when one is needed.
-        $field_type = $this->config->get('category_display');
-        $form['cid'] = [
-          '#type' => $field_type,
+        $form['categories'] = [
+          '#type' => $this->config->get('category_display'),
           '#title' => $this->t('Category'),
           '#default_value' => $default_category,
           '#options' => $categories,
@@ -176,9 +186,9 @@ class MassContactForm extends FormBase {
       }
       else {
         // Otherwise, just use the default category.
-        $form['cid'] = [
+        $form['categories'] = [
           '#type' => 'value',
-          '#value' => $default_category,
+          '#value' => [$default_category],
         ];
         $form['cid-info'] = [
           '#type' => 'item',
@@ -194,7 +204,8 @@ class MassContactForm extends FormBase {
       // 0 => 'No', 1 == 'Yes', 2 == 'Selected categories'.
       if ($optout_setting == 1 || $optout_setting == 2) {
         // @todo https://www.drupal.org/node/2867177
-        // Allow to override or respect opt-outs if admin, otherwise use default.
+        // Allow to override or respect opt-outs if admin, otherwise use
+        // default.
         if ($this->currentUser()->hasPermission('mass contact administer')) {
           $form['optout'] = [
             '#type' => 'checkbox',
@@ -316,8 +327,8 @@ class MassContactForm extends FormBase {
           '#type' => 'item',
           '#title' => $this->t('Archive a copy of this message on this website'),
           '#markup' => $this->config->get('create_archive_copy')
-            ? $this->t('A copy of this message will be archived on this website.')
-            : $this->t('A copy of this message will NOT be archived on this website.'),
+          ? $this->t('A copy of this message will be archived on this website.')
+          : $this->t('A copy of this message will NOT be archived on this website.'),
         ];
       }
 
@@ -343,7 +354,17 @@ class MassContactForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // @todo
+    $configuration = [];
 
+    // @todo switch for immediate processing vs queue system.
+    $this->massContact->processMassContactMessage(
+      $form_state->getValue('categories'),
+      $form_state->getValue('subject'),
+      $form_state->getValue('message')['value'],
+      $form_state->getValue('message')['format'],
+      $configuration
+    );
   }
 
   /**

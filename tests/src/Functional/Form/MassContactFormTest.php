@@ -77,6 +77,18 @@ class MassContactFormTest extends MassContactTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Recipients will NOT be hidden from each other.');
     $this->assertSession()->pageTextContains(' A copy of this message will NOT be archived on this website.');
+
+    // Send a message.
+    $edit = [
+      'subject' => $this->randomString(),
+      'message[value]' => $this->randomString(),
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Send email'));
+    // Should be one item in the queue.
+    $queue = \Drupal::queue('mass_contact_queue_messages');
+    $this->assertEquals(1, $queue->numberOfItems());
+
+    // @todo process queue and verify emails.
   }
 
 }

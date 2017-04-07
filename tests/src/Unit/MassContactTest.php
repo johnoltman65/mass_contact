@@ -4,6 +4,7 @@ namespace Drupal\Tests\mass_contact\Unit;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Queue\QueueFactory;
 use Drupal\mass_contact\MassContact;
 use Drupal\Tests\UnitTestCase;
 
@@ -27,18 +28,19 @@ class MassContactTest extends UnitTestCase {
     $module_handler->moduleExists('mimemail')->willReturn(FALSE);
     $module_handler->moduleExists('swiftmailer')->willReturn(FALSE);
     $config_factory = $this->prophesize(ConfigFactoryInterface::class)->reveal();
-    $fixture = new MassContact($module_handler->reveal(), $config_factory);
+    $queue_factory = $this->prophesize(QueueFactory::class)->reveal();
+    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory);
     $this->assertFalse($fixture->htmlSupported());
 
     // Mime mail module.
     $module_handler->moduleExists('mimemail')->willReturn(TRUE);
-    $fixture = new MassContact($module_handler->reveal(), $config_factory);
+    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory);
     $this->assertTrue($fixture->htmlSupported());
 
     // Swiftmailer module.
     $module_handler->moduleExists('mimemail')->willReturn(FALSE);
     $module_handler->moduleExists('swiftmailer')->willReturn(TRUE);
-    $fixture = new MassContact($module_handler->reveal(), $config_factory);
+    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory);
     $this->assertTrue($fixture->htmlSupported());
   }
 
