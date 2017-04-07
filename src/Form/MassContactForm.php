@@ -81,7 +81,7 @@ class MassContactForm extends FormBase {
 
     /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface $category */
     foreach ($this->entityTypeManager->getStorage('mass_contact_category')->loadMultiple() as $category) {
-      if ($this->currentUser()->hasPermission('mass contact send to users in the ' . $category->id() . ' category')) {
+      if ($category->access('view')) {
         $categories[$category->id()] = $category->label();
 
         if ($category->getSelected()) {
@@ -279,7 +279,7 @@ class MassContactForm extends FormBase {
         // @todo Port email attachments.
         // @see https://www.drupal.org/node/2867544
         if ($this->currentUser()->hasPermission('mass contact include attachments')) {
-          for ($i = 1; $i <= \Drupal::config('mass_contact.settings')->get('number_of_attachments'); $i++) {
+          for ($i = 1; $i <= $this->config->get('number_of_attachments'); $i++) {
             $form['attachment_' . $i] = [
               '#type' => 'file',
               '#title' => t('Attachment #!number', ['!number' => $i]),
@@ -348,6 +348,25 @@ class MassContactForm extends FormBase {
       ];
     }
 
+    $this->buildTaskList($form);
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+
+  }
+
+  /**
+   * Builds the task list at the bottom of the mass contact form.
+   *
+   * @param array $form
+   *   The mass contact form definition.
+   */
+  protected function buildTaskList(array &$form) {
     if ($this->currentUser()->hasPermission('mass contact administer')) {
       $tasks = [];
       if ($this->currentUser()->hasPermission('administer permissions')) {
@@ -369,15 +388,6 @@ class MassContactForm extends FormBase {
         '#items' => $tasks,
       ];
     }
-
-    return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-
   }
 
 }

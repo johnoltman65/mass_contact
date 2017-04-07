@@ -11,6 +11,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   id = "mass_contact_category",
  *   label = @Translation("Mass contact category"),
  *   handlers = {
+ *     "access" = "\Drupal\mass_contact\CategoryAccessControlHandler",
  *     "list_builder" = "Drupal\mass_contact\CategoryListBuilder",
  *     "form" = {
  *       "add" = "Drupal\mass_contact\Form\CategoryForm",

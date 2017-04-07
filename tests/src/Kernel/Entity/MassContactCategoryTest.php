@@ -53,7 +53,7 @@ class MassContactCategoryTest extends MassContactTestBase {
       'role' => [
         'categories' => [
           'foo',
-          'bar'
+          'bar',
         ],
         'conjunction' => 'AND',
       ],
@@ -66,4 +66,5 @@ class MassContactCategoryTest extends MassContactTestBase {
     $this->assertEquals(['foo', 'bar'], $grouping->getCategories());
     $this->assertEquals('Roles: <em class="placeholder">Foo, Bar</em>', $grouping->displayCategories(['foo', 'bar']));
   }
+
 }

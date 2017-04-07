@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\Tests\mass_contact\Kernel;
+
 use Drupal\Component\Utility\Unicode;
 use Drupal\mass_contact\Entity\MassContactCategory;
 

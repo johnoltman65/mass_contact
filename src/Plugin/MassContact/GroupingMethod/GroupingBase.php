@@ -42,4 +42,5 @@ abstract class GroupingBase extends PluginBase implements GroupingInterface {
   public function getCategories() {
     return $this->configuration['categories'];
   }
+
 }
