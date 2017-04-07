@@ -3,12 +3,15 @@
 namespace Drupal\Tests\mass_contact\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\mass_contact\Kernel\CategoryCreationTrait;
 use Drupal\user\Entity\Role;
 
 /**
  * Base class for functional Mass Contact tests.
  */
 abstract class MassContactTestBase extends BrowserTestBase {
+
+  use CategoryCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -50,6 +53,9 @@ abstract class MassContactTestBase extends BrowserTestBase {
       $rid = $this->createRole([]);
       $this->roles[$i] = Role::load($rid);
     }
+
+    // Dummy user 1.
+    $this->createUser();
   }
 
 }

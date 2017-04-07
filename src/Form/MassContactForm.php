@@ -298,40 +298,26 @@ class MassContactForm extends FormBase {
         ];
       }
 
-      // Add the field for specifying whether to save the message as a node or
-      // not.
-      if ($this->currentUser()->hasPermission('mass contact archive messages')) {
-        // Check if the user is allowed to override the node copy setting.
-        if (\Drupal::currentUser()->hasPermission('mass contact override archiving')) {
-          $form['nodecc'] = [
-            '#type' => 'checkbox',
-            '#title' => $this->t('Archive a copy of this message on this website'),
-            '#default_value' => $this->config->get('nodecc_d'),
-          ];
-        }
-        // If not, then do it or not based on the administrative setting.
-        else {
-          $form['nodecc'] = [
-            '#type' => 'hidden',
-            '#default_value' => $this->config->get('nodecc_d'),
-          ];
-          $form['nodecc_notice'] = [
-            '#type' => 'item',
-            '#title' => $this->t('Archive a copy of this message on this website'),
-            '#markup' => $this->t('A copy of this message will !not be archived on this website.', ['!not' => $this->config->get('nodecc_d') ? '' : 'not']),
-          ];
-        }
+      // Check if the user is allowed to override the node copy setting.
+      if ($this->currentUser()->hasPermission('mass contact override archiving')) {
+        $form['create_archive_copy'] = [
+          '#type' => 'checkbox',
+          '#title' => $this->t('Archive a copy of this message on this website'),
+          '#default_value' => $this->config->get('create_archive_copy'),
+        ];
       }
       // If not, then do it or not based on the administrative setting.
       else {
-        $form['nodecc'] = [
+        $form['create_archive_copy'] = [
           '#type' => 'hidden',
-          '#default_value' => $this->config->get('nodecc_d'),
+          '#default_value' => $this->config->get('create_archive_copy'),
         ];
-        $form['nodecc_notice'] = [
+        $form['archive_notice'] = [
           '#type' => 'item',
           '#title' => $this->t('Archive a copy of this message on this website'),
-          '#markup' => $this->t('A copy of this message will !not be archived on this website.', ['!not' => $this->config->get('nodecc_d') ? '' : 'not']),
+          '#markup' => $this->config->get('create_archive_copy')
+            ? $this->t('A copy of this message will be archived on this website.')
+            : $this->t('A copy of this message will NOT be archived on this website.'),
         ];
       }
 

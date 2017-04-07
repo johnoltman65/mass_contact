@@ -14,7 +14,7 @@ mass_contact.settings:
     optout_d:
       type: string
       label: 'Allow users to opt-out of emails'
-    nodecc_d:
+    create_archive_copy:
       type: boolean
       label: 'Create and archive copy of the email'
     hourly_threshold:

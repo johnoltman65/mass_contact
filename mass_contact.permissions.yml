@@ -1,9 +1,6 @@
 mass contact administer:
   title: 'Administer mass contact'
   description: 'Allows the user to add, change, & delete categories and to change the administrative settings of Mass Contact.'
-mass contact archive messages:
-  title: 'Archive messages as content'
-  description: 'Allows the message sender to save an archive copy of the message as a node.'
 mass contact include attachments:
   title: 'Attach files to messages'
   description: 'Allows the message sender to include attachments with the message.'

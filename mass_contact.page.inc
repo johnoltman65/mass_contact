@@ -79,7 +79,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   }
 
   // Set whether a copy will be archived as a node.
-  $nodecc = \Drupal::config('mass_contact.settings')->get('nodecc_d');
+  $nodecc = \Drupal::config('mass_contact.settings')->get('create_archive_copy');
   if (\Drupal::currentUser()->hasPermission('mass contact archive messages') && \Drupal::currentUser()->hasPermission('mass contact override archiving')) {
     // Only set $nodecc if the user is allowed to archive messages AND
     // override the archive setting.

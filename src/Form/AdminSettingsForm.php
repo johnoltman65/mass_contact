@@ -27,7 +27,7 @@ class AdminSettingsForm extends SettingsFormBase {
       'recipient_limit',
       'send_with_cron',
       'optout_d',
-      'nodecc_d',
+      'create_archive_copy',
       'hourly_threshold',
       'category_display',
     ];
@@ -90,10 +90,10 @@ class AdminSettingsForm extends SettingsFormBase {
     ];
 
     // Node copy options.
-    $form['nodecc_d'] = [
+    $form['create_archive_copy'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Archive messages by saving a copy as a node'),
-      '#default_value' => $config->get('nodecc_d'),
+      '#default_value' => $config->get('create_archive_copy'),
     ];
 
     // Flood control options.

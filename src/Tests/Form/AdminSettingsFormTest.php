@@ -32,7 +32,7 @@ class AdminSettingsFormTest extends SystemConfigFormTestBase {
       'recipient_limit' => 42,
       'send_with_cron' => TRUE,
       'optout_d' => MassContactInterface::OPT_OUT_GLOBAL,
-      'nodecc_d' => NULL,
+      'create_archive_copy' => NULL,
       'hourly_threshold' => 33,
       'category_display' => 'checkboxes',
     ];
