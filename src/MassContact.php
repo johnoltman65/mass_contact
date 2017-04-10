@@ -3,13 +3,20 @@
 namespace Drupal\mass_contact;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Queue\QueueFactory;
 
 /**
  * The Mass Contact helper service.
  */
 class MassContact implements MassContactInterface {
+
+  /**
+   * Number of recipients to queue into a single queue worker at a time.
+   */
+  const MAX_QUEUE_RECIPIENTS = 20;
 
   /**
    * Defines the HTML modules supported.
@@ -50,6 +57,20 @@ class MassContact implements MassContactInterface {
   protected $sendingQueue;
 
   /**
+   * The recipient grouping plugin manager.
+   *
+   * @var \Drupal\Core\Mail\MailManagerInterface
+   */
+  protected $mail;
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs the Mass Contact helper.
    *
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
@@ -58,12 +79,19 @@ class MassContact implements MassContactInterface {
    *   The config factory service.
    * @param \Drupal\Core\Queue\QueueFactory $queue
    *   The queue factory.
+   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   *   The mail plugin manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, QueueFactory $queue) {
+  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, QueueFactory $queue, MailManagerInterface $mail_manager, EntityTypeManagerInterface $entity_type_manager) {
     $this->moduleHandler = $module_handler;
     $this->config = $config_factory->get('mass_contact.settings');
     $this->processingQueue = $queue->get('mass_contact_queue_messages', TRUE);
     $this->sendingQueue = $queue->get('mass_contact_send_message', TRUE);
+    $this->mail = $mail_manager;
+    $this->entityTypeManager = $entity_type_manager;
+
   }
 
   /**
@@ -103,6 +131,80 @@ class MassContact implements MassContactInterface {
     $default = [];
     // @todo
     return $default;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function queueRecipients(array $category_ids, $subject, $body, $format, array $configuration = []) {
+
+    $recipients = [];
+    $data = [
+      'subject' => $subject,
+      'body' => $body,
+      'format' => $format,
+      'configuration' => $configuration,
+      'recipients' => $recipients,
+    ];
+    foreach ($this->getRecipients($category_ids) as $i => $uid) {
+      $recipients[] = $uid;
+      if (count($recipients) == static::MAX_QUEUE_RECIPIENTS) {
+        // Send in batches.
+        $data['recipients'] = $recipients;
+        $this->sendingQueue->createItem($data);
+        $recipients = [];
+      }
+    }
+
+    // If there are any left, queue those too.
+    if (!empty($recipients)) {
+      $data['recipients'] = $recipients;
+      $this->sendingQueue->createItem($data);
+    }
+  }
+
+  /**
+   * Given categories, returns an array of recipient IDs.
+   *
+   * @param string[] $category_ids
+   *   An array of mass contact category IDs.
+   *
+   * @return int[]
+   *   An array of recipient user IDs.
+   */
+  protected function getRecipients(array $category_ids) {
+    /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface[] $categories */
+    $categories = $this->entityTypeManager->getStorage('mass_contact_category')->loadMultiple($category_ids);
+    $recipients = [];
+    foreach ($categories as $category) {
+      foreach ($category->getRecipients() as $plugin_id => $config) {
+        $grouping = $category->getGroupingCategories($plugin_id);
+        $recipients += $grouping->getRecipients($config['categories']);
+      }
+    }
+    return $recipients;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function sendMessage(array $recipients, $subject, $body, $format, array $configuration = []) {
+    $params = [
+      'subject' => $subject,
+      'body' => $body,
+      'format' => $format,
+      // @todo Respect header configurations.
+      'headers' => [],
+    ];
+    foreach ($recipients as $account_id) {
+      /** @var \Drupal\user\UserInterface $account */
+      if ($account = $this->entityTypeManager->getStorage('user')->load($account_id)) {
+        // Re-check account is still active.
+        if ($account->isActive()) {
+          $this->mail->mail('mass_contact', 'mass_contact', $account->getEmail(), $account->language()->getId(), $params);
+        }
+      }
+    }
   }
 
 }

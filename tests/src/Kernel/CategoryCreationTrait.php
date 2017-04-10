@@ -14,6 +14,7 @@ trait CategoryCreationTrait {
    * Creates a category.
    *
    * @return \Drupal\mass_contact\Entity\MassContactCategoryInterface
+   *   The new category entity.
    */
   public function createCategory(array $settings = []) {
     $settings += [

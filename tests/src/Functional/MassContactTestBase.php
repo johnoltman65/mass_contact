@@ -42,6 +42,9 @@ abstract class MassContactTestBase extends BrowserTestBase {
   protected function setUp() {
     parent::setUp();
 
+    // Dummy user 1.
+    $this->createUser();
+
     $this->admin = $this->createUser([
       'mass contact administer',
       'access administration pages',
@@ -53,9 +56,6 @@ abstract class MassContactTestBase extends BrowserTestBase {
       $rid = $this->createRole([]);
       $this->roles[$i] = Role::load($rid);
     }
-
-    // Dummy user 1.
-    $this->createUser();
   }
 
 }

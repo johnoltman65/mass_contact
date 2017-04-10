@@ -47,4 +47,38 @@ interface MassContactInterface {
    */
   public function processMassContactMessage(array $categories, $subject, $body, $format, array $configuration = []);
 
+  /**
+   * Takes a mass contact, calculates recipients and queues them for delivery.
+   *
+   * @param array $category_ids
+   *   An array of category IDs to send to.
+   * @param string $subject
+   *   The message subject.
+   * @param string $body
+   *   The message body.
+   * @param string $format
+   *   The filter format to use for the body.
+   * @param array $configuration
+   *   An array of configuration. Default values are provided by the mass
+   *   contact settings.
+   */
+  public function queueRecipients(array $category_ids, $subject, $body, $format, array $configuration = []);
+
+  /**
+   * Sends a message to a list of recipient user IDs.
+   *
+   * @param int[] $recipients
+   *   An array of recipient user IDs.
+   * @param string $subject
+   *   The message subject.
+   * @param string $body
+   *   The message body.
+   * @param string $format
+   *   The filter format to use for the body.
+   * @param array $configuration
+   *   An array of configuration. Default values are provided by the mass
+   *   contact settings.
+   */
+  public function sendMessage(array $recipients, $subject, $body, $format, array $configuration = []);
+
 }
