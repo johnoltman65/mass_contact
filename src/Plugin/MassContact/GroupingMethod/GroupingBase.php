@@ -32,7 +32,7 @@ abstract class GroupingBase extends PluginBase implements GroupingInterface {
   public function defaultConfiguration() {
     return [
       'categories' => [],
-      'conjunction' => 'ANY',
+      'conjunction' => 'OR',
     ];
   }
 

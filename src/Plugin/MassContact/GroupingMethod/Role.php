@@ -42,6 +42,7 @@ class Role extends GroupingBase implements ContainerFactoryPluginInterface {
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->configuration += $this->defaultConfiguration();
+    assert(in_array($this->configuration['conjunction'], ['AND', 'OR']));
     $this->entityTypeManager = $entity_type_manager;
   }
 
@@ -90,16 +91,34 @@ class Role extends GroupingBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function getRecipients(array $categories) {
-    $query = $this->entityTypeManager->getStorage('user')->getQuery();
-    $query->condition('status', 1);
+    if ($this->configuration['conjunction'] === 'OR') {
+      $query = $this->entityTypeManager->getStorage('user')->getQuery();
+      $query->condition('status', 1);
 
-    // If the authenticated role is not included, add the appropriate filters.
-    // Otherwise, return all active users.
-    if (!in_array(RoleInterface::AUTHENTICATED_ID, $categories)) {
-      $query->condition('roles', $categories, 'IN');
+      // If the authenticated role is not included, add the appropriate filters.
+      // Otherwise, return all active users.
+      if (!in_array(RoleInterface::AUTHENTICATED_ID, $categories)) {
+        $query->condition('roles', $categories, 'IN');
+      }
+      return $query->execute();
+    }
+    else {
+      // Must have all the roles if conjunction is set to AND.
+      // Note that entity query doesn't appear to be able to handle multiple
+      // conditions against the same field.
+      $results = [];
+      foreach ($categories as $id) {
+        $query = $this->entityTypeManager->getStorage('user')->getQuery();
+        $query->condition('status', 1);
+
+        if ($id !== RoleInterface::AUTHENTICATED_ID) {
+          $query->condition('roles', $id);
+        }
+        $results[$id] = $query->execute();
+      }
+      return count($results) > 1 ? call_user_func_array('array_intersect', $results) : reset($results);
     }
 
-    return $query->execute();
   }
 
   /**

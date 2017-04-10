@@ -248,7 +248,7 @@ function mass_contact_mail($key, &$message, $params) {
   }
   $message['subject'] = $params['subject'];
 
-  $message['body'][] = $params['body'];
+  $message['body'][] = check_markup($params['body'], $params['format']);
 
   // @todo update sender/etc from `$params['configuration']`.
 }
