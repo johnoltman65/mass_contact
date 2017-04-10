@@ -43,4 +43,16 @@ abstract class GroupingBase extends PluginBase implements GroupingInterface {
     return $this->configuration['categories'];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  }
+
 }

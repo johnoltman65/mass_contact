@@ -15,8 +15,11 @@ class MassContact implements MassContactInterface {
 
   /**
    * Number of recipients to queue into a single queue worker at a time.
+   *
+   * If sending via BCC, this also controls the number of recipients in a single
+   * email.
    */
-  const MAX_QUEUE_RECIPIENTS = 20;
+  const MAX_QUEUE_RECIPIENTS = 200;
 
   /**
    * Defines the HTML modules supported.
@@ -128,8 +131,11 @@ class MassContact implements MassContactInterface {
    *   The default configuration as defined in the mass_contact.settings config.
    */
   protected function getDefaultConfiguration() {
-    $default = [];
-    // @todo
+    $default = [
+      'use_bcc' => $this->config->get('use_bcc'),
+      'sender_name' => $this->config->get('default_sender_name'),
+      'sender_mail' => $this->config->get('default_sender_email'),
+    ];
     return $default;
   }
 
@@ -193,15 +199,33 @@ class MassContact implements MassContactInterface {
       'subject' => $subject,
       'body' => $body,
       'format' => $format,
-      // @todo Respect header configurations.
+      'configuration' => $configuration,
       'headers' => [],
     ];
-    foreach ($recipients as $account_id) {
-      /** @var \Drupal\user\UserInterface $account */
-      if ($account = $this->entityTypeManager->getStorage('user')->load($account_id)) {
-        // Re-check account is still active.
-        if ($account->isActive()) {
-          $this->mail->mail('mass_contact', 'mass_contact', $account->getEmail(), $account->language()->getId(), $params);
+
+    // If utilizing BCC, one email is sent.
+    if ($configuration['use_bcc']) {
+      $recipient_emails = [];
+      foreach ($recipients as $account_id) {
+        /** @var \Drupal\user\UserInterface $account */
+        if ($account = $this->entityTypeManager->getStorage('user')->load($account_id)) {
+          if ($account->isActive()) {
+            $recipient_emails[] = $account->getEmail();
+          }
+        }
+      }
+      $params['headers']['Bcc'] = implode(',', $recipient_emails);
+      $this->mail->mail('mass_contact', 'mass_contact', $configuration['sender_mail'], \Drupal::languageManager()->getDefaultLanguage()->getId(), $params);
+    }
+    else {
+      foreach ($recipients as $account_id) {
+        /** @var \Drupal\user\UserInterface $account */
+        if ($account = $this->entityTypeManager->getStorage('user')->load($account_id)
+        ) {
+          // Re-check account is still active.
+          if ($account->isActive()) {
+            $this->mail->mail('mass_contact', 'mass_contact', $account->getEmail(), $account->language()->getId(), $params);
+          }
         }
       }
     }

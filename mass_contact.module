@@ -250,5 +250,6 @@ function mass_contact_mail($key, &$message, $params) {
 
   $message['body'][] = check_markup($params['body'], $params['format']);
 
-  // @todo update sender/etc from `$params['configuration']`.
+  // Update the 'From' address.
+  $message['from'] = $params['configuration']['sender_mail'];
 }

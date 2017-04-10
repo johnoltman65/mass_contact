@@ -33,7 +33,7 @@ class EmailHeaderFormTest extends SystemConfigFormTestBase {
       'default_sender_email' => Unicode::strtolower($this->randomMachineName()) . '@drupal.org',
       'include_from_name' => TRUE,
       'include_to_name' => TRUE,
-      'bcc_d' => NULL,
+      'use_bcc' => NULL,
       'category_override' => NULL,
     ];
     foreach ($values as $config_key => $value) {

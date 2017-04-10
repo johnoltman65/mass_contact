@@ -73,7 +73,7 @@ function mass_contact_mail_page_submit($form, &$form_state) {
   $empty_lists = 0;
 
   // Set wether the recipients will be BCC or not.
-  $bcc = \Drupal::config('mass_contact.settings')->get('bcc_d');
+  $bcc = \Drupal::config('mass_contact.settings')->get('use_bcc');
   if (\Drupal::currentUser()->hasPermission('mass contact override bcc')) {
     $bcc = $form_state['values']['bcc'];
   }

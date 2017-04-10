@@ -116,7 +116,7 @@ class MassContactForm extends FormBase {
       $default_sender_name = $this->config->get('default_sender_name');
       if ($default_sender_name) {
         if ($this->currentUser()->hasPermission('mass contact change default sender information')) {
-          $form['name'] = [
+          $form['sender_name'] = [
             '#type' => 'textfield',
             '#title' => $this->t('Your name'),
             '#maxlength' => 255,
@@ -125,7 +125,7 @@ class MassContactForm extends FormBase {
           ];
         }
         else {
-          $form['name'] = [
+          $form['sender_name'] = [
             '#type' => 'item',
             '#title' => $this->t('Your name'),
             '#value' => $default_sender_name,
@@ -133,7 +133,7 @@ class MassContactForm extends FormBase {
         }
       }
       else {
-        $form['name'] = [
+        $form['sender_name'] = [
           '#type' => 'textfield',
           '#title' => t('Your name'),
           '#maxlength' => 255,
@@ -146,7 +146,7 @@ class MassContactForm extends FormBase {
       $default_sender_email = $this->config->get('default_sender_email');
       if ($default_sender_email) {
         if ($this->currentUser()->hasPermission('mass contact change default sender information')) {
-          $form['mail'] = [
+          $form['sender_mail'] = [
             '#type' => 'textfield',
             '#title' => $this->t('Your email address'),
             '#maxlength' => 255,
@@ -155,7 +155,7 @@ class MassContactForm extends FormBase {
           ];
         }
         else {
-          $form['mail'] = [
+          $form['sender_mail'] = [
             '#type' => 'item',
             '#title' => $this->t('Your email address'),
             '#value' => $default_sender_email,
@@ -163,7 +163,7 @@ class MassContactForm extends FormBase {
         }
       }
       else {
-        $form['mail'] = [
+        $form['sender_mail'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Your email address'),
           '#maxlength' => 255,
@@ -231,22 +231,22 @@ class MassContactForm extends FormBase {
       // BCC field of the message.
       // Check if the user is allowed to override the BCC setting.
       if ($this->currentUser()->hasPermission('mass contact override bcc')) {
-        $form['bcc'] = [
+        $form['use_bcc'] = [
           '#type' => 'checkbox',
           '#title' => t('Send as BCC (hide recipients)'),
-          '#default_value' => $this->config->get('bcc_d'),
+          '#default_value' => $this->config->get('use_bcc'),
         ];
       }
       // If not, then just display the BCC info.
       else {
-        $form['bcc'] = [
+        $form['use_bcc'] = [
           '#type' => 'value',
-          '#value' => $this->config->get('bcc_d'),
+          '#value' => $this->config->get('use_bcc'),
         ];
         $form['bcc-info'] = [
           '#type' => 'item',
           '#title' => t('Send as BCC (hide recipients)'),
-          '#markup' => $this->config->get('bcc_d')
+          '#markup' => $this->config->get('use_bcc')
           ? $this->t('Recipients will be hidden from each other.')
           : $this->t('Recipients will NOT be hidden from each other.'),
         ];
@@ -354,8 +354,11 @@ class MassContactForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // @todo
-    $configuration = [];
+    $configuration = [
+      'use_bcc' => $form_state->getValue('use_bcc'),
+      'sender_name' => $form_state->getValue('sender_name'),
+      'sender_mail' => $form_state->getValue('sender_mail'),
+    ];
 
     // @todo switch for immediate processing vs queue system.
     $this->massContact->processMassContactMessage(

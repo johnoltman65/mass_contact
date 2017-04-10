@@ -58,9 +58,9 @@ class MassContactFormTest extends MassContactTestBase {
       $this->categories[$i] = $this->createCategory();
     }
 
-    // Add 42 users.
+    // Add 410 users.
     $this->recipientRole = Role::load($this->createRole([]));
-    foreach (range(1, 42) as $i) {
+    foreach (range(1, 410) as $i) {
       $account = $this->createUser();
       if ($i == 5) {
         // Block the 5th one.
@@ -88,14 +88,14 @@ class MassContactFormTest extends MassContactTestBase {
     $this->assertSession()->pageTextContains('This message will be sent to all users in the ' . $this->categories[2]->label() . ' category.');
     $this->assertSession()->pageTextContains('A copy of this message will be archived on this website.');
     $this->assertSession()->pageTextContains('Recipients will be hidden from each other.');
-    $this->assertSession()->fieldExists('mail');
-    $this->assertSession()->fieldValueEquals('mail', $this->massContactUser->getEmail());
-    $this->assertSession()->fieldExists('name');
-    $this->assertSession()->fieldValueEquals('name', $this->massContactUser->getDisplayName());
+    $this->assertSession()->fieldExists('sender_mail');
+    $this->assertSession()->fieldValueEquals('sender_mail', $this->massContactUser->getEmail());
+    $this->assertSession()->fieldExists('sender_name');
+    $this->assertSession()->fieldValueEquals('sender_name', $this->massContactUser->getDisplayName());
 
     // Update some options.
     $config = $this->config('mass_contact.settings');
-    $config->set('bcc_d', FALSE);
+    $config->set('use_bcc', FALSE);
     $config->set('create_archive_copy', FALSE);
     $config->set('default_sender_email', 'foo@bar.com');
     $config->set('default_sender_name', 'Foo Bar');
@@ -105,8 +105,8 @@ class MassContactFormTest extends MassContactTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Recipients will NOT be hidden from each other.');
     $this->assertSession()->pageTextContains(' A copy of this message will NOT be archived on this website.');
-    $this->assertSession()->fieldNotExists('mail');
-    $this->assertSession()->fieldNotExists('name');
+    $this->assertSession()->fieldNotExists('sender_mail');
+    $this->assertSession()->fieldNotExists('sender_name');
 
     // Set category 2 to send to all authenticated users.
     $recipients = [
@@ -150,9 +150,48 @@ class MassContactFormTest extends MassContactTestBase {
       $queue->deleteItem($item);
     }
 
-    // Should be 41 emails (41 non-blocked users with the recipient role).
+    // Should be 409 emails (409 non-blocked users with the recipient role).
     $emails = $this->getMails();
-    $this->assertEquals(41, count($emails));
+    $this->assertEquals(409, count($emails));
+
+    // Switch back to BCC mode and only 3 emails should be sent.
+    \Drupal::state()->set('system.test_mail_collector', []);
+    $config->set('use_bcc', TRUE);
+    $config->save();
+
+    // Send a message to category 2.
+    $edit = [
+      'subject' => $this->randomString(),
+      'message[value]' => $this->randomString(),
+      'categories[]' => [$this->categories[2]->id()],
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Send email'));
+    // Should be one item in the queue.
+    $queue = \Drupal::queue('mass_contact_queue_messages');
+    $this->assertEquals(1, $queue->numberOfItems());
+
+    // Process the queue.
+    /** @var \Drupal\Core\Queue\QueueWorkerManagerInterface $manager */
+    $manager = $this->container->get('plugin.manager.queue_worker');
+    $queue_worker = $manager->createInstance('mass_contact_queue_messages');
+    while ($item = $queue->claimItem()) {
+      $queue_worker->processItem($item->data);
+      $queue->deleteItem($item);
+    }
+
+    // There should now be 3 items in the sending queue.
+    // @see \Drupal\mass_contact\MassContact::MAX__QUEUE_RECIPIENTS
+    $queue = \Drupal::queue('mass_contact_send_message');
+    $this->assertEquals(3, $queue->numberOfItems());
+    $queue_worker = $manager->createInstance('mass_contact_send_message');
+    while ($item = $queue->claimItem()) {
+      $queue_worker->processItem($item->data);
+      $queue->deleteItem($item);
+    }
+
+    // Should be 3 emails since BCC is used.
+    $emails = $this->getMails();
+    $this->assertEquals(3, count($emails));
   }
 
 }

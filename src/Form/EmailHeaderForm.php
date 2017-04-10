@@ -19,7 +19,7 @@ class EmailHeaderForm extends SettingsFormBase {
       'default_sender_email',
       'include_from_name',
       'include_to_name',
-      'bcc_d',
+      'use_bcc',
       'category_override',
     ];
   }
@@ -87,10 +87,10 @@ class EmailHeaderForm extends SettingsFormBase {
     ];
 
     // BCC options.
-    $form['bcc_d'] = [
+    $form['use_bcc'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Send as BCC (hide recipients) by default'),
-      '#default_value' => $config->get('bcc_d'),
+      '#default_value' => $config->get('use_bcc'),
     ];
 
     // More category options.

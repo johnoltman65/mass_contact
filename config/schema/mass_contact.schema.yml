@@ -31,7 +31,7 @@ mass_contact.settings:
       type: boolean
     include_to_name:
       type: boolean
-    bcc_d:
+    use_bcc:
       type: boolean
     category_override:
       type: boolean
