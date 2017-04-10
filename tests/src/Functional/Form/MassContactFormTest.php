@@ -99,6 +99,14 @@ class MassContactFormTest extends MassContactTestBase {
     $config->set('create_archive_copy', FALSE);
     $config->set('default_sender_email', 'foo@bar.com');
     $config->set('default_sender_name', 'Foo Bar');
+    $config->set('message_prefix', [
+      'value' => $this->randomString(),
+      'format' => filter_default_format(),
+    ]);
+    $config->set('message_suffix', [
+      'value' => $this->randomString(),
+      'format' => filter_default_format(),
+    ]);
     $config->save();
     $this->massContactRole->grantPermission('mass contact send to users in the ' . $this->categories[3]->id() . ' category')->save();
     $this->drupalGet(Url::fromRoute('mass_contact'));
@@ -192,6 +200,15 @@ class MassContactFormTest extends MassContactTestBase {
     // Should be 3 emails since BCC is used.
     $emails = $this->getMails();
     $this->assertEquals(3, count($emails));
+
+    // Verify message prefix/suffix are properly attached.
+    $expected = implode("\n\n", [
+      $config->get('message_prefix.value'),
+      $edit['message[value]'],
+      $config->get('message_suffix.value'),
+    ]) . "\n\n";
+    $this->assertMail('body', $expected);
+    $this->assertMail('to', 'foo@bar.com');
   }
 
 }

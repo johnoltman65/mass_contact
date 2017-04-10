@@ -84,160 +84,6 @@ function mass_contact_help($path, $arg) {
 }
 
 /**
- * Implements hook_form_alter().
- *
- * This is for the user_profile_form.
- */
-function mass_contact_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
-  if ($form['#user_category'] == 'account') {
-    $account = $form['#user'];
-
-    // The admin allows a blanket opt out of all mass mailings.
-    if (\Drupal::config('mass_contact.settings')->get('optout_d') == 1) {
-      $form['mass_contact'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Mass contact settings'),
-        '#weight' => 5,
-        '#collapsible' => TRUE,
-      );
-      // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$form['mass_contact']['mass_contact_optout'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Opt-out of mass email messages'),
-        '#default_value' => !empty($account->data['mass_contact_optout']) ? $account->data['mass_contact_optout'] : 0,
-        '#description' => \Drupal::config('mass_contact.settings')->get('mass_contact_optout_message'),
-      );
-    }
-    // The admin allows a selective opt out of individual categories of mass
-    // mailings.
-    elseif (\Drupal::config('mass_contact.settings')->get('optout_d') == 2) {
-      // @FIXME
-// Could not extract the default value because it is either indeterminate, or
-// not scalar. You'll need to provide a default value in
-// config/install/mass_contact.settings.yml and config/schema/mass_contact.schema.yml.
-$form['mass_contact'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Mass contact settings'),
-        '#weight' => 5,
-        '#collapsible' => TRUE,
-        '#description' => \Drupal::config('mass_contact.settings')->get('mass_contact_optout_message'),
-      );
-
-      $included_categories = array();
-      $all_included_categories = array();
-      // Add form elements provided by grouping_method plugins.
-      // @FIXME
-// Most CTools APIs have been moved into core.
-// 
-// @see https://www.drupal.org/node/2164623
-// ctools_include('plugins');
-
-      // Get the information about all plugins that implemnent this type of
-      // plugin.
-      $plugins = \Drupal::service('plugin.manager.mass_contact.grouping_method')->getDefinitions();
-      foreach ($plugins as $plugin_name => $plugin) {
-        // Get the admin edit function name for this particular implementation.
-        $function = ctools_plugin_get_function($plugin, 'mass_contact_user_edit');
-        // Call the plugin function to add the form snippet(s).
-        $included_categories = $function($form['#user']);
-        if (!empty($included_categories)) {
-          $all_included_categories += $included_categories;
-        }
-      }
-
-      if (!empty($all_included_categories)) {
-        // Eliminate duplicates.
-        $all_included_categories = array_unique($all_included_categories);
-        // Sort the contents, naturally and case insensitively.
-        natcasesort($all_included_categories);
-
-        foreach ($all_included_categories as $category_cid => $category_category) {
-          // If the user is in the category, show the option to opt out of it.
-          $form['mass_contact']['mass_contact_optout_' . $category_cid] = array(
-            '#type' => 'checkbox',
-            '#title' => t('Opt-out of mass email messages to the %category category.', array('%category' => $category_category)),
-            '#default_value' => !empty($account->data['mass_contact_optout_' . $category_cid]) ? $account->data['mass_contact_optout_' . $category_cid] : 0,
-          );
-        }
-      }
-    }
-  }
-}
-
-
-/**
- * Implements hook_user_presave().
- *
- * @FIXME
- * The $edit and $category parameters are gone in Drupal 8. They have been left
- * here in order to prevent 'undefined variable' errors, but they will never
- * actually be passed to this hook. You'll need to modify this function and
- * remove every reference to them.
- *
- * @FIXME
- * The $edit and $category parameters are gone in Drupal 8. They have been left
- * here in order to prevent 'undefined variable' errors, but they will never
- * actually be passed to this hook. You'll need to modify this function and
- * remove every reference to them.
- *
- * @FIXME
- * The $edit and $category parameters are gone in Drupal 8. They have been left
- * here in order to prevent 'undefined variable' errors, but they will never
- * actually be passed to this hook. You'll need to modify this function and
- * remove every reference to them.
- */
-
-
-
-function mass_contact_user_presave(\Drupal\user\UserInterface $edit = NULL, \Drupal\user\UserInterface $account = NULL, \Drupal\user\UserInterface $category = NULL) {
-  // @todo Revisit when opt-out functionality is built in.
-  return;
-  // Remove any previously saved category opt out data.
-  if (!empty($edit['data'])) {
-    foreach ($edit['data'] as $key => $value) {
-      if (substr($key, 0, 19) == 'mass_contact_optout') {
-        unset($key);
-      }
-    }
-  }
-
-  // Get all Mass Contact categories.
-  $categories = db_select('mass_contact', 'mc')
-    ->fields('mc', array('cid', 'category', 'recipients'))
-    ->execute();
-
-  // Iterate through each category.
-  foreach ($categories as $category) {
-    // If the item is either 0 or 1, then save its setting. This will allow
-    // users to opt back in, after opting out.
-    if (isset($edit['mass_contact_optout_' . $category->cid]) && $edit['mass_contact_optout_' . $category->cid] == 0) {
-      // Set the new values, which will unset any that were opted back in.
-      unset($edit['data']['mass_contact_optout_' . $category->cid]);
-    }
-    elseif (isset($edit['mass_contact_optout_' . $category->cid]) && $edit['mass_contact_optout_' . $category->cid] == 1) {
-      // Set the new values, which will unset any that were opted back in.
-      $edit['data']['mass_contact_optout_' . $category->cid] = $edit['mass_contact_optout_' . $category->cid];
-    }
-  }
-
-  // Do the same for the global setting to opt out.
-  // If the item is either 0 or 1, then save its setting. This will allow
-  // users to opt back in, after opting out.
-  if (isset($edit['mass_contact_optout']) && $edit['mass_contact_optout'] == 0) {
-    // Set the new values, which will unset any that were opted back in.
-    unset($edit['data']['mass_contact_optout']);
-  }
-  elseif (isset($edit['mass_contact_optout']) && $edit['mass_contact_optout'] == 1) {
-    // Set the new values, which will unset any that were opted back in.
-    $edit['data']['mass_contact_optout'] = $edit['mass_contact_optout'];
-  }
-
-}
-
-/**
  * Implements hook_mail().
  */
 function mass_contact_mail($key, &$message, $params) {
@@ -248,7 +94,18 @@ function mass_contact_mail($key, &$message, $params) {
   }
   $message['subject'] = $params['subject'];
 
+  // Message prefix.
+  $config = \Drupal::config('mass_contact.settings');
+  if ($config->get('message_prefix.value')) {
+    $message['body'][] = check_markup($config->get('message_prefix.value'), $config->get('message_prefix.format'));
+  }
+
   $message['body'][] = check_markup($params['body'], $params['format']);
+
+  // Message suffix.
+  if ($config->get('message_suffix.value')) {
+    $message['body'][] = check_markup($config->get('message_suffix.value'), $config->get('message_suffix.format'));
+  }
 
   // Update the 'From' address.
   $message['from'] = $params['configuration']['sender_mail'];
