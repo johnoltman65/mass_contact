@@ -135,7 +135,7 @@ class MassContactForm extends FormBase {
       else {
         $form['sender_name'] = [
           '#type' => 'textfield',
-          '#title' => t('Your name'),
+          '#title' => $this->t('Your name'),
           '#maxlength' => 255,
           '#default_value' => $this->currentUser()->getDisplayName(),
           '#required' => TRUE,
@@ -192,7 +192,7 @@ class MassContactForm extends FormBase {
         ];
         $form['cid-info'] = [
           '#type' => 'item',
-          '#title' => t('Category'),
+          '#title' => $this->t('Category'),
           '#markup' => $this->t('This message will be sent to all users in the %category category.', ['%category' => $default_category_name]),
         ];
       }
@@ -209,7 +209,7 @@ class MassContactForm extends FormBase {
         if ($this->currentUser()->hasPermission('mass contact administer')) {
           $form['optout'] = [
             '#type' => 'checkbox',
-            '#title' => t('Respect user opt-outs.'),
+            '#title' => $this->t('Respect user opt-outs.'),
             '#default_value' => 1,
           ];
         }
@@ -233,7 +233,7 @@ class MassContactForm extends FormBase {
       if ($this->currentUser()->hasPermission('mass contact override bcc')) {
         $form['use_bcc'] = [
           '#type' => 'checkbox',
-          '#title' => t('Send as BCC (hide recipients)'),
+          '#title' => $this->t('Send as BCC (hide recipients)'),
           '#default_value' => $this->config->get('use_bcc'),
         ];
       }
@@ -245,7 +245,7 @@ class MassContactForm extends FormBase {
         ];
         $form['bcc-info'] = [
           '#type' => 'item',
-          '#title' => t('Send as BCC (hide recipients)'),
+          '#title' => $this->t('Send as BCC (hide recipients)'),
           '#markup' => $this->config->get('use_bcc')
           ? $this->t('Recipients will be hidden from each other.')
           : $this->t('Recipients will NOT be hidden from each other.'),
@@ -268,7 +268,7 @@ class MassContactForm extends FormBase {
       // Check if the user is allowed to override the text format.
       $form['body']['message'] = [
         '#type' => 'text_format',
-        '#title' => t('Message'),
+        '#title' => $this->t('Message'),
         '#format' => $default_filter_format ?: filter_default_format(),
         '#rows' => 12,
         '#required' => TRUE,
@@ -293,7 +293,7 @@ class MassContactForm extends FormBase {
           for ($i = 1; $i <= $this->config->get('number_of_attachments'); $i++) {
             $form['attachment_' . $i] = [
               '#type' => 'file',
-              '#title' => t('Attachment #!number', ['!number' => $i]),
+              '#title' => $this->t('Attachment #!number', ['!number' => $i]),
             ];
           }
         }
@@ -305,7 +305,7 @@ class MassContactForm extends FormBase {
       if ($this->currentUser()->id()) {
         $form['copy'] = [
           '#type' => 'checkbox',
-          '#title' => t('Send yourself a copy.'),
+          '#title' => $this->t('Send yourself a copy.'),
         ];
       }
 

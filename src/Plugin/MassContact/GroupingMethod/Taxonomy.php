@@ -1,12 +1,5 @@
 <?php
 
-/**
- * @file
- * Mass_contact plugin type grouping_method.
- *
- * Select users by taxonomy terms.
- */
-
 use Drupal\Core\Language\Language;
 use Drupal\Component\Utility\Html;
 
@@ -104,7 +97,6 @@ function mass_contact_taxonomy_categories($recipients) {
   if (empty($terms)) {
     return;
   }
-  ``
   $term_names = [];
   foreach ($terms as $term) {
     // For each term object, add the name to an array.
@@ -112,7 +104,7 @@ function mass_contact_taxonomy_categories($recipients) {
   }
 
   // Return the list of terms included in this category.
-  return t('Taxonomy terms: %terms', ['%terms' => implode(', ', $term_names)]);
+  return $this->t('Taxonomy terms: %terms', ['%terms' => implode(', ', $term_names)]);
 }
 
 /**
@@ -163,7 +155,7 @@ function mass_contact_taxonomy_admin_edit($recipients) {
         // Create a set of checkboxes, including each possible term.
         $form_element[$field_name] = [
           '#type' => 'checkboxes',
-          '#title' => t('Taxonomy vocabulary: %vocabulary', ['%vocabulary' => $vocabulary->name]),
+          '#title' => $this->t('Taxonomy vocabulary: %vocabulary', ['%vocabulary' => $vocabulary->name]),
           '#options' => $options,
           '#default_value' => $default_value,
         ];

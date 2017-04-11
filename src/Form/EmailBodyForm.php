@@ -86,7 +86,7 @@ class EmailBodyForm extends SettingsFormBase {
     $form['html_settings'] = [
       '#type' => 'details',
       '#open' => $this->massContact->htmlSupported(),
-      '#title' => t('HTML Settings'),
+      '#title' => $this->t('HTML Settings'),
     ];
     if ($this->massContact->htmlSupported()) {
       $format = $config->get('message_format');
@@ -95,9 +95,9 @@ class EmailBodyForm extends SettingsFormBase {
       }, filter_formats());
       $form['html_settings']['message_format'] = [
         '#type' => 'select',
-        '#title' => t('The default text format'),
+        '#title' => $this->t('The default text format'),
         '#default_value' => $format,
-        '#description' => t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not allow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
+        '#description' => $this->t('This is the text format that will be initially selected. If you do not want to allow HTML messages, then specify a plain text text format and do not allow it to be overridden below. Keep in mind that the user sending the message may not have access to all the text formats that are available here.'),
         '#options' => $options,
       ];
     }
@@ -153,27 +153,27 @@ class EmailBodyForm extends SettingsFormBase {
     // @todo https://www.drupal.org/node/2867544
     $form['mass_contact_attachment_settings'] = [
       '#type' => 'fieldset',
-      '#title' => t('Attachment Settings'),
+      '#title' => $this->t('Attachment Settings'),
     ];
     if ($mimemail) {
       $form['mass_contact_attachment_settings']['number_of_attachments'] = [
         '#type' => 'textfield',
-        '#title' => t('Number of attachments'),
+        '#title' => $this->t('Number of attachments'),
         '#default_value' => \Drupal::config('mass_contact.settings')->get('number_of_attachments'),
         '#size' => 10,
-        '#description' => t("The number of attachments to allow on the contact form. The maximum number of allowed uploads may be limited by PHP. If necessary, check your system's PHP php.ini file for a max_file_uploads directive to change."),
+        '#description' => $this->t("The number of attachments to allow on the contact form. The maximum number of allowed uploads may be limited by PHP. If necessary, check your system's PHP php.ini file for a max_file_uploads directive to change."),
       ];
       $form['mass_contact_attachment_settings']['attachment_location'] = [
         '#type' => 'textfield',
-        '#title' => t('Attachment location'),
+        '#title' => $this->t('Attachment location'),
         '#default_value' => \Drupal::config('mass_contact.settings')->get('attachment_location'),
-        '#description' => t('If a copy of the message is saved as a node, this is the file path where to save the attachment(s) so it can be viewed later. If you specify anything here, it will be a subdirectory of your Public file system path, which is set on !file_conf_page. If you do not specify anything here, all attachments will be saved in the directory specified in the Public file system path.', ['!file_conf_page' => \Drupal::l(t('File system configuration page'), Url::fromRoute('system.file_system_settings'))]),
+        '#description' => $this->t('If a copy of the message is saved as a node, this is the file path where to save the attachment(s) so it can be viewed later. If you specify anything here, it will be a subdirectory of your Public file system path, which is set on !file_conf_page. If you do not specify anything here, all attachments will be saved in the directory specified in the Public file system path.', ['!file_conf_page' => \Drupal::l($this->t('File system configuration page'), Url::fromRoute('system.file_system_settings'))]),
       ];
     }
     else {
       $form['mass_contact_attachment_settings']['mass_contact_no_mimemail'] = [
         '#type' => 'item',
-        '#description' => t('This module no longer supports attachments without the Mime Mail module, which can be found here: http://drupal.org/project/mimemail.'),
+        '#description' => $this->t('This module no longer supports attachments without the Mime Mail module, which can be found here: http://drupal.org/project/mimemail.'),
       ];
     }
 

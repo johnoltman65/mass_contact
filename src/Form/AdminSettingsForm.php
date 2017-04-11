@@ -42,7 +42,7 @@ class AdminSettingsForm extends SettingsFormBase {
     $config = $this->config('mass_contact.settings');
     $form['form_information'] = [
       '#type' => 'textarea',
-      '#title' => t('Additional information for Mass Contact form'),
+      '#title' => $this->t('Additional information for Mass Contact form'),
       '#default_value' => $config->get('form_information'),
       '#description' => $this->t('Information to show on the <a href=":url">Mass Contact page</a>.', [':url' => Url::fromRoute('mass_contact')->toString()]),
     ];
