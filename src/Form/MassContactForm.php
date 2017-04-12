@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\mass_contact\MassContact;
 use Drupal\mass_contact\MassContactInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -353,6 +354,20 @@ class MassContactForm extends FormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
+    // Process immediately via the batch system.
+    $all_recipients = $this->massContact->getRecipients($form_state->getValue('categories'));
+
+    if (empty($all_recipients)) {
+      $form_state->setErrorByName('categories', $this->t('The selected categories have no recipients.'));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $configuration = [
       'use_bcc' => $form_state->getValue('use_bcc'),
@@ -360,14 +375,36 @@ class MassContactForm extends FormBase {
       'sender_mail' => $form_state->getValue('sender_mail'),
     ];
 
-    // @todo switch for immediate processing vs queue system.
-    $this->massContact->processMassContactMessage(
-      $form_state->getValue('categories'),
-      $form_state->getValue('subject'),
-      $form_state->getValue('message')['value'],
-      $form_state->getValue('message')['format'],
-      $configuration
-    );
+    if ($this->config->get('send_with_cron')) {
+      // Utilize cron/job queue system.
+      $this->massContact->processMassContactMessage(
+        $form_state->getValue('categories'),
+        $form_state->getValue('subject'),
+        $form_state->getValue('message')['value'],
+        $form_state->getValue('message')['format'],
+        $configuration
+      );
+    }
+    else {
+      // Process immediately via the batch system.
+      $all_recipients = $this->massContact->getRecipients($form_state->getValue('categories'));
+
+      $batch = [
+        'title' => $this->t('Sending message'),
+        'operations' => [],
+      ];
+      foreach ($this->massContact->getGroupedRecipients($all_recipients) as $recipients) {
+        $data = [
+          'recipients' => $recipients,
+          'subject' => $form_state->getValue('subject'),
+          'body' => $form_state->getValue('message')['value'],
+          'format' => $form_state->getValue('message')['format'],
+          'configuration' => $configuration,
+        ];
+        $batch['operations'][] = [[static::class, 'processRecipients'], $data];
+      }
+      batch_set($batch);
+    }
   }
 
   /**
@@ -398,6 +435,26 @@ class MassContactForm extends FormBase {
         '#items' => $tasks,
       ];
     }
+  }
+
+  /**
+   * Batch processor for sending the message to recipients.
+   *
+   * @param array $recipients
+   *   An array of recipient user IDs.
+   * @param string $subject
+   *   The message subject.
+   * @param string $body
+   *   The body.
+   * @param string $format
+   *   The format.
+   * @param array $configuration
+   *   The configuration.
+   */
+  public static function processRecipients(array $recipients, $subject, $body, $format, array $configuration) {
+    /** @var \Drupal\mass_contact\MassContactInterface $mass_contact */
+    $mass_contact = \Drupal::service('mass_contact');
+    $mass_contact->sendMessage($recipients, $subject, $body, $format, $configuration);
   }
 
 }

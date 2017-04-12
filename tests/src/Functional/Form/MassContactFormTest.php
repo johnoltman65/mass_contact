@@ -81,6 +81,9 @@ class MassContactFormTest extends MassContactTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('No categories found!');
 
+    // Test with queue system.
+    $this->config('mass_contact.settings')->set('send_with_cron', TRUE)->save();
+
     // Grant permission to one category only.
     $this->massContactRole->grantPermission('mass contact send to users in the ' . $this->categories[2]->id() . ' category')->save();
     $this->drupalGet(Url::fromRoute('mass_contact'));
@@ -148,10 +151,10 @@ class MassContactFormTest extends MassContactTestBase {
       $queue->deleteItem($item);
     }
 
-    // There should now be 3 items in the sending queue.
+    // There should now be 9 items in the sending queue.
     // @see \Drupal\mass_contact\MassContact::MAX__QUEUE_RECIPIENTS
     $queue = \Drupal::queue('mass_contact_send_message');
-    $this->assertEquals(3, $queue->numberOfItems());
+    $this->assertEquals(9, $queue->numberOfItems());
     $queue_worker = $manager->createInstance('mass_contact_send_message');
     while ($item = $queue->claimItem()) {
       $queue_worker->processItem($item->data);
@@ -187,19 +190,19 @@ class MassContactFormTest extends MassContactTestBase {
       $queue->deleteItem($item);
     }
 
-    // There should now be 3 items in the sending queue.
+    // There should now be 9 items in the sending queue.
     // @see \Drupal\mass_contact\MassContact::MAX__QUEUE_RECIPIENTS
     $queue = \Drupal::queue('mass_contact_send_message');
-    $this->assertEquals(3, $queue->numberOfItems());
+    $this->assertEquals(9, $queue->numberOfItems());
     $queue_worker = $manager->createInstance('mass_contact_send_message');
     while ($item = $queue->claimItem()) {
       $queue_worker->processItem($item->data);
       $queue->deleteItem($item);
     }
 
-    // Should be 3 emails since BCC is used.
+    // Should be 9 emails since BCC is used.
     $emails = $this->getMails();
-    $this->assertEquals(3, count($emails));
+    $this->assertEquals(9, count($emails));
 
     // Verify message prefix/suffix are properly attached.
     $expected = implode("\n\n", [
@@ -209,6 +212,11 @@ class MassContactFormTest extends MassContactTestBase {
     ]) . "\n\n";
     $this->assertMail('body', $expected);
     $this->assertMail('to', 'foo@bar.com');
+
+    // @todo Test with batch system.
+    // @see https://www.drupal.org/node/2855942
+    $this->config('mass_contact.settings')->set('send_with_cron', FALSE)->save();
+    \Drupal::state()->set('system.test_mail_collector', []);
   }
 
 }

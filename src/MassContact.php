@@ -19,7 +19,7 @@ class MassContact implements MassContactInterface {
    * If sending via BCC, this also controls the number of recipients in a single
    * email.
    */
-  const MAX_QUEUE_RECIPIENTS = 200;
+  const MAX_QUEUE_RECIPIENTS = 50;
 
   /**
    * Defines the HTML modules supported.
@@ -150,35 +150,40 @@ class MassContact implements MassContactInterface {
       'body' => $body,
       'format' => $format,
       'configuration' => $configuration,
-      'recipients' => $recipients,
     ];
-    foreach ($this->getRecipients($category_ids) as $i => $uid) {
-      $recipients[] = $uid;
-      if (count($recipients) == static::MAX_QUEUE_RECIPIENTS) {
-        // Send in batches.
-        $data['recipients'] = $recipients;
-        $this->sendingQueue->createItem($data);
-        $recipients = [];
-      }
-    }
-
-    // If there are any left, queue those too.
-    if (!empty($recipients)) {
+    $all_recipients = $this->getRecipients($category_ids);
+    foreach ($this->getGroupedRecipients($all_recipients) as $recipients) {
       $data['recipients'] = $recipients;
       $this->sendingQueue->createItem($data);
     }
   }
 
   /**
-   * Given categories, returns an array of recipient IDs.
-   *
-   * @param string[] $category_ids
-   *   An array of mass contact category IDs.
-   *
-   * @return int[]
-   *   An array of recipient user IDs.
+   * {@inheritdoc}
    */
-  protected function getRecipients(array $category_ids) {
+  public function getGroupedRecipients(array $all_recipients) {
+    $groupings = [];
+    $recipients = [];
+    foreach ($all_recipients as $account_id) {
+      $recipients[] = $account_id;
+      if (count($recipients) == static::MAX_QUEUE_RECIPIENTS) {
+        // Send in batches.
+        $groupings[] = $recipients;
+        $recipients = [];
+      }
+    }
+
+    // If there are any left, group those too.
+    if (!empty($recipients)) {
+      $groupings[] = $recipients;
+    }
+    return $groupings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRecipients(array $category_ids) {
     /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface[] $categories */
     $categories = $this->entityTypeManager->getStorage('mass_contact_category')->loadMultiple($category_ids);
     $recipients = [];

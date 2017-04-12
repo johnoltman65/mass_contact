@@ -53,13 +53,4 @@ interface GroupingInterface extends PluginInspectionInterface, DerivativeInspect
    */
   public function getCategories();
 
-  /* @todo The rest
-  'mass_contact_admin_edit_validate' => 'mass_contact_taxonomy_admin_edit_validate',
-  'mass_contact_admin_edit_submit' => 'mass_contact_taxonomy_admin_edit_submit',
-
-  // This callback is used to maintain the form for opting in or out of
-  // categories.
-  'mass_contact_user_edit' => 'mass_contact_taxonomy_user_edit',
-  );
-   */
 }

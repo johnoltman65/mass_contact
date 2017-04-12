@@ -81,4 +81,26 @@ interface MassContactInterface {
    */
   public function sendMessage(array $recipients, $subject, $body, $format, array $configuration = []);
 
+  /**
+   * Given categories, returns an array of recipient IDs.
+   *
+   * @param string[] $category_ids
+   *   An array of mass contact category IDs.
+   *
+   * @return int[]
+   *   An array of recipient user IDs.
+   */
+  public function getRecipients(array $category_ids);
+
+  /**
+   * Get groups of recipients for batch processing.
+   *
+   * @param int[] $all_recipients
+   *   An array of all recipients.
+   *
+   * @return array
+   *   An array of arrays of recipients.
+   */
+  public function getGroupedRecipients(array $all_recipients);
+
 }

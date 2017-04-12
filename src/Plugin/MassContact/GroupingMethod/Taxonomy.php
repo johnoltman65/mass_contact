@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ */
+
 use Drupal\Core\Language\Language;
 use Drupal\Component\Utility\Html;
 
