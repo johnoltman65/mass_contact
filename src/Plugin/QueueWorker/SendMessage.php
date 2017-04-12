@@ -59,7 +59,7 @@ class SendMessage extends QueueWorkerBase implements ContainerFactoryPluginInter
    * {@inheritdoc}
    */
   public function processItem($data) {
-    $this->massContact->sendMessage($data['recipients'], $data['subject'], $data['body'], $data['format'], $data['configuration']);
+    $this->massContact->sendMessage($data['recipients'], $data['message'], $data['configuration']);
   }
 
 }

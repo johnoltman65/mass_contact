@@ -10,4 +10,36 @@ use Drupal\user\EntityOwnerInterface;
  */
 interface MassContactMessageInterface extends EntityOwnerInterface, ContentEntityInterface {
 
+  /**
+   * Gets the message body.
+   *
+   * @return string
+   *   The message body.
+   */
+  public function getBody();
+
+  /**
+   * Get the message categories.
+   *
+   * @return \Drupal\mass_contact\Entity\MassContactCategoryInterface[]
+   *   The message categories.
+   */
+  public function getCategories();
+
+  /**
+   * Get the message body format.
+   *
+   * @return string
+   *   The message body format.
+   */
+  public function getFormat();
+
+  /**
+   * Get the message subject.
+   *
+   * @return string
+   *   The message subject.
+   */
+  public function getSubject();
+
 }

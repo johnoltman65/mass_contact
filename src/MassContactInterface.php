@@ -2,6 +2,8 @@
 
 namespace Drupal\mass_contact;
 
+use Drupal\mass_contact\Entity\MassContactMessageInterface;
+
 /**
  * Defines an interface for the Mass Contact helper service.
  */
@@ -33,64 +35,48 @@ interface MassContactInterface {
   /**
    * Main entry point for queuing mass contact emails.
    *
-   * @param array $categories
-   *   An array of category IDs to send to.
-   * @param string $subject
-   *   The message subject.
-   * @param string $body
-   *   The message body.
-   * @param string $format
-   *   The filter format to use for the body.
+   * @param \Drupal\mass_contact\Entity\MassContactMessageInterface $message
+   *   The mass contact message entity.
    * @param array $configuration
    *   An array of configuration. Default values are provided by the mass
    *   contact settings.
    */
-  public function processMassContactMessage(array $categories, $subject, $body, $format, array $configuration = []);
+  public function processMassContactMessage(MassContactMessageInterface $message, array $configuration = []);
 
   /**
    * Takes a mass contact, calculates recipients and queues them for delivery.
    *
-   * @param array $category_ids
-   *   An array of category IDs to send to.
-   * @param string $subject
-   *   The message subject.
-   * @param string $body
-   *   The message body.
-   * @param string $format
-   *   The filter format to use for the body.
+   * @param \Drupal\mass_contact\Entity\MassContactMessageInterface $message
+   *   The mass contact message entity.
    * @param array $configuration
    *   An array of configuration. Default values are provided by the mass
    *   contact settings.
    */
-  public function queueRecipients(array $category_ids, $subject, $body, $format, array $configuration = []);
+  public function queueRecipients(MassContactMessageInterface $message, array $configuration = []);
 
   /**
    * Sends a message to a list of recipient user IDs.
    *
    * @param int[] $recipients
    *   An array of recipient user IDs.
-   * @param string $subject
-   *   The message subject.
-   * @param string $body
-   *   The message body.
-   * @param string $format
-   *   The filter format to use for the body.
+   * @param \Drupal\mass_contact\Entity\MassContactMessageInterface $message
+   *   The mass contact message entity.
    * @param array $configuration
    *   An array of configuration. Default values are provided by the mass
    *   contact settings.
    */
-  public function sendMessage(array $recipients, $subject, $body, $format, array $configuration = []);
+  public function sendMessage(array $recipients, MassContactMessageInterface $message, array $configuration = []);
 
   /**
    * Given categories, returns an array of recipient IDs.
    *
-   * @param string[] $category_ids
-   *   An array of mass contact category IDs.
+   * @param \Drupal\mass_contact\Entity\MassContactCategoryInterface[] $categories
+   *   An array of mass contact categories.
    *
    * @return int[]
    *   An array of recipient user IDs.
    */
-  public function getRecipients(array $category_ids);
+  public function getRecipients(array $categories);
 
   /**
    * Get groups of recipients for batch processing.

@@ -59,7 +59,7 @@ class QueueMessages extends QueueWorkerBase implements ContainerFactoryPluginInt
    * {@inheritdoc}
    */
   public function processItem($data) {
-    $this->massContact->queueRecipients($data['categories'], $data['subject'], $data['body'], $data['format'], $data['configuration']);
+    $this->massContact->queueRecipients($data['message'], $data['configuration']);
   }
 
 }

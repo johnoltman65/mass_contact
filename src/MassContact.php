@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Queue\QueueFactory;
+use Drupal\mass_contact\Entity\MassContactMessageInterface;
 
 /**
  * The Mass Contact helper service.
@@ -112,13 +113,10 @@ class MassContact implements MassContactInterface {
   /**
    * {@inheritdoc}
    */
-  public function processMassContactMessage(array $categories, $subject, $body, $format, array $configuration = []) {
+  public function processMassContactMessage(MassContactMessageInterface $message, array $configuration = []) {
     $configuration += $this->getDefaultConfiguration();
     $data = [
-      'categories' => $categories,
-      'subject' => $subject,
-      'body' => $body,
-      'format' => $format,
+      'message' => $message,
       'configuration' => $configuration,
     ];
     $this->processingQueue->createItem($data);
@@ -142,16 +140,13 @@ class MassContact implements MassContactInterface {
   /**
    * {@inheritdoc}
    */
-  public function queueRecipients(array $category_ids, $subject, $body, $format, array $configuration = []) {
+  public function queueRecipients(MassContactMessageInterface $message, array $configuration = []) {
 
-    $recipients = [];
     $data = [
-      'subject' => $subject,
-      'body' => $body,
-      'format' => $format,
+      'message' => $message,
       'configuration' => $configuration,
     ];
-    $all_recipients = $this->getRecipients($category_ids);
+    $all_recipients = $this->getRecipients($message->getCategories());
     foreach ($this->getGroupedRecipients($all_recipients) as $recipients) {
       $data['recipients'] = $recipients;
       $this->sendingQueue->createItem($data);
@@ -183,9 +178,7 @@ class MassContact implements MassContactInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRecipients(array $category_ids) {
-    /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface[] $categories */
-    $categories = $this->entityTypeManager->getStorage('mass_contact_category')->loadMultiple($category_ids);
+  public function getRecipients(array $categories) {
     $recipients = [];
     foreach ($categories as $category) {
       foreach ($category->getRecipients() as $plugin_id => $config) {
@@ -199,11 +192,11 @@ class MassContact implements MassContactInterface {
   /**
    * {@inheritdoc}
    */
-  public function sendMessage(array $recipients, $subject, $body, $format, array $configuration = []) {
+  public function sendMessage(array $recipients, MassContactMessageInterface $message, array $configuration = []) {
     $params = [
-      'subject' => $subject,
-      'body' => $body,
-      'format' => $format,
+      'subject' => $message->getSubject(),
+      'body' => $message->getBody(),
+      'format' => $message->getFormat(),
       'configuration' => $configuration,
       'headers' => [],
     ];
