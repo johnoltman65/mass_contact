@@ -214,7 +214,7 @@ class MassContactFormTest extends MassContactTestBase {
     // Verify message prefix/suffix are properly attached.
     $expected = implode("\n\n", [
       $config->get('message_prefix.value'),
-      $edit['message[value]'],
+      $edit['body[value]'],
       $config->get('message_suffix.value'),
     ]) . "\n\n";
     $this->assertMail('body', $expected);
