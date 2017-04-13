@@ -129,7 +129,7 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
       ->setRequired(TRUE)
       ->setDisplayOptions('view', [
-        'label' => 'above',
+        'label' => 'inline',
         'type' => 'entity_reference_label',
         'weight' => -6,
       ]);
@@ -143,7 +143,7 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'string',
-        'weight' => -5,
+        'weight' => -15,
       ]);
 
     $fields['body'] = BaseFieldDefinition::create('text_long')
@@ -161,9 +161,9 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
       ->setSetting('target_type', 'user')
       ->setDefaultValueCallback('Drupal\mass_contact\Entity\MassContactMessage::getCurrentUserId')
       ->setDisplayOptions('view', [
-        'label' => 'hidden',
+        'label' => 'inline',
         'type' => 'author',
-        'weight' => 0,
+        'weight' => -7,
       ]);
 
     $fields['sent'] = BaseFieldDefinition::create('created')
@@ -171,9 +171,9 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
       ->setDescription(t('The time that the message was sent.'))
       ->setDefaultValueCallback('Drupal\mass_contact\Entity\MassContactMessage::getDefaultSentTime')
       ->setDisplayOptions('view', [
-        'label' => 'hidden',
+        'label' => 'inline',
         'type' => 'timestamp',
-        'weight' => 0,
+        'weight' => -8,
       ]);
 
     return $fields;

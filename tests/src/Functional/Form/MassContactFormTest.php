@@ -50,7 +50,7 @@ class MassContactFormTest extends MassContactTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->massContactUser = $this->createUser(['mass contact send messages']);
+    $this->massContactUser = $this->createUser(['mass contact send messages', 'mass contact view archived messages']);
     $role_id = $this->massContactUser->getRoles(TRUE);
     $this->massContactRole = Role::load(reset($role_id));
 
@@ -134,7 +134,7 @@ class MassContactFormTest extends MassContactTestBase {
     // Send a message to category 2.
     $edit = [
       'subject' => $this->randomString(),
-      'message[value]' => $this->randomString(),
+      'body[value]' => $this->randomString(),
       'categories[]' => [$this->categories[2]->id()],
     ];
     $this->drupalPostForm(NULL, $edit, t('Send email'));
@@ -167,16 +167,23 @@ class MassContactFormTest extends MassContactTestBase {
 
     // Switch back to BCC mode and only 3 emails should be sent.
     \Drupal::state()->set('system.test_mail_collector', []);
+    $config->set('create_archive_copy', TRUE);
     $config->set('use_bcc', TRUE);
     $config->save();
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
 
     // Send a message to category 2.
     $edit = [
       'subject' => $this->randomString(),
-      'message[value]' => $this->randomString(),
+      'body[value]' => $this->randomString(),
       'categories[]' => [$this->categories[2]->id()],
     ];
     $this->drupalPostForm(NULL, $edit, t('Send email'));
+    $this->assertSession()->pageTextContains(t('A copy has been archived'));
+    $this->clickLink('here');
+    $this->assertSession()->statusCodeEquals(200);
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
+
     // Should be one item in the queue.
     $queue = \Drupal::queue('mass_contact_queue_messages');
     $this->assertEquals(1, $queue->numberOfItems());

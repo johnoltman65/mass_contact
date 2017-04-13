@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * This is the main code file for the Mass Contact module.
@@ -6,76 +7,55 @@
  * This is primarily where all the hooks are implemented.
  */
 
+use Drupal\Core\Link;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+
 /**
  * Implements hook_help().
  */
-function mass_contact_help($path, $arg) {
+function mass_contact_help($route_name, RouteMatchInterface $route_match) {
   $output = '';
 
-  switch ($path) {
-    case 'admin/help#mass_contact':
-      // @FIXME
-// l() expects a Url object, created from a route name or external URI.
-// $output .= '<h3>' . t('Related tasks:') . '</h3><ul>' .
-//         '<li>' . l(t('Configure the module'), 'admin/config/system/mass_contact/settings') . '</li>' .
-//         '<li>' . l(t('Add new category'), 'admin/config/system/mass_contact/add') . '</li>' .
-//         '<li>' . l(t('List current categories'), 'admin/config/system/mass_contact') . '</li>' .
-//         '<li>' . l(t('Set permissions'), 'admin/people/permissions', array('fragment' => 'module-mass_contact')) . '</li>' .
-//         '<li>' . l(t('Send a mass email message'), 'mass_contact') . '</li></ul>';
-
+  switch ($route_name) {
+    case 'help.page.mass_contact':
+      $output .= '<h3>' . t('Related tasks:') . '</h3><ul>';
+      $output .= '<li>' . Link::createFromRoute(t('Configure the module'), 'mass_contact.settings')->toString() . '</li>';
+      $output .= '<li>' . Link::createFromRoute(t('Add new category'), 'entity.mass_contact_category.add_form')->toString() . '</li>';
+      $output .= '<li>' . Link::createFromRoute(t('List current categories'), 'entity.mass_contact_category.collection')->toString() . '</li>';
+      if (\Drupal::currentUser()->hasPermission('administer permissions')) {
+        $output .= '<li>' . Link::createFromRoute(t('Set Mass Contact permissions'), 'user.admin_permissions', [], ['fragment' => 'module-mass_contact'])->toString() . '</li>';
+      }
+      $output .= '<li>' . Link::createFromRoute(t('Send a mass email message'), 'entity.mass_contact_message.add_form')->toString() . '</li></ul>';
 
       $output .= '<h3>' . t('Configuration and setup') . '</h3>';
       $output .= '<p>' . t('While an attempt has been made at setting sensible defaults, the configuration should be reviewed and tweaked before sending any messages.') . '</p>';
-      $output .= '<p>' . t('Before sending any mass email messages, at least one category needs to be created, which can be done at the same location where the administrative settings are. ') . '</p>';
+      $output .= '<p>' . t('Before sending any mass email messages, at least one category needs to be created, which can be done at the same location where the administrative settings are.') . '</p>';
       $output .= '<p>' . t("By default, the email messages are sent as plain text. If the Mime Mail module is enabled, the email messages may be sent as HTML and may include one or more binary file attachments (if permitted by admin).") . '</p>';
 
       $output .= '<h3>' . t('Miscelaneous information') . '</h3>';
       $output .= '<p>' . t("This module works by sending a single email to your mail server with all of the recipients' email addresses in either the 'To:' or 'Bcc:' field. The mail server is then responsible for parsing out the recipients' addresses and forwarding the message along to everyone.") . '</p>';
       $output .= '<p>' . t("When using the Bcc option, recipients are not potentially left open to abuse due to their email addresses being visible to all other recipients.") . '</p>';
 
-      $output .= '<h3>' . t('Menu structure') . '</h3>';
-      $output .= '<p>' . t('Here is a description of the menu items and links Mass Contact provides:') . '</p>';
-      $output .= '<table><thead>';
-      $output .= '<tr><th>' . t('URL') . '</th><th>' . t('Label') . '</th><th>' . t('Description') . '</th><th>' . t('To have access to this URL, users must have this permission') . '</th></tr></thead>';
-      $output .= '<tbody><tr><td>' . t('/admin/config/system/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The main administrative interface, which defaults to the Category listing page.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
-      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/list') . '</td><td>' . t('Category list') . '</td><td>' . t('List the currently defined categories.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
-      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/add') . '</td><td>' . t('Add category') . '</td><td>' . t('Add a new category.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
-      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/edit/$category_id') . '</td><td>' . t("Edit Mass Contact category (the 'edit' operation in the Category list)") . '</td><td>' . t('Edit an existing category') . '</td><td>' . t('administer mass contact') . '</td></tr>';
-      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/delete/$category_id') . '</td><td>' . t("Delete Mass Contact category (the 'delete' operation in the Category list)") . '</td><td>' . t('Delete an existing category.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
-      $output .= '<tr><td>' . t('/admin/config/system/mass_contact/settings') . '</td><td>' . t('Settings') . '</td><td>' . t('Administrative settings to modify how Mass Contact operates. There are three sub pages under this one: Miscellaneous, Message header and Message body.') . '</td><td>' . t('administer mass contact') . '</td></tr>';
-      $output .= '<tr><td>' . t('/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The main Mass Contact form for sending messages.') . '</td><td>' . t('send mass contact email messages') . '</td></tr>';
-      $output .= '<tr><td>' . t('/node/add/mass_contact') . '</td><td>' . t('Mass Contact') . '</td><td>' . t('The add content page for adding a Mass Contact content item. This is not really useful on its own.') . '</td><td>' . t('create mass_contact content') . '</td></tr>';
-      $output .= '</tbody></table>';
-
       $output .= '<h3>' . t('Troubleshooting') . '</h3>';
       $output .= '<p>' . t('Verify the permission set correctly.') . '</p>';
       $output .= '<p>' . t('When sending messages as Bcc (hiding the recipients from each other) and breaking up a large recipient list into smaller chunks or sending to multiple categories while retaining the category name in the subject, keep in mind that the sender will receive a copy of the message for every group of recipients the list is broken up into. That is normal behavior and cannot be changed.') . '</p>';
       $output .= '<p>' . t('If your category permissions are not showing up correctly, check your category name and make sure you do not have any stray characters or any characters that Drupal does not allow.') . '</p>';
-      $output .= '<p>' . t('If you experience "return-path" errors when sending email, you can try the !returnpath module to see if that solves your problem.', array('!returnpath' => \Drupal::l(t('Return-Path'), \Drupal\Core\Url::fromUri('http://drupal.org/project/returnpath')))) . '</p>';
-      if (\Drupal::currentUser()->hasPermission('view site reports')) {
-        $drupal_logs = t("Drupal's !logs in the !reports.",
-          array(
-            '!logs' => \Drupal::l(t('log messages'), \Drupal\Core\Url::fromRoute('dblog.overview')),
-            '!reports' => \Drupal::l(t('Reports section'), \Drupal\Core\Url::fromRoute('system.admin_reports')),
-          )
-        );
+      $output .= '<p>' . t('If you experience "return-path" errors when sending email, you can try the !returnpath module to see if that solves your problem.', ['!returnpath' => \Drupal::l(t('Return-Path'), Url::fromUri('http://drupal.org/project/returnpath'))]) . '</p>';
+      if (\Drupal::currentUser()->hasPermission('access site reports')) {
+        $output .= '<p>' . t("If PHP's mail() function encounters an error, it just returns FALSE and Drupal presents a message like this: 'Unable to send email. Contact the site administrator if the problem persists.' To find what the cause of the error is, you may need to reference a number of logs:");
+        $output .= '<ul><li>' . t('Drupal\'s <a href="@logs">log messages</a> in the <a href="@reports">reports section</a>', ['@logs' => Url::fromRoute('dblog.overview')->toString(), '@reports' => Url::fromRoute('system.admin_reports')]) . '</li>';
+        $output .= '<li>' . t("The host server's system logs. For most Linux systems, the log files are usually stored in /var/log. The system messages are usually stored in /var/log/messages or /var/log/syslog.") . '</li>';
+        $output .= '<li>' . t("The HTTP server software's logs. For Apache on Linux, it's log files are usually found in /var/log/httpd, /var/log/apache or /var/log/apache2.") . '</li>';
+        $output .= '<li>' . t("The mail server software's logs. Most mail servers store thier logs in /var/log/mail*, where 'mail*' might be a directory or it might be a number of files in /var/log, including (but not limited to) mail.log, mail.info, mail.warn and mail.err.") . '</li></ul></p>';
       }
-      else {
-        $drupal_logs = t("Drupal's log messages in the Reports section.");
-      }
-      $output .= '<p>' . t("If PHP's mail() function encounters an error, it just returns FALSE and Drupal presents a message like this: 'Unable to send email. Contact the site administrator if the problem persists.'
-                            To find what the cause of the error is, you may need to reference a number of logs:") .
-                            '<ul><li>' . $drupal_logs . '</li>' .
-                            '<li>' . t("The host server's system logs. For most Linux systems, the log files are usually stored in /var/log. The system messages are usually stored in /var/log/messages or /var/log/syslog.") . '</li>' .
-                            '<li>' . t("The HTTP server software's logs. For Apache on Linux, it's log files are usually found in /var/log/httpd, /var/log/apache or /var/log/apache2.") . '</li>' .
-                            '<li>' . t("The mail server software's logs. Most mail servers store thier logs in /var/log/mail*, where 'mail*' might be a directory or it might be a number of files in /var/log, including (but not limited to) mail.log, mail.info, mail.warn and mail.err.") . '</li></ul></p>';
-      $output .= '<p>' . t('If you are also using other mail related modules on your Drupal installation (i.e.: !htmlmail module, !mimemail module, !phpmailer module, !smtp module, etc.), be sure to check the issue queues for those modules for solutions, as well.',
-        array(
-          '!htmlmail' => \Drupal::l(t('HTML Mail'), \Drupal\Core\Url::fromUri('http://drupal.org/project/htmlmail')),
-          '!mimemail' => \Drupal::l(t('Mime Mail'), \Drupal\Core\Url::fromUri('http://drupal.org/project/mimemail')),
-          '!phpmailer' => \Drupal::l(t('PHPMailer'), \Drupal\Core\Url::fromUri('http://drupal.org/project/phpmailer')),
-          '!smtp' => \Drupal::l(t('SMTP Authentication Support'), \Drupal\Core\Url::fromUri('http://drupal.org/project/smtp')),
-        )
+      $output .= '<p>' . t('If you are also using other mail related modules on your Drupal installation (i.e.: @htmlmail module, @mimemail module, @phpmailer module, @smtp module, etc.), be sure to check the issue queues for those modules for solutions, as well.',
+        [
+          '@htmlmail' => \Drupal::l(t('HTML Mail'), Url::fromUri('http://drupal.org/project/htmlmail')),
+          '@mimemail' => \Drupal::l(t('Mime Mail'), Url::fromUri('http://drupal.org/project/mimemail')),
+          '@phpmailer' => \Drupal::l(t('PHPMailer'), Url::fromUri('http://drupal.org/project/phpmailer')),
+          '@smtp' => \Drupal::l(t('SMTP Authentication Support'), Url::fromUri('http://drupal.org/project/smtp')),
+        ]
       ) . '</p>';
       break;
 

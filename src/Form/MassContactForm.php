@@ -274,7 +274,7 @@ class MassContactForm extends ContentEntityForm {
       $default_filter_format = $this->config->get('message_format');
 
       // Check if the user is allowed to override the text format.
-      $form['body']['message'] = [
+      $form['body'] = [
         '#type' => 'text_format',
         '#title' => $this->t('Message'),
         '#format' => $default_filter_format ?: filter_default_format(),
@@ -284,13 +284,13 @@ class MassContactForm extends ContentEntityForm {
       if (!$this->currentUser()->hasPermission('mass contact override text format')) {
         // The user is not allowed to override the text format, so lock it down
         // to the default one.
-        $form['body']['message']['#allowed_formats'] = [$default_filter_format ?: filter_default_format()];
+        $form['body']['#allowed_formats'] = [$default_filter_format ?: filter_default_format()];
       }
 
       if (!$this->moduleHandler->moduleExists('mimemail') && !$this->moduleHandler->moduleExists('swiftmailer')) {
         // No HTML email handling, lock down to plain text.
-        $form['body']['message']['#allowed_formats'] = ['plain_text'];
-        $form['body']['message']['#format'] = 'plain_text';
+        $form['body']['#allowed_formats'] = ['plain_text'];
+        $form['body']['#format'] = 'plain_text';
       }
 
       // If the user has access, add the field for specifying the attachment.
@@ -311,6 +311,7 @@ class MassContactForm extends ContentEntityForm {
       // can be abused to spam people.
       // @todo Why are anonymous users allowed to hit this form at all?!
       if ($this->currentUser()->id()) {
+        // @todo Port this functionality.
         $form['copy'] = [
           '#type' => 'checkbox',
           '#title' => $this->t('Send yourself a copy.'),
@@ -328,8 +329,8 @@ class MassContactForm extends ContentEntityForm {
       // If not, then do it or not based on the administrative setting.
       else {
         $form['create_archive_copy'] = [
-          '#type' => 'hidden',
-          '#default_value' => $this->config->get('create_archive_copy'),
+          '#type' => 'value',
+          '#value' => $this->config->get('create_archive_copy'),
         ];
         $form['archive_notice'] = [
           '#type' => 'item',
@@ -394,7 +395,7 @@ class MassContactForm extends ContentEntityForm {
 
     $message = $this->entityTypeManager->getStorage('mass_contact_message')->create([
       'subject' => $form_state->getValue('subject'),
-      'body' => $form_state->getValue('message'),
+      'body' => $form_state->getValue('body'),
     ]);
     $categories = [];
 
