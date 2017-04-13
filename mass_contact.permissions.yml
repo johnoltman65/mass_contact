@@ -19,6 +19,9 @@ mass contact override text format:
 mass contact send messages:
   title: 'Send messages with Mass Contact'
   description: 'Allows the user to send messages with the Mass Contact.'
+mass contact view archived messages:
+  title: 'View archived Mass Contact messages'
+  description: 'Allows viewing of archived messages.'
 
 permission_callbacks:
   - \Drupal\mass_contact\Permissions::categoryPermissions

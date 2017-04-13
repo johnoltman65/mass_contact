@@ -20,6 +20,17 @@ use Drupal\user\UserInterface;
  *     singular = "@count mass contact message",
  *     plural = "@count mass contact messages"
  *   ),
+ *   handlers = {
+ *     "access" = "Drupal\mass_contact\MessageAccessControlHandler",
+ *     "form" = {
+ *       "default" = "Drupal\mass_contact\Form\MassContactForm"
+ *     },
+ *     "list_builder" = "Drupal\mass_contact\MessageListBuilder",
+ *     "route_provider" = {
+ *       "html" = "\Drupal\mass_contact\Routing\HtmlRouteProvider"
+ *     }
+ *   },
+ *   admin_permission = "mass contact administer",
  *   translatable = FALSE,
  *   base_table = "mass_contact",
  *   data_table = "mass_contact_field_data",
@@ -28,6 +39,10 @@ use Drupal\user\UserInterface;
  *     "uuid" = "uuid",
  *     "uid" = "uid",
  *     "label" = "subject"
+ *   },
+ *   links = {
+ *     "add-form": "/mass-contact",
+ *     "canonical": "/mass-contact/archive/{mass_contact_message}"
  *   }
  * )
  */
@@ -91,6 +106,13 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
   /**
    * {@inheritdoc}
    */
+  public function getSentTime() {
+    return $this->get('sent')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getSubject() {
     return $this->get('subject')->value;
   }
@@ -105,7 +127,12 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
       ->setLabel(t('Categories'))
       ->setSetting('target_type', 'mass_contact_category')
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
-      ->setRequired(TRUE);
+      ->setRequired(TRUE)
+      ->setDisplayOptions('view', [
+        'label' => 'above',
+        'type' => 'entity_reference_label',
+        'weight' => -6,
+      ]);
 
     $fields['subject'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Subject'))
@@ -125,6 +152,7 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'text_default',
+        'weight' => 5,
       ]);
 
     $fields['uid'] = BaseFieldDefinition::create('entity_reference')
@@ -141,18 +169,12 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
     $fields['sent'] = BaseFieldDefinition::create('created')
       ->setLabel(t('Sent on'))
       ->setDescription(t('The time that the message was sent.'))
-      ->setDefaultValueCallback('Drupal\mass_contact\Entity\MassContactMessage::getSentTime')
+      ->setDefaultValueCallback('Drupal\mass_contact\Entity\MassContactMessage::getDefaultSentTime')
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'timestamp',
         'weight' => 0,
       ]);
-
-    $fields['archive'] = BaseFieldDefinition::create('boolean')
-      ->setLabel(t('Keep an archive copy of the message'))
-      ->setDescription(t('If set to TRUE, an archive copy will be kept. Otherwise, the message will be deleted during cleanup operations.'))
-      ->setRequired(TRUE)
-      ->setDefaultValue(FALSE);
 
     return $fields;
   }
@@ -177,7 +199,7 @@ class MassContactMessage extends ContentEntityBase implements MassContactMessage
    * @return array
    *   An array of default values.
    */
-  public static function getSentTime() {
+  public static function getDefaultSentTime() {
     return [\Drupal::requestStack()->getCurrentRequest()->server->get('REQUEST_TIME')];
   }
 

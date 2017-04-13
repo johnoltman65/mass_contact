@@ -77,7 +77,7 @@ class MassContactFormTest extends MassContactTestBase {
   public function testNormalAccess() {
     $this->drupalLogin($this->massContactUser);
     // With access to no categories, an error should appear.
-    $this->drupalGet(Url::fromRoute('mass_contact'));
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('No categories found!');
 
@@ -86,7 +86,7 @@ class MassContactFormTest extends MassContactTestBase {
 
     // Grant permission to one category only.
     $this->massContactRole->grantPermission('mass contact send to users in the ' . $this->categories[2]->id() . ' category')->save();
-    $this->drupalGet(Url::fromRoute('mass_contact'));
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('This message will be sent to all users in the ' . $this->categories[2]->label() . ' category.');
     $this->assertSession()->pageTextContains('A copy of this message will be archived on this website.');
@@ -112,7 +112,7 @@ class MassContactFormTest extends MassContactTestBase {
     ]);
     $config->save();
     $this->massContactRole->grantPermission('mass contact send to users in the ' . $this->categories[3]->id() . ' category')->save();
-    $this->drupalGet(Url::fromRoute('mass_contact'));
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Recipients will NOT be hidden from each other.');
     $this->assertSession()->pageTextContains(' A copy of this message will NOT be archived on this website.');

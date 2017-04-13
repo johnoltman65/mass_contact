@@ -42,4 +42,12 @@ interface MassContactMessageInterface extends EntityOwnerInterface, ContentEntit
    */
   public function getSubject();
 
+  /**
+   * Gets the sent time.
+   *
+   * @return int
+   *   The time the message was sent.
+   */
+  public function getSentTime();
+
 }

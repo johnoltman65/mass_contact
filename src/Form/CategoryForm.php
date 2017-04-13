@@ -85,7 +85,7 @@ class CategoryForm extends EntityForm {
       '#type' => 'checkbox',
       '#title' => $this->t('Selected by default'),
       '#default_value' => $mass_contact_category->getSelected(),
-      '#description' => $this->t('This category will be selected by default on the <a href="@url">Mass Contact form</a>.', ['@url' => Url::fromRoute('mass_contact')->toString()]),
+      '#description' => $this->t('This category will be selected by default on the <a href="@url">Mass Contact form</a>.', ['@url' => Url::fromRoute('entity.mass_contact_message.add_form')->toString()]),
     ];
 
     return $form;

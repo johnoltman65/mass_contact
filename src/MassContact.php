@@ -120,6 +120,9 @@ class MassContact implements MassContactInterface {
       'configuration' => $configuration,
     ];
     $this->processingQueue->createItem($data);
+    if ($configuration['create_archive_copy']) {
+      $message->save();
+    }
   }
 
   /**
@@ -133,6 +136,7 @@ class MassContact implements MassContactInterface {
       'use_bcc' => $this->config->get('use_bcc'),
       'sender_name' => $this->config->get('default_sender_name'),
       'sender_mail' => $this->config->get('default_sender_email'),
+      'create_archive_copy' => $this->config->get('create_archive_copy'),
     ];
     return $default;
   }

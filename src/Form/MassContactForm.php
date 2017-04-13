@@ -2,10 +2,13 @@
 
 namespace Drupal\mass_contact\Form;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Entity\ContentEntityForm;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -17,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Main form for sending Mass Contact emails.
  */
-class MassContactForm extends FormBase {
+class MassContactForm extends ContentEntityForm {
 
   /**
    * The mass contact configuration.
@@ -50,6 +53,12 @@ class MassContactForm extends FormBase {
   /**
    * Constructs the Mass Contact form.
    *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   The entity manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -57,7 +66,8 @@ class MassContactForm extends FormBase {
    * @param \Drupal\mass_contact\MassContactInterface $mass_contact
    *   The mass contact service.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, MassContactInterface $mass_contact) {
+  public function __construct(EntityManagerInterface $entity_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, MassContactInterface $mass_contact) {
+    parent::__construct($entity_manager, $entity_type_bundle_info, $time);
     $this->config = $this->configFactory()->get('mass_contact.settings');
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
@@ -69,6 +79,9 @@ class MassContactForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('entity.manager'),
+      $container->get('entity_type.bundle.info'),
+      $container->get('datetime.time'),
       $container->get('module_handler'),
       $container->get('entity_type.manager'),
       $container->get('mass_contact')
@@ -78,15 +91,8 @@ class MassContactForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
-    return 'mass_contact';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    $form = [];
+  public function form(array $form, FormStateInterface $form_state) {
+    $form = parent::form($form, $form_state);
 
     $categories = [];
     $default_category = [];
@@ -355,6 +361,14 @@ class MassContactForm extends FormBase {
   /**
    * {@inheritdoc}
    */
+  public function actions(array $form, FormStateInterface $form_state) {
+    // @todo Potentially refactor to add the 'Send email' button here.
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
@@ -375,14 +389,15 @@ class MassContactForm extends FormBase {
       'use_bcc' => $form_state->getValue('use_bcc'),
       'sender_name' => $form_state->getValue('sender_name'),
       'sender_mail' => $form_state->getValue('sender_mail'),
+      'create_archive_copy' => $form_state->getValue('create_archive_copy'),
     ];
 
     $message = $this->entityTypeManager->getStorage('mass_contact_message')->create([
       'subject' => $form_state->getValue('subject'),
       'body' => $form_state->getValue('message'),
-      'archive' => (bool) $form_state->getValue('create_archive_copy'),
     ]);
     $categories = [];
+
     foreach ($form_state->getValue('categories') as $id) {
       $categories[] = ['target_id' => $id];
     }
@@ -412,6 +427,12 @@ class MassContactForm extends FormBase {
         $batch['operations'][] = [[static::class, 'processRecipients'], $data];
       }
       batch_set($batch);
+      if ($form_state->getValue('create_archive_copy')) {
+        $message->save();
+      }
+    }
+    if ($message->id()) {
+      drupal_set_message($this->t('A copy has been archived <a href="@url">here</a>.', ['@url' => $message->toUrl()->toString()]));
     }
   }
 

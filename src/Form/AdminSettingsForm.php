@@ -44,7 +44,7 @@ class AdminSettingsForm extends SettingsFormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Additional information for Mass Contact form'),
       '#default_value' => $config->get('form_information'),
-      '#description' => $this->t('Information to show on the <a href=":url">Mass Contact page</a>.', [':url' => Url::fromRoute('mass_contact')->toString()]),
+      '#description' => $this->t('Information to show on the <a href=":url">Mass Contact page</a>.', [':url' => Url::fromRoute('entity.mass_contact_message.add_form')->toString()]),
     ];
 
     // Rate limiting options.

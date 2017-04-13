@@ -38,10 +38,10 @@ entity.mass_contact_category.collection:
   requirements:
     _permission: 'mass contact administer'
 
-mass_contact:
-  path: '/mass-contact'
+entity.mass_contact_message.collection:
+  path: '/mass-contact/archive'
   defaults:
-    _title: 'Mass Contact'
-    _form: '\Drupal\mass_contact\Form\MassContactForm'
+    _entity_list: 'mass_contact_message'
+    _title: 'Mass Contact Archive'
   requirements:
-    _permission: 'mass contact send messages'
+    _permission: 'mass contact view archived messages'
