@@ -190,7 +190,8 @@ class MassContact implements MassContactInterface {
         $recipients += $grouping->getRecipients($config['categories']);
       }
     }
-    return $recipients;
+    // Filter down to unique recipients.
+    return array_unique($recipients);
   }
 
   /**
