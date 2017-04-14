@@ -30,6 +30,14 @@ mass_contact.settings_email_body:
   requirements:
     _permission: 'mass contact administer'
 
+entity.mass_contact_category.canonical:
+  path: '/admin/config/mass-contact/category/{mass_contact_category}/edit'
+  defaults:
+    _entity_form: 'mass_contact_category.edit'
+    _title: 'Edit Mass Contact Category'
+  requirements:
+    _permission: 'mass contact administer'
+
 entity.mass_contact_category.collection:
   path: '/admin/config/mass-contact/category'
   defaults:
