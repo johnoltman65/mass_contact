@@ -57,7 +57,7 @@ class MessageListBuilder extends EntityListBuilder {
         'class' => [RESPONSIVE_PRIORITY_MEDIUM],
       ],
       'sent' => [
-        'data' => $this->t('Send on'),
+        'data' => $this->t('Sent on'),
         'class' => [RESPONSIVE_PRIORITY_MEDIUM],
       ],
       'uid' => [
