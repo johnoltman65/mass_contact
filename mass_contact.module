@@ -7,9 +7,17 @@
  * This is primarily where all the hooks are implemented.
  */
 
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultForbidden;
+use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\mass_contact\MassContactInterface;
 
 /**
  * Implements hook_help().
@@ -89,4 +97,44 @@ function mass_contact_mail($key, &$message, $params) {
 
   // Update the 'From' address.
   $message['from'] = $params['configuration']['sender_mail'];
+}
+
+/**
+ * Implements hook_entity_field_access().
+ */
+function mass_contact_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  if ($field_definition->getName() === MassContactInterface::OPT_OUT_FIELD_ID) {
+    // Only allow access if there are any categories, and site is configured
+    // to allow opt-out.
+    if ((\Drupal::config('mass_contact.settings')->get('optout_enabled') === MassContactInterface::OPT_OUT_DISABLED) || empty(\Drupal::entityTypeManager()->getStorage('mass_contact_category')->loadMultiple())) {
+      return AccessResultForbidden::forbidden('No categories or opt out is disabled');
+    }
+  }
+  return AccessResult::neutral();
+}
+
+/**
+ * Implements callback_allowed_values_function().
+ */
+function mass_contact_opt_out_allowed_values_callback(FieldStorageDefinitionInterface $definition, FieldableEntityInterface $entity = NULL, &$cacheable = NULL) {
+  $opt_out = \Drupal::config('mass_contact.settings')->get('optout_enabled');
+  if ($opt_out === MassContactInterface::OPT_OUT_DISABLED) {
+    // Opt-out is disabled.
+    return [];
+  }
+
+  $values = [1 => t('Opt-out of all emails')];
+
+  if ($opt_out === MassContactInterface::OPT_OUT_GLOBAL) {
+    // Return a simple global opt-out checkbox.
+    return $values;
+  }
+
+  // Per-category opt-out is enabled, so return all categories.
+  /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface[] $categories */
+  $categories = \Drupal::entityTypeManager()->getStorage('mass_contact_category')->loadMultiple();
+  foreach ($categories as $category) {
+    $values[$category->id()] = $category->label();
+  }
+  return $values;
 }

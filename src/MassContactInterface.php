@@ -25,6 +25,11 @@ interface MassContactInterface {
   const OPT_OUT_CATEGORY = 'category';
 
   /**
+   * The user opt-out field ID.
+   */
+  const OPT_OUT_FIELD_ID = 'mass_contact_opt_out';
+
+  /**
    * Determines if HTML emails are supported.
    *
    * @return bool

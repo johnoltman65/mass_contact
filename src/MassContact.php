@@ -47,6 +47,13 @@ class MassContact implements MassContactInterface {
   protected $moduleHandler;
 
   /**
+   * The opt-out service.
+   *
+   * @var \Drupal\mass_contact\OptOutInterface
+   */
+  protected $optOut;
+
+  /**
    * The message queueing queue.
    *
    * @var \Drupal\Core\Queue\QueueInterface
@@ -87,10 +94,13 @@ class MassContact implements MassContactInterface {
    *   The mail plugin manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
+   * @param \Drupal\mass_contact\OptOutInterface $opt_out
+   *   The mass contact opt-out service.
    */
-  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, QueueFactory $queue, MailManagerInterface $mail_manager, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, QueueFactory $queue, MailManagerInterface $mail_manager, EntityTypeManagerInterface $entity_type_manager, OptOutInterface $opt_out) {
     $this->moduleHandler = $module_handler;
     $this->config = $config_factory->get('mass_contact.settings');
+    $this->optOut = $opt_out;
     $this->processingQueue = $queue->get('mass_contact_queue_messages', TRUE);
     $this->sendingQueue = $queue->get('mass_contact_send_message', TRUE);
     $this->mail = $mail_manager;
@@ -190,6 +200,10 @@ class MassContact implements MassContactInterface {
         $recipients += $grouping->getRecipients($config['categories']);
       }
     }
+
+    // Filter out users that have opted out.
+    $recipients = array_diff($recipients, $this->optOut->getOptOutAccounts($categories));
+
     // Filter down to unique recipients.
     return array_unique($recipients);
   }

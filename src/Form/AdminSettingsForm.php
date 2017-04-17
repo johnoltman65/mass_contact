@@ -26,7 +26,7 @@ class AdminSettingsForm extends SettingsFormBase {
       'form_information',
       'recipient_limit',
       'send_with_cron',
-      'optout_d',
+      'optout_enabled',
       'create_archive_copy',
       'hourly_threshold',
       'category_display',
@@ -77,10 +77,10 @@ class AdminSettingsForm extends SettingsFormBase {
       '#title' => $this->t('Opt-out options'),
     ];
     // @todo Refactor this when adding optout functionality to utilize a field.
-    $form['mass_contact_optout_options']['optout_d'] = [
+    $form['mass_contact_optout_options']['optout_enabled'] = [
       '#type' => 'radios',
       '#title' => $this->t('Allow users to opt-out of mass email messages'),
-      '#default_value' => $config->get('optout_d'),
+      '#default_value' => $config->get('optout_enabled'),
       '#options' => [
         MassContactInterface::OPT_OUT_DISABLED => $this->t('No'),
         MassContactInterface::OPT_OUT_GLOBAL => $this->t('Yes'),

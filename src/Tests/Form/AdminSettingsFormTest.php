@@ -31,7 +31,7 @@ class AdminSettingsFormTest extends SystemConfigFormTestBase {
       'form_information' => $this->randomString(),
       'recipient_limit' => 42,
       'send_with_cron' => TRUE,
-      'optout_d' => MassContactInterface::OPT_OUT_GLOBAL,
+      'optout_enabled' => MassContactInterface::OPT_OUT_GLOBAL,
       'create_archive_copy' => NULL,
       'hourly_threshold' => 33,
       'category_display' => 'checkboxes',

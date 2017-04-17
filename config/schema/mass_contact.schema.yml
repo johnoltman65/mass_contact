@@ -11,7 +11,7 @@ mass_contact.settings:
     send_with_cron:
       type: boolean
       label: 'Send with cron/job queue'
-    optout_d:
+    optout_enabled:
       type: string
       label: 'Allow users to opt-out of emails'
     create_archive_copy:

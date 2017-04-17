@@ -206,7 +206,7 @@ class MassContactForm extends ContentEntityForm {
       }
 
       // Add the field for specifying whether opt-outs are respected or not.
-      $optout_setting = $this->config->get('optout_d');
+      $optout_setting = $this->config->get('optout_enabled');
 
       // Allow users to opt-out of mass emails:
       // 0 => 'No', 1 == 'Yes', 2 == 'Selected categories'.

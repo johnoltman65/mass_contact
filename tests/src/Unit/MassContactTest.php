@@ -8,6 +8,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Queue\QueueFactory;
 use Drupal\mass_contact\MassContact;
+use Drupal\mass_contact\OptOutInterface;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -33,18 +34,19 @@ class MassContactTest extends UnitTestCase {
     $queue_factory = $this->prophesize(QueueFactory::class)->reveal();
     $mail_manager = $this->prophesize(MailManagerInterface::class)->reveal();
     $entity_type_manager = $this->prophesize(EntityTypeManagerInterface::class)->reveal();
-    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory, $mail_manager, $entity_type_manager);
+    $opt_out = $this->prophesize(OptOutInterface::class)->reveal();
+    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory, $mail_manager, $entity_type_manager, $opt_out);
     $this->assertFalse($fixture->htmlSupported());
 
     // Mime mail module.
     $module_handler->moduleExists('mimemail')->willReturn(TRUE);
-    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory, $mail_manager, $entity_type_manager);
+    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory, $mail_manager, $entity_type_manager, $opt_out);
     $this->assertTrue($fixture->htmlSupported());
 
     // Swiftmailer module.
     $module_handler->moduleExists('mimemail')->willReturn(FALSE);
     $module_handler->moduleExists('swiftmailer')->willReturn(TRUE);
-    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory, $mail_manager, $entity_type_manager);
+    $fixture = new MassContact($module_handler->reveal(), $config_factory, $queue_factory, $mail_manager, $entity_type_manager, $opt_out);
     $this->assertTrue($fixture->htmlSupported());
   }
 
