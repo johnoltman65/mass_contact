@@ -196,7 +196,7 @@ class MassContactForm extends ContentEntityForm {
         // Otherwise, just use the default category.
         $form['categories'] = [
           '#type' => 'value',
-          '#value' => [$default_category],
+          '#value' => $default_category,
         ];
         $form['cid-info'] = [
           '#type' => 'item',
