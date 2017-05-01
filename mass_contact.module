@@ -106,8 +106,17 @@ function mass_contact_entity_field_access($operation, FieldDefinitionInterface $
   if ($field_definition->getName() === MassContactInterface::OPT_OUT_FIELD_ID) {
     // Only allow access if there are any categories, and site is configured
     // to allow opt-out.
-    if ((\Drupal::config('mass_contact.settings')->get('optout_enabled') === MassContactInterface::OPT_OUT_DISABLED) || empty(\Drupal::entityTypeManager()->getStorage('mass_contact_category')->loadMultiple())) {
-      return AccessResultForbidden::forbidden('No categories or opt out is disabled');
+    if ((\Drupal::config('mass_contact.settings')
+        ->get('optout_enabled') === MassContactInterface::OPT_OUT_DISABLED)
+    ) {
+      return AccessResultForbidden::forbidden('Opt out is disabled');
+    }
+
+    if (\Drupal::config('mass_contact.settings')
+        ->get('optout_enabled') === MassContactInterface::OPT_OUT_CATEGORY && empty(\Drupal::entityTypeManager()
+        ->getStorage('mass_contact_category')
+        ->loadMultiple())) {
+      return AccessResultForbidden::forbidden('Opt out is setup to allow configuration by categories, but no categories were found');
     }
   }
   return AccessResult::neutral();

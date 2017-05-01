@@ -209,8 +209,9 @@ class MassContactForm extends ContentEntityForm {
       $optout_setting = $this->config->get('optout_enabled');
 
       // Allow users to opt-out of mass emails:
-      // 0 => 'No', 1 == 'Yes', 2 == 'Selected categories'.
-      if ($optout_setting == 1 || $optout_setting == 2) {
+      // 'disabled' => 'No', 'global' == 'Yes', 'category' == 'Selected
+      // categories'.
+      if ($optout_setting !== MassContactInterface::OPT_OUT_DISABLED) {
         // @todo https://www.drupal.org/node/2867177
         // Allow to override or respect opt-outs if admin, otherwise use
         // default.
