@@ -97,6 +97,10 @@ function mass_contact_mail($key, &$message, $params) {
 
   // Update the 'From' address.
   $message['from'] = $params['configuration']['sender_mail'];
+
+  // Unset the format so the correct format configured for site's mail can take
+  // effect.
+  unset($message['params']['format']);
 }
 
 /**
