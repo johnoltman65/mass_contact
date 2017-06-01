@@ -1,7 +1,8 @@
 <?php
 
-namespace Drupal\Tests\mass_contact\Form;
+namespace Drupal\Tests\mass_contact\Functional\Form;
 
+use Drupal\Core\Queue\QueueWorkerInterface;
 use Drupal\Core\Test\AssertMailTrait;
 use Drupal\Core\Url;
 use Drupal\Tests\mass_contact\Functional\MassContactTestBase;
@@ -76,10 +77,9 @@ class MassContactFormTest extends MassContactTestBase {
    */
   public function testNormalAccess() {
     $this->drupalLogin($this->massContactUser);
-    // With access to no categories, an error should appear.
+    // Ensure page loads successfully.
     $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('No categories found!');
 
     // Test with queue system.
     $this->config('mass_contact.settings')->set('send_with_cron', TRUE)->save();
@@ -88,7 +88,6 @@ class MassContactFormTest extends MassContactTestBase {
     $this->massContactRole->grantPermission('mass contact send to users in the ' . $this->categories[2]->id() . ' category')->save();
     $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
     $this->assertSession()->statusCodeEquals(200);
-    $this->assertSession()->pageTextContains('This message will be sent to all users in the ' . $this->categories[2]->label() . ' category.');
     $this->assertSession()->pageTextContains('A copy of this message will be archived on this website.');
     $this->assertSession()->pageTextContains('Recipients will be hidden from each other.');
     $this->assertSession()->fieldExists('sender_mail');
@@ -138,32 +137,21 @@ class MassContactFormTest extends MassContactTestBase {
       'categories[]' => [$this->categories[2]->id()],
     ];
     $this->drupalPostForm(NULL, $edit, t('Send email'));
-    // Should be one item in the queue.
-    $queue = \Drupal::queue('mass_contact_queue_messages');
-    $this->assertEquals(1, $queue->numberOfItems());
 
-    // Process the queue.
     /** @var \Drupal\Core\Queue\QueueWorkerManagerInterface $manager */
+    /** @var \Drupal\Core\Queue\QueueWorkerInterface $message_queue_queue_worker */
+    /** @var \Drupal\Core\Queue\QueueWorkerInterface $send_message_queue_worker */
     $manager = $this->container->get('plugin.manager.queue_worker');
-    $queue_worker = $manager->createInstance('mass_contact_queue_messages');
-    while ($item = $queue->claimItem()) {
-      $queue_worker->processItem($item->data);
-      $queue->deleteItem($item);
-    }
+    $message_queue_queue_worker = $manager->createInstance('mass_contact_queue_messages');
+    $send_message_queue_worker = $manager->createInstance('mass_contact_send_message');
 
-    // There should now be 9 items in the sending queue.
+    // Should be one item in the  Queue messages queue.
+    $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
+
+    // There should now be 9 items in the sending queue and 409 emails
+    // (409 non-blocked users with the recipient role).
     // @see \Drupal\mass_contact\MassContact::MAX__QUEUE_RECIPIENTS
-    $queue = \Drupal::queue('mass_contact_send_message');
-    $this->assertEquals(9, $queue->numberOfItems());
-    $queue_worker = $manager->createInstance('mass_contact_send_message');
-    while ($item = $queue->claimItem()) {
-      $queue_worker->processItem($item->data);
-      $queue->deleteItem($item);
-    }
-
-    // Should be 409 emails (409 non-blocked users with the recipient role).
-    $emails = $this->getMails();
-    $this->assertEquals(409, count($emails));
+    $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 9, 409);
 
     // Switch back to BCC mode and only 3 emails should be sent.
     \Drupal::state()->set('system.test_mail_collector', []);
@@ -184,46 +172,130 @@ class MassContactFormTest extends MassContactTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
 
-    // Should be one item in the queue.
-    $queue = \Drupal::queue('mass_contact_queue_messages');
-    $this->assertEquals(1, $queue->numberOfItems());
+    // Should be one item in the  Queue messages queue.
+    $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
 
-    // Process the queue.
-    /** @var \Drupal\Core\Queue\QueueWorkerManagerInterface $manager */
-    $manager = $this->container->get('plugin.manager.queue_worker');
-    $queue_worker = $manager->createInstance('mass_contact_queue_messages');
-    while ($item = $queue->claimItem()) {
-      $queue_worker->processItem($item->data);
-      $queue->deleteItem($item);
-    }
-
-    // There should now be 9 items in the sending queue.
+    // There should now be 9 items in the sending queue and 9 emails
+    // (since BCC is used).
     // @see \Drupal\mass_contact\MassContact::MAX__QUEUE_RECIPIENTS
-    $queue = \Drupal::queue('mass_contact_send_message');
-    $this->assertEquals(9, $queue->numberOfItems());
-    $queue_worker = $manager->createInstance('mass_contact_send_message');
-    while ($item = $queue->claimItem()) {
-      $queue_worker->processItem($item->data);
-      $queue->deleteItem($item);
-    }
-
-    // Should be 9 emails since BCC is used.
-    $emails = $this->getMails();
-    $this->assertEquals(9, count($emails));
+    $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 9, 9);
 
     // Verify message prefix/suffix are properly attached.
     $expected = implode("\n\n", [
-      $config->get('message_prefix.value'),
-      $edit['body[value]'],
-      $config->get('message_suffix.value'),
-    ]) . "\n\n";
+        $config->get('message_prefix.value'),
+        $edit['body[value]'],
+        $config->get('message_suffix.value'),
+      ]) . "\n\n";
     $this->assertMail('body', $expected);
     $this->assertMail('to', 'foo@bar.com');
+
+    // Test send me a copy feature.
+    \Drupal::state()->set('system.test_mail_collector', []);
+
+    // Test Send a message without any categories with 'Send me a copy'
+    // unchecked. Mail should not be sent since there are no recipients.
+    $edit = [
+      'subject' => $this->randomString(),
+      'body[value]' => $this->randomString(),
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Send email'));
+    $this->assertSession()->pageTextContains('There are no recipients chosen for this mass contact message.');
+
+    // Test Sending a message without any categories with
+    // 'Send me a copy checked'. Mail should be sent since there is one
+    // recipient.
+    $edit = [
+      'subject' => $this->randomString(),
+      'body[value]' => $this->randomString(),
+      'copy' => TRUE,
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Send email'));
+
+    // Should be one item in the  Queue messages queue.
+    $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
+
+    // There should now be only 1 item in the sending queue for the current
+    // user and 1 email sent.
+    $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 1, 1);
+
+    // Test sending a message to category 2 and also a copy to yourself with
+    // BCC option as false.
+    $config->set('use_bcc', FALSE);
+    $config->save();
+    \Drupal::state()->set('system.test_mail_collector', []);
+
+    $edit = [
+      'subject' => $this->randomString(),
+      'body[value]' => $this->randomString(),
+      'categories[]' => [$this->categories[2]->id()],
+      'copy' => TRUE,
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Send email'));
+
+    // Should be one item in the  Queue messages queue.
+    $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
+
+    // There should now be 9 items in the sending queue for the current
+    // user and should be 410 emails (409 non-blocked users with the recipient
+    // role and 1 current user for copy).
+    $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 9, 410);
 
     // @todo Test with batch system.
     // @see https://www.drupal.org/node/2855942
     $this->config('mass_contact.settings')->set('send_with_cron', FALSE)->save();
     \Drupal::state()->set('system.test_mail_collector', []);
+  }
+
+  /**
+   * Verifies the number of items in the mass_contact_queue_messages queue.
+   *
+   * Also processes the queue.
+   *
+   * @param \Drupal\Core\Queue\QueueWorkerInterface $queue_worker
+   *   The queue worker for the mass_contact_queue_messages queue.
+   * @param int $expected_queue_items
+   *   Number of items expected in the mass_contact_queue_messages queue.
+   */
+  protected function verifyAndProcessQueueMessagesQueue(QueueWorkerInterface $queue_worker, $expected_queue_items) {
+    $queue = \Drupal::queue('mass_contact_queue_messages');
+    // Number of items in the queue_messages queue should be equal to
+    // $expected_queue_items.
+    $this->assertEquals($expected_queue_items, $queue->numberOfItems());
+
+    // Process the queue.
+    while ($item = $queue->claimItem()) {
+      $queue_worker->processItem($item->data);
+      $queue->deleteItem($item);
+    }
+  }
+
+  /**
+   * Verifies the number of items in the mass_contact_send_message queue.
+   *
+   * Also processes the queue and verifies the number of emails generated.
+   *
+   * @param \Drupal\Core\Queue\QueueWorkerInterface $queue_worker
+   *   The queue worker for the mass_contact_send_message queue.
+   * @param int $expected_queue_items
+   *   Number of items expected in the mass_contact_send_message queue.
+   * @param int $expected_mails
+   *   Number of emails expected to be sent.
+   */
+  protected function verifyAndProcessSendMessageQueue(QueueWorkerInterface $queue_worker, $expected_queue_items, $expected_mails) {
+    $queue = \Drupal::queue('mass_contact_send_message');
+    // Number of items in the send_messages queue should be equal to
+    // $expected_queue_items.
+    $this->assertEquals($expected_queue_items, $queue->numberOfItems());
+
+    // Process the queue.
+    while ($item = $queue->claimItem()) {
+      $queue_worker->processItem($item->data);
+      $queue->deleteItem($item);
+    }
+
+    // Number of emails should be equal to $expected_mails.
+    $emails = $this->getMails();
+    $this->assertEquals($expected_mails, count($emails));
   }
 
 }
