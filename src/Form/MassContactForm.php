@@ -11,7 +11,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Drupal\mass_contact\Entity\MassContactMessageInterface;
 use Drupal\mass_contact\MassContact;
 use Drupal\mass_contact\MassContactInterface;
@@ -266,8 +265,8 @@ class MassContactForm extends ContentEntityForm {
         '#type' => 'item',
         '#title' => $this->t('Send as BCC (hide recipients)'),
         '#markup' => $this->config->get('use_bcc')
-          ? $this->t('Recipients will be hidden from each other.')
-          : $this->t('Recipients will NOT be hidden from each other.'),
+        ? $this->t('Recipients will be hidden from each other.')
+        : $this->t('Recipients will NOT be hidden from each other.'),
       ];
     }
 
@@ -346,7 +345,7 @@ class MassContactForm extends ContentEntityForm {
         '#type' => 'item',
         '#title' => $this->t('Archive a copy of this message on this website'),
         '#markup' => $this->config->get('create_archive_copy') ? $this->t('A copy of this message will be archived on this website.')
-          : $this->t('A copy of this message will NOT be archived on this website.'),
+        : $this->t('A copy of this message will NOT be archived on this website.'),
       ];
     }
 
@@ -408,7 +407,7 @@ class MassContactForm extends ContentEntityForm {
     // Add the sender's email to the configs, if the 'Send yourself a copy'
     // option has been chosen.
     if ($form_state->getValue('copy')) {
-      $configuration['send_me_copy_email_address'] = $this->currentUser()->getEmail();
+      $configuration['send_me_copy_user'] = $this->currentUser()->id();
     }
 
     $message = $this->entityTypeManager->getStorage('mass_contact_message')->create([

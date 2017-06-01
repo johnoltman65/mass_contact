@@ -158,7 +158,8 @@ class MassContact implements MassContactInterface {
       'sender_name' => $this->config->get('default_sender_name'),
       'sender_mail' => $this->config->get('default_sender_email'),
       'create_archive_copy' => $this->config->get('create_archive_copy'),
-      'send_me_copy_email_address' => '',
+      // @todo Make the default configurable.
+      'send_me_copy_user' => FALSE,
     ];
     return $default;
   }
@@ -173,17 +174,13 @@ class MassContact implements MassContactInterface {
       'configuration' => $configuration,
     ];
     $all_recipients = $this->getRecipients($message->getCategories());
-    $send_me_a_copy_email_address = $data['configuration']['send_me_copy_email_address'];
-    if ($send_me_a_copy_email_address) {
+    $send_me_copy_user = $data['configuration']['send_me_copy_user'];
+    if ($send_me_copy_user) {
       // Add the sender's email to the recipient list if 'Send yourself a copy'
       // option has been chosen AND the email is not already in the recipient
       // list.
-      if (empty($all_recipients) || (!in_array($send_me_a_copy_email_address, array_column($all_recipients, 'email')))) {
-        $all_recipients[] = [
-          'email' => $data['configuration']['send_me_copy_email_address'],
-          'langcode' => $this->entityTypeManager->getStorage('user')
-            ->load($this->currentUser->id())->langcode->value,
-        ];
+      if (empty($all_recipients) || !in_array($send_me_copy_user, $all_recipients)) {
+        $all_recipients[] = $send_me_copy_user;
       }
     }
     foreach ($this->getGroupedRecipients($all_recipients) as $recipients) {
@@ -228,18 +225,7 @@ class MassContact implements MassContactInterface {
       }
 
       // Filter out users that have opted out.
-      $recipients = array_diff_key($recipients, $this->optOut->getOptOutAccounts($categories));
-
-      // We should have a unique list of users at this point.  (Adding arrays
-      // behaves that way).
-      $user_storage = $this->entityTypeManager->getStorage('user');
-      $recipients_emails = [];
-      foreach ($recipients as $key => $value) {
-        $user = $user_storage->load($key);
-        $recipients_emails[$key] = ['email' => $user->getEmail(), 'langcode' => $user->langcode->value];
-      }
-
-      return $recipients_emails;
+      return array_diff_key($recipients, $this->optOut->getOptOutAccounts($categories));
     }
   }
 
@@ -257,12 +243,20 @@ class MassContact implements MassContactInterface {
 
     // If utilizing BCC, one email is sent.
     if ($configuration['use_bcc']) {
-      $params['headers']['Bcc'] = implode(',', array_unique(array_column($recipients, 'email')));
+      $emails = [];
+      foreach ($recipients as $recipient) {
+        /** @var \Drupal\user\UserInterface $account */
+        $account = $this->entityTypeManager->getStorage('user')->load($recipient);
+        $emails[] = $account->getEmail();
+      }
+      $params['headers']['Bcc'] = implode(',', array_unique($emails));
       $this->mail->mail('mass_contact', 'mass_contact', $configuration['sender_mail'], \Drupal::languageManager()->getDefaultLanguage()->getId(), $params);
     }
     else {
       foreach ($recipients as $recipient) {
-        $this->mail->mail('mass_contact', 'mass_contact', $recipient['email'], $recipient['langcode'], $params);
+        /** @var \Drupal\user\UserInterface $account */
+        $account = $this->entityTypeManager->getStorage('user')->load($recipient);
+        $this->mail->mail('mass_contact', 'mass_contact', $account->getEmail(), $account->getPreferredLangcode(), $params);
       }
     }
   }
