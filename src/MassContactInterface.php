@@ -77,11 +77,13 @@ interface MassContactInterface {
    *
    * @param \Drupal\mass_contact\Entity\MassContactCategoryInterface[] $categories
    *   An array of mass contact categories.
+   * @param bool $respect_opt_out
+   *   Whether to respect opt outs when getting the list of recipients.
    *
    * @return int[]
    *   An array of recipient user IDs.
    */
-  public function getRecipients(array $categories);
+  public function getRecipients(array $categories, $respect_opt_out);
 
   /**
    * Get groups of recipients for batch processing.

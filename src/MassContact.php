@@ -173,7 +173,7 @@ class MassContact implements MassContactInterface {
       'message' => $message,
       'configuration' => $configuration,
     ];
-    $all_recipients = $this->getRecipients($message->getCategories());
+    $all_recipients = $this->getRecipients($message->getCategories(), $configuration['respect_opt_out']);
     $send_me_copy_user = $data['configuration']['send_me_copy_user'];
     if ($send_me_copy_user) {
       // Add the sender's email to the recipient list if 'Send yourself a copy'
@@ -214,7 +214,7 @@ class MassContact implements MassContactInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRecipients(array $categories) {
+  public function getRecipients(array $categories, $respect_opt_out) {
     $recipients = [];
     if (!empty($categories)) {
       foreach ($categories as $category) {
@@ -224,8 +224,14 @@ class MassContact implements MassContactInterface {
         }
       }
 
-      // Filter out users that have opted out.
-      return array_diff_key($recipients, $this->optOut->getOptOutAccounts($categories));
+      // Filter out users that have opted out only if sender has chosen to
+      // respect opt outs.
+      if ($respect_opt_out) {
+        return array_diff_key($recipients, $this->optOut->getOptOutAccounts($categories));
+      }
+      else {
+        return $recipients;
+      }
     }
   }
 

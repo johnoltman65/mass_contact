@@ -12,18 +12,18 @@ use Drupal\mass_contact\Entity\MassContactCategoryInterface;
 class OptOut implements OptOutInterface {
 
   /**
-   * The mass contact settings.
-   *
-   * @var \Drupal\Core\Config\ImmutableConfig
-   */
-  protected $config;
-
-  /**
    * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityManager;
+
+  /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
 
   /**
    * OptOut constructor.
@@ -34,7 +34,7 @@ class OptOut implements OptOutInterface {
    *   The entity type manager service.
    */
   public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager) {
-    $this->config = $config_factory->get('mass_contact.settings');
+    $this->configFactory = $config_factory;
     $this->entityManager = $entity_type_manager;
   }
 
@@ -42,7 +42,9 @@ class OptOut implements OptOutInterface {
    * {@inheritdoc}
    */
   public function getOptOutAccounts(array $categories = []) {
-    if ($this->config->get('optout_enabled') === MassContactInterface::OPT_OUT_DISABLED) {
+    // Get the latest configs.
+    $config = $this->configFactory->get('mass_contact.settings');
+    if ($config->get('optout_enabled') === MassContactInterface::OPT_OUT_DISABLED) {
       // Opt-out is completely disabled, return empty.
       return [];
     }
@@ -50,7 +52,7 @@ class OptOut implements OptOutInterface {
     $query = $this->entityManager->getStorage('user')->getQuery();
     $query->condition('status', 1);
 
-    if ($this->config->get('optout_enabled') === MassContactInterface::OPT_OUT_GLOBAL) {
+    if ($config->get('optout_enabled') === MassContactInterface::OPT_OUT_GLOBAL) {
       // Any user with a value here has opted out.
       $query->condition(MassContactInterface::OPT_OUT_FIELD_ID, 0, '<>');
     }

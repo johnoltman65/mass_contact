@@ -379,12 +379,12 @@ class MassContactForm extends ContentEntityForm {
     if ($form_state->getValue('categories')) {
       $categories = $this->entityTypeManager->getStorage('mass_contact_category')
         ->loadMultiple($form_state->getValue('categories'));
-      $all_recipients = $this->massContact->getRecipients($categories);
+      $all_recipients = $this->massContact->getRecipients($categories, $form_state->getValue('optout'));
     }
     // If the 'Send yourself a copy' option has been chosen. count it as a
     // recipient.
     if ($form_state->getValue('copy')) {
-      $all_recipients[] = $this->currentUser()->getEmail();
+      $all_recipients[] = $this->currentUser()->id();
     }
     // Either a category should be chosen, or send yourself a copy option should
     // be checked.
@@ -402,6 +402,7 @@ class MassContactForm extends ContentEntityForm {
       'sender_name' => $form_state->getValue('sender_name'),
       'sender_mail' => $form_state->getValue('sender_mail'),
       'create_archive_copy' => $form_state->getValue('create_archive_copy'),
+      'respect_opt_out' => $form_state->getValue('optout'),
     ];
 
     // Add the sender's email to the configs, if the 'Send yourself a copy'
@@ -430,16 +431,12 @@ class MassContactForm extends ContentEntityForm {
     }
     else {
       // Process immediately via the batch system.
-      $all_recipients = $this->massContact->getRecipients($message->getCategories());
+      $all_recipients = $this->massContact->getRecipients($message->getCategories(), $form_state->getValue('optout'));
       // Add the sender's email to the recipient list if 'Send yourself a copy'
       // option has been chosen AND the email is not already in the recipient
       // list.
-      if ($form_state->getValue('copy') && !in_array($form_state->getValue('sender_mail'), array_column($all_recipients, 'email'))) {
-        $all_recipients[] = [
-          'email' => $form_state->getValue('sender_mail'),
-          'langcode' => $this->entityTypeManager->getStorage('user')
-            ->load($this->currentUser()->id())->langcode->value,
-        ];
+      if ($form_state->getValue('copy') && !in_array($this->currentUser()->id(), $all_recipients)) {
+        $all_recipients[] = $this->currentUser()->id();
       }
       $batch = [
         'title' => $this->t('Sending message'),

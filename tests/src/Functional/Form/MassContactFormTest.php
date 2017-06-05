@@ -7,6 +7,7 @@ use Drupal\Core\Test\AssertMailTrait;
 use Drupal\Core\Url;
 use Drupal\Tests\mass_contact\Functional\MassContactTestBase;
 use Drupal\user\Entity\Role;
+use Drupal\mass_contact\MassContactInterface;
 
 /**
  * Tests for the Mass Contact form.
@@ -67,6 +68,11 @@ class MassContactFormTest extends MassContactTestBase {
         // Block the 5th one.
         $account->block();
       }
+
+      if ($i == 20 || $i == 50) {
+        // Opt out of mass contacts for the 20th and 50th users.
+        $account->mass_contact_opt_out->value = 1;
+      }
       $account->addRole($this->recipientRole->id());
       $account->save();
     }
@@ -101,6 +107,8 @@ class MassContactFormTest extends MassContactTestBase {
     $config->set('create_archive_copy', FALSE);
     $config->set('default_sender_email', 'foo@bar.com');
     $config->set('default_sender_name', 'Foo Bar');
+    // Do not respect opt-outs.
+    $config->set('optout_enabled', MassContactInterface::OPT_OUT_DISABLED);
     $config->set('message_prefix', [
       'value' => $this->randomString(),
       'format' => filter_default_format(),
@@ -189,9 +197,39 @@ class MassContactFormTest extends MassContactTestBase {
     $this->assertMail('body', $expected);
     $this->assertMail('to', 'foo@bar.com');
 
+    // Test opt out feature.
+    \Drupal::state()->set('system.test_mail_collector', []);
+    $config->set('optout_enabled', MassContactInterface::OPT_OUT_GLOBAL);
+    $config->set('use_bcc', FALSE);
+    $config->save();
+    // Get form again.
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
+    $this->assertSession()->statusCodeEquals(200);
+    // Send a message to category 2 with BCC disabled.
+    $edit = [
+      'subject' => $this->randomString(),
+      'body[value]' => $this->randomString(),
+      'categories[]' => [$this->categories[2]->id()],
+    ];
+
+    $this->drupalPostForm(NULL, $edit, t('Send email'));
+
+    // Should be one item in the  Queue messages queue.
+    $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
+
+    // There should now be 9 items in the sending queue and 407 emails
+    // (since BCC is not used and 2 users have opted out).
+    // @see \Drupal\mass_contact\MassContact::MAX__QUEUE_RECIPIENTS
+    $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 9, 407);
+
     // Test send me a copy feature.
     \Drupal::state()->set('system.test_mail_collector', []);
-
+    // Use BCC for this test.
+    $config->set('use_bcc', TRUE);
+    $config->save();
+    // Get form again.
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
+    $this->assertSession()->statusCodeEquals(200);
     // Test Send a message without any categories with 'Send me a copy'
     // unchecked. Mail should not be sent since there are no recipients.
     $edit = [
@@ -222,6 +260,8 @@ class MassContactFormTest extends MassContactTestBase {
     // BCC option as false.
     $config->set('use_bcc', FALSE);
     $config->save();
+    // Get form again.
+    $this->drupalGet(Url::fromRoute('entity.mass_contact_message.add_form'));
     \Drupal::state()->set('system.test_mail_collector', []);
 
     $edit = [
@@ -236,9 +276,9 @@ class MassContactFormTest extends MassContactTestBase {
     $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
 
     // There should now be 9 items in the sending queue for the current
-    // user and should be 410 emails (409 non-blocked users with the recipient
-    // role and 1 current user for copy).
-    $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 9, 410);
+    // user and should be 408 emails (407 non-blocked users and non opted out
+    // users with the recipient role and 1 current user for copy).
+    $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 9, 408);
 
     // @todo Test with batch system.
     // @see https://www.drupal.org/node/2855942
