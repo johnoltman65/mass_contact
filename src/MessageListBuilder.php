@@ -77,12 +77,24 @@ class MessageListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    // Build a list of categories.
+    $categories = [];
+
+    foreach ($entity->getCategories() as $category) {
+      $categories[] = $category->label();
+    };
+
     /** @var \Drupal\mass_contact\Entity\MassContactMessageInterface $entity */
     $row = [
       'subject' => $entity->toLink(),
       'sent' => $this->dateFormatter->format($entity->getSentTime(), 'short'),
       'uid' => $entity->getOwner()->toLink(),
-      'categories' => $entity->categories->view,
+      'categories' => [
+        'data' => [
+          '#theme' => 'item_list',
+          '#items' => $categories,
+        ],
+      ],
     ];
     $row += parent::buildRow($entity);
     return $row;
