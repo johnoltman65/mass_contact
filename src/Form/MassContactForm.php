@@ -11,8 +11,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
-use Drupal\mass_contact\Entity\MassContactMessageInterface;
-use Drupal\mass_contact\MassContact;
+use Drupal\user\PrivateTempStoreFactory;
 use Drupal\mass_contact\MassContactInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -64,13 +63,16 @@ class MassContactForm extends ContentEntityForm {
    *   The entity type manager service.
    * @param \Drupal\mass_contact\MassContactInterface $mass_contact
    *   The mass contact service.
+   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   *   The factory for the temp store object.
    */
-  public function __construct(EntityManagerInterface $entity_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, MassContactInterface $mass_contact) {
+  public function __construct(EntityManagerInterface $entity_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, MassContactInterface $mass_contact, PrivateTempStoreFactory $temp_store_factory) {
     parent::__construct($entity_manager, $entity_type_bundle_info, $time);
     $this->config = $this->configFactory()->get('mass_contact.settings');
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->massContact = $mass_contact;
+    $this->tempStoreFactory = $temp_store_factory;
   }
 
   /**
@@ -83,7 +85,8 @@ class MassContactForm extends ContentEntityForm {
       $container->get('datetime.time'),
       $container->get('module_handler'),
       $container->get('entity_type.manager'),
-      $container->get('mass_contact')
+      $container->get('mass_contact'),
+      $container->get('user.private_tempstore')
     );
   }
 
@@ -410,6 +413,9 @@ class MassContactForm extends ContentEntityForm {
     if ($form_state->getValue('copy')) {
       $configuration['send_me_copy_user'] = $this->currentUser()->id();
     }
+    else {
+      $configuration['send_me_copy_user'] = FALSE;
+    }
 
     $message = $this->entityTypeManager->getStorage('mass_contact_message')->create([
       'subject' => $form_state->getValue('subject'),
@@ -422,42 +428,21 @@ class MassContactForm extends ContentEntityForm {
       }
       $message->categories = $categories;
     }
-    if ($this->config->get('send_with_cron')) {
-      // Utilize cron/job queue system.
-      $this->massContact->processMassContactMessage(
-        $message,
-        $configuration
-      );
-    }
-    else {
-      // Process immediately via the batch system.
-      $all_recipients = $this->massContact->getRecipients($message->getCategories(), $form_state->getValue('optout'));
-      // Add the sender's email to the recipient list if 'Send yourself a copy'
-      // option has been chosen AND the email is not already in the recipient
-      // list.
-      if ($form_state->getValue('copy') && !in_array($this->currentUser()->id(), $all_recipients)) {
-        $all_recipients[] = $this->currentUser()->id();
-      }
-      $batch = [
-        'title' => $this->t('Sending message'),
-        'operations' => [],
-      ];
-      foreach ($this->massContact->getGroupedRecipients($all_recipients) as $recipients) {
-        $data = [
-          'recipients' => $recipients,
-          'message' => $message,
-          'configuration' => $configuration,
-        ];
-        $batch['operations'][] = [[static::class, 'processRecipients'], $data];
-      }
-      batch_set($batch);
-    }
-    if ($form_state->getValue('create_archive_copy')) {
-      $message->save();
-    }
-    if ($message->id()) {
-      drupal_set_message($this->t('A copy has been archived <a href="@url">here</a>.', ['@url' => $message->toUrl()->toString()]));
-    }
+
+    // Store data needed for the confirmation form in the user's private temp
+    // storage.
+    $store = \Drupal::service("user.private_tempstore")->get('mass_contact_confirm_info');
+    $store->set($message->uuid(),
+      [
+        'mass_contact_message' => $message,
+        'configuration' => $configuration,
+      ]);
+
+    // Redirect to the confirmation form.
+    $form_state->setRedirect('entity.mass_contact.confirm_before_send', [
+      'mass_contact_confirm_info' => $message->uuid(),
+    ]);
+
   }
 
   /**
@@ -488,22 +473,6 @@ class MassContactForm extends ContentEntityForm {
         '#items' => $tasks,
       ];
     }
-  }
-
-  /**
-   * Batch processor for sending the message to recipients.
-   *
-   * @param array $recipients
-   *   An array of recipient user IDs.
-   * @param \Drupal\mass_contact\Entity\MassContactMessageInterface $message
-   *   The mass contact message.
-   * @param array $configuration
-   *   The configuration.
-   */
-  public static function processRecipients(array $recipients, MassContactMessageInterface $message, array $configuration) {
-    /** @var \Drupal\mass_contact\MassContactInterface $mass_contact */
-    $mass_contact = \Drupal::service('mass_contact');
-    $mass_contact->sendMessage($recipients, $message, $configuration);
   }
 
 }

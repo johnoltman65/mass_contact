@@ -13,3 +13,8 @@ services:
       - '@module_handler'
       - Drupal\mass_contact\Plugin\MassContact\GroupingMethod\GroupingInterface
       - Drupal\mass_contact\Annotation\GroupingMethod
+  mass_contact_confirm_info:
+    class: Drupal\mass_contact\ParamConverter\MassContactConfirmConverter
+    arguments: ['@user.private_tempstore']
+    tags:
+      - { name: paramconverter }

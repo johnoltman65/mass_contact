@@ -146,6 +146,13 @@ class MassContactFormTest extends MassContactTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Send email'));
 
+    $message_configs['optout'] = FALSE;
+    $message_configs['copy'] = FALSE;
+    $message_configs['bcc'] = FALSE;
+    $message_configs['create_archive_copy'] = FALSE;
+    $message_configs['user_count'] = 409;
+    $this->verifyConfirmFormAndConfirmSendEmail($message_configs);
+
     /** @var \Drupal\Core\Queue\QueueWorkerManagerInterface $manager */
     /** @var \Drupal\Core\Queue\QueueWorkerInterface $message_queue_queue_worker */
     /** @var \Drupal\Core\Queue\QueueWorkerInterface $send_message_queue_worker */
@@ -175,6 +182,14 @@ class MassContactFormTest extends MassContactTestBase {
       'categories[]' => [$this->categories[2]->id()],
     ];
     $this->drupalPostForm(NULL, $edit, t('Send email'));
+
+    $message_configs['optout'] = FALSE;
+    $message_configs['copy'] = FALSE;
+    $message_configs['bcc'] = TRUE;
+    $message_configs['create_archive_copy'] = TRUE;
+    $message_configs['user_count'] = 409;
+    $this->verifyConfirmFormAndConfirmSendEmail($message_configs);
+
     $this->assertSession()->pageTextContains(t('A copy has been archived'));
     $this->clickLink('here');
     $this->assertSession()->statusCodeEquals(200);
@@ -214,6 +229,13 @@ class MassContactFormTest extends MassContactTestBase {
 
     $this->drupalPostForm(NULL, $edit, t('Send email'));
 
+    $message_configs['optout'] = TRUE;
+    $message_configs['copy'] = FALSE;
+    $message_configs['bcc'] = FALSE;
+    $message_configs['create_archive_copy'] = TRUE;
+    $message_configs['user_count'] = 407;
+    $this->verifyConfirmFormAndConfirmSendEmail($message_configs);
+
     // Should be one item in the  Queue messages queue.
     $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
 
@@ -249,6 +271,13 @@ class MassContactFormTest extends MassContactTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Send email'));
 
+    $message_configs['optout'] = TRUE;
+    $message_configs['copy'] = TRUE;
+    $message_configs['bcc'] = TRUE;
+    $message_configs['create_archive_copy'] = TRUE;
+    $message_configs['user_count'] = 1;
+    $this->verifyConfirmFormAndConfirmSendEmail($message_configs);
+
     // Should be one item in the  Queue messages queue.
     $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
 
@@ -272,6 +301,13 @@ class MassContactFormTest extends MassContactTestBase {
     ];
     $this->drupalPostForm(NULL, $edit, t('Send email'));
 
+    $message_configs['optout'] = TRUE;
+    $message_configs['copy'] = TRUE;
+    $message_configs['bcc'] = FALSE;
+    $message_configs['create_archive_copy'] = TRUE;
+    $message_configs['user_count'] = 408;
+    $this->verifyConfirmFormAndConfirmSendEmail($message_configs);
+
     // Should be one item in the  Queue messages queue.
     $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 1);
 
@@ -279,6 +315,27 @@ class MassContactFormTest extends MassContactTestBase {
     // user and should be 408 emails (407 non-blocked users and non opted out
     // users with the recipient role and 1 current user for copy).
     $this->verifyAndProcessSendMessageQueue($send_message_queue_worker, 9, 408);
+
+    // Test cancelling the message confirm form.
+    // No messages should be sent if the cancel button is pressed on the
+    // confirmation form.
+    \Drupal::state()->set('system.test_mail_collector', []);
+    $edit = [
+      'subject' => $this->randomString(),
+      'body[value]' => $this->randomString(),
+      'categories[]' => [$this->categories[2]->id()],
+      'copy' => TRUE,
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Send email'));
+    $message_configs['optout'] = TRUE;
+    $message_configs['copy'] = TRUE;
+    $message_configs['bcc'] = FALSE;
+    $message_configs['create_archive_copy'] = TRUE;
+    $message_configs['user_count'] = 408;
+    $message_configs['cancel'] = TRUE;
+    $this->verifyConfirmFormAndConfirmSendEmail($message_configs);
+
+    $this->verifyAndProcessQueueMessagesQueue($message_queue_queue_worker, 0);
 
     // @todo Test with batch system.
     // @see https://www.drupal.org/node/2855942
@@ -336,6 +393,67 @@ class MassContactFormTest extends MassContactTestBase {
     // Number of emails should be equal to $expected_mails.
     $emails = $this->getMails();
     $this->assertEquals($expected_mails, count($emails));
+  }
+
+  /**
+   * Verifies text in the confirmation form and submits the confirmation form.
+   *
+   * Form submission is cancelled if configs have an entry for
+   * $message_configs['cancel'].
+   *
+   * @param array $message_configs
+   *   An array of chosen message configs which decides the text in the
+   *   confirmation form.
+   */
+  protected function verifyConfirmFormAndConfirmSendEmail(array $message_configs) {
+    $this->assertSession()
+      ->pageTextContains('Are you sure you want to send this message to ' . $message_configs['user_count'] . ' user(s)?');
+    if ($this->massContactUser->hasPermission('mass contact administer')) {
+      if ($message_configs['optout']) {
+        $this->assertSession()
+          ->pageTextContains('You have selected to respect user opt-outs. If a user has opted out of emails they will not receive this mass contact message.');
+      }
+      else {
+        $this->assertSession()
+          ->pageTextContains('You have selected to NOT respect user opt-outs. Emails will be sent to all users even if they have elected not to receive a mass contact message.');
+      }
+    }
+    if ($this->massContactUser->hasPermission('mass contact override bcc')) {
+      if ($message_configs['bcc']) {
+        $this->assertSession()
+          ->pageTextContains('Recipients of this message will be HIDDEN on the email');
+      }
+      else {
+        $this->assertSession()
+          ->pageTextContains('Recipients of this message will NOT be HIDDEN on the email');
+      }
+    }
+    if ($message_configs['copy']) {
+      $this->assertSession()
+        ->pageTextContains('A copy of this message will be sent to you.');
+    }
+    else {
+      $this->assertSession()
+        ->pageTextContains('A copy of this message will NOT be sent to you.');
+    }
+    if ($this->massContactUser->hasPermission('mass contact override archiving')) {
+      if ($message_configs['create_archive_copy']) {
+        $this->assertSession()
+          ->pageTextContains('A copy of this message will be archived on this site.');
+      }
+      else {
+        $this->assertSession()
+          ->pageTextContains('A copy of this message will NOT be archived on this site.');
+      }
+    }
+    if (empty($message_configs['cancel'])) {
+      $this->drupalPostForm(NULL, [], t('Confirm'));
+      $this->assertSession()
+        ->pageTextContains('Mass Contact message sent successfully.');
+    }
+    else {
+      $this->clickLink('Cancel');
+    }
   }
 
 }
