@@ -81,7 +81,11 @@ class MessageListBuilder extends EntityListBuilder {
     $categories = [];
 
     foreach ($entity->getCategories() as $category) {
-      $categories[] = $category->label();
+      // It is possible to delete a category after creating a mass contact
+      // message for that category.
+      if (!empty($category)) {
+        $categories[] = $category->label();
+      }
     };
 
     /** @var \Drupal\mass_contact\Entity\MassContactMessageInterface $entity */
