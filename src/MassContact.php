@@ -160,6 +160,7 @@ class MassContact implements MassContactInterface {
       'create_archive_copy' => $this->config->get('create_archive_copy'),
       // @todo Make the default configurable.
       'send_me_copy_user' => FALSE,
+      'respect_opt_out' => TRUE,
     ];
     return $default;
   }
@@ -169,19 +170,31 @@ class MassContact implements MassContactInterface {
    */
   public function queueRecipients(MassContactMessageInterface $message, array $configuration = []) {
 
+    // Add defaults.
+    $configuration += $this->getDefaultConfiguration();
+
     $data = [
       'message' => $message,
       'configuration' => $configuration,
     ];
+
     $all_recipients = $this->getRecipients($message->getCategories(), $configuration['respect_opt_out']);
     $send_me_copy_user = $data['configuration']['send_me_copy_user'];
     if ($send_me_copy_user) {
       // Add the sender's email to the recipient list if 'Send yourself a copy'
       // option has been chosen AND the email is not already in the recipient
       // list.
-      if (empty($all_recipients) || !in_array($send_me_copy_user, $all_recipients)) {
-        $all_recipients[] = $send_me_copy_user;
+      // Add this user as the first user in the list. If the user exists in the
+      // recipient list, remove the user and add the user again as first in the
+      // list.
+      if (!empty($all_recipients)) {
+        $send_me_copy_user_key = array_search($send_me_copy_user, $all_recipients);
+        if ($send_me_copy_user_key !== FALSE) {
+          unset($all_recipients[$send_me_copy_user_key]);
+        }
       }
+
+      $all_recipients = [$send_me_copy_user => $send_me_copy_user] + $all_recipients;
     }
     foreach ($this->getGroupedRecipients($all_recipients) as $recipients) {
       $data['recipients'] = $recipients;
@@ -229,10 +242,9 @@ class MassContact implements MassContactInterface {
       if ($respect_opt_out) {
         return array_diff_key($recipients, $this->optOut->getOptOutAccounts($categories));
       }
-      else {
-        return $recipients;
-      }
     }
+
+    return $recipients;
   }
 
   /**

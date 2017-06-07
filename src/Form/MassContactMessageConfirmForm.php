@@ -245,9 +245,23 @@ class MassContactMessageConfirmForm extends ConfirmFormBase {
       // Add the sender's email to the recipient list if 'Send yourself a copy'
       // option has been chosen AND the email is not already in the recipient
       // list.
-      if (empty($all_recipients) || (!empty($this->messageConfigs['send_me_copy_user']) && !in_array($this->messageConfigs['send_me_copy_user'], $all_recipients))) {
-        $all_recipients[] = $this->currentUser()->id();
+      // Add this user as the first user in the list. If the user exists in the
+      // recipient list, remove the user and add the user again as first in the
+      // list.
+      if ($this->messageConfigs['send_me_copy_user']) {
+        if (!empty($all_recipients)) {
+          $send_me_copy_user_key = array_search($this->messageConfigs['send_me_copy_user'], $all_recipients);
+          if ($send_me_copy_user_key) {
+            unset($all_recipients[$send_me_copy_user_key]);
+          }
+        }
+
+        $all_recipients = [
+          $this->currentUser()->id() => $this->currentUser()
+            ->id(),
+        ] + $all_recipients;
       }
+
       $batch = [
         'title' => $this->t('Sending message'),
         'operations' => [],
