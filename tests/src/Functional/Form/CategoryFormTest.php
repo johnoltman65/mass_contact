@@ -28,12 +28,15 @@ class CategoryFormTest extends MassContactTestBase {
     $this->assertSession()->addressEquals('/admin/config/mass-contact');
 
     $this->assertSession()->linkExists(t('Categories'));
-    $this->assertSession()->linkByHrefExists('/admin/config/mass-contact/settings');
+    $this->assertSession()
+      ->linkByHrefExists('/admin/config/mass-contact/settings');
     $this->clickLink(t('Categories'));
-    $this->assertSession()->addressEquals('/admin/config/mass-contact/category');
+    $this->assertSession()
+      ->addressEquals('/admin/config/mass-contact/category');
     $this->assertSession()->linkExists(t('Add category'));
     $this->clickLink(t('Add category'));
-    $this->assertSession()->addressEquals('/admin/config/mass-contact/category/add');
+    $this->assertSession()
+      ->addressEquals('/admin/config/mass-contact/category/add');
 
     // Create a category via the UI.
     $edit = [
@@ -67,7 +70,9 @@ class CategoryFormTest extends MassContactTestBase {
     $edit['recipients[role][conjunction]'] = 'OR';
     $this->drupalPostForm(NULL, $edit, t('Save'));
 
-    \Drupal::entityTypeManager()->getStorage('mass_contact_category')->resetCache();
+    \Drupal::entityTypeManager()
+      ->getStorage('mass_contact_category')
+      ->resetCache();
     /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface $category */
     $category = MassContactCategory::load($edit['id']);
     $this->assertEquals($edit['label'], $category->label());
@@ -81,6 +86,17 @@ class CategoryFormTest extends MassContactTestBase {
       'conjunction' => 'OR',
     ];
     $this->assertEquals($expected, $category->getRecipients()['role']);
+
+    // Test that when no recipients are selected, a validation error is thrown.
+    $this->drupalGet('/admin/config/mass-contact/category/add');
+    // Create a category via the UI.
+    $edit = [
+      'id' => Unicode::strtolower($this->randomMachineName()),
+      'label' => $this->randomString(),
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->assertSession()
+      ->pageTextContains('At least one recipient is required.');
   }
 
 }

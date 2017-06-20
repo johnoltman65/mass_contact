@@ -146,7 +146,7 @@ class Role extends GroupingBase implements ContainerFactoryPluginInterface {
         'OR' => $this->t('Any'),
         'AND' => $this->t('All'),
       ],
-      '#description' => $this->t('Choose <em>any</em> to return recipients with any of the categories, choose <em>all</em> to return recipients matching all of the categories.'),
+      '#description' => $this->t('Choose <em>any</em> to return recipients with any of the roles, choose <em>all</em> to return recipients with all of the roles.'),
       '#default_value' => $this->configuration['conjunction'],
     ];
   }

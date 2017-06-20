@@ -94,6 +94,25 @@ class CategoryForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $recipients_chosen = FALSE;
+    $mass_contact_category = $this->entity;
+    foreach ($this->groupingMethodManager->getDefinitions() as $definition) {
+      if (!$plugin = $mass_contact_category->getGroupingCategories($definition['id'])) {
+        $plugin = $this->groupingMethodManager->createInstance($definition['id'], []);
+      }
+      if ($form['recipients'][$plugin->getPluginId()]['categories']['#value']) {
+        $recipients_chosen = TRUE;
+      }
+    }
+    if (!($recipients_chosen)) {
+      $form_state->setErrorByName('', $this->t('At least one recipient is required.'), 'error');
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\mass_contact\Entity\MassContactCategoryInterface $mass_contact_category */
     $mass_contact_category = $this->entity;

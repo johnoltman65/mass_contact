@@ -231,10 +231,16 @@ class MassContact implements MassContactInterface {
     $recipients = [];
     if (!empty($categories)) {
       foreach ($categories as $category) {
+        $category_recipients = [];
         foreach ($category->getRecipients() as $plugin_id => $config) {
           $grouping = $category->getGroupingCategories($plugin_id);
-          $recipients += $grouping->getRecipients($config['categories']);
+          if (!empty($config['categories'])) {
+            // Only If values were chosen for this grouping in this category,
+            // we gather recipients.
+            $category_recipients[$plugin_id] = $grouping->getRecipients($config['categories']);
+          }
         }
+        $recipients += count($category_recipients) > 1 ? call_user_func_array('array_intersect', $category_recipients) : reset($category_recipients);
       }
 
       // Filter out users that have opted out only if sender has chosen to
