@@ -379,9 +379,9 @@ class MassContactForm extends ContentEntityForm {
 
     // Get the list of recipients for all chosen categories if any have been
     // chosen.
-    if (array_filter($form_state->getValue('categories'))) {
+    if ($form_state->getValue('categories')) {
       $categories = $this->entityTypeManager->getStorage('mass_contact_category')
-        ->loadMultiple(array_filter($form_state->getValue('categories')));
+        ->loadMultiple($form_state->getValue('categories'));
       $all_recipients = $this->massContact->getRecipients($categories, $form_state->getValue('optout'));
     }
     // If the 'Send yourself a copy' option has been chosen. count it as a
@@ -422,8 +422,8 @@ class MassContactForm extends ContentEntityForm {
       'body' => $form_state->getValue('body'),
     ]);
     $categories = [];
-    if (!empty(array_filter($form_state->getValue('categories')))) {
-      foreach (array_filter($form_state->getValue('categories')) as $id) {
+    if (!empty($form_state->getValue('categories'))) {
+      foreach ($form_state->getValue('categories') as $id) {
         $categories[] = ['target_id' => $id];
       }
       $message->categories = $categories;
