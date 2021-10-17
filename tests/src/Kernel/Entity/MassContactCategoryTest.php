@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\mass_contact\Kernel\Entity;
 
-use Drupal\simpletest\UserCreationTrait;
 use Drupal\Tests\mass_contact\Kernel\CategoryCreationTrait;
 use Drupal\Tests\mass_contact\Kernel\MassContactTestBase;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\Role;
 
 /**

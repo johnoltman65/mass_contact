@@ -2,15 +2,15 @@
 
 namespace Drupal\mass_contact\Tests\Form;
 
+use Drupal\KernelTests\ConfigFormTestBase;
 use Drupal\mass_contact\Form\EmailBodyForm;
-use Drupal\system\Tests\System\SystemConfigFormTestBase;
 
 /**
  * Admin settings form test.
  *
  * @group mass_contact
  */
-class EmailBodyFormTest extends SystemConfigFormTestBase {
+class EmailBodyFormTest extends ConfigFormTestBase {
 
   /**
    * {@inheritdoc}

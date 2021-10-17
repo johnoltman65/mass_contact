@@ -3,7 +3,7 @@
 namespace Drupal\Tests\mass_contact\Kernel;
 
 use Drupal\mass_contact\MassContactInterface;
-use Drupal\simpletest\UserCreationTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Kernel tests for the opt-out service.

@@ -2,7 +2,8 @@
 
 namespace Drupal\Tests\mass_contact\Kernel;
 
-use Drupal\simpletest\UserCreationTrait;
+
+use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Access control handler tests.

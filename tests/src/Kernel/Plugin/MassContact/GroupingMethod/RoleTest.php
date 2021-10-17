@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\mass_contact\Kernel\Plugin\MassContact\GroupingMethod;
 
-use Drupal\simpletest\UserCreationTrait;
 use Drupal\Tests\mass_contact\Kernel\MassContactTestBase;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Entity\Role as UserRole;
 use Drupal\user\RoleInterface;
 

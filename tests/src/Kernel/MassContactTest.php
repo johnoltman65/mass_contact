@@ -3,7 +3,7 @@
 namespace Drupal\Tests\mass_contact\Kernel;
 
 use Drupal\mass_contact\Entity\MassContactMessage;
-use Drupal\simpletest\UserCreationTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Tests for the mass contact service.
