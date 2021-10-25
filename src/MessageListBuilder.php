@@ -2,6 +2,7 @@
 
 namespace Drupal\mass_contact;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
@@ -22,6 +23,13 @@ class MessageListBuilder extends EntityListBuilder {
   protected $dateFormatter;
 
   /**
+   * The mass contact settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
    * Mass contact message list builder constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -30,10 +38,13 @@ class MessageListBuilder extends EntityListBuilder {
    *   The entity storage.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, DateFormatterInterface $date_formatter) {
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, DateFormatterInterface $date_formatter, ConfigFactoryInterface $config_factory) {
     parent::__construct($entity_type, $storage);
     $this->dateFormatter = $date_formatter;
+    $this->config = $config_factory->get('mass_contact.settings');
   }
 
   /**
@@ -43,7 +54,8 @@ class MessageListBuilder extends EntityListBuilder {
     return new static(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('date.formatter')
+      $container->get('date.formatter'),
+      $container->get('config.factory')
     );
   }
 
@@ -116,6 +128,22 @@ class MessageListBuilder extends EntityListBuilder {
       ];
     }
     return $operations;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEntityIds() {
+    $sort_order = ($this->config->get('archive_sort_order') == 'ascending') ? 'ASC' : 'DESC';
+
+    $query = $this->getStorage()->getQuery()
+      ->sort('sent', $sort_order);
+
+    // Only add the pager if a limit is specified.
+    if ($this->limit) {
+      $query->pager($this->limit);
+    }
+    return $query->execute();
   }
 
 }

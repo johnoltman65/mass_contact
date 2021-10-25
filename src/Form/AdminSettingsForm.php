@@ -30,6 +30,7 @@ class AdminSettingsForm extends SettingsFormBase {
       'create_archive_copy',
       'hourly_threshold',
       'category_display',
+      'archive_sort_order',
     ];
   }
 
@@ -115,6 +116,18 @@ class AdminSettingsForm extends SettingsFormBase {
         'checkboxes' => 'Check boxes',
       ],
       '#description' => $this->t("Select the form field to use to display the available categories to the message sender."),
+    ];
+
+    // Archive sort order options.
+    $form['archive_sort_order'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Archive sort order'),
+      '#default_value' => $config->get('archive_sort_order'),
+      '#options' => [
+        'ascending' => 'Ascending',
+        'descending' => 'Descending',
+      ],
+      '#description' => $this->t("Select the sort order to display archived contact messages."),
     ];
 
     return $form;
